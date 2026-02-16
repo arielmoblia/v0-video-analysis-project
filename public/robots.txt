@@ -1,0 +1,15 @@
+# robots.txt para tol.ar
+User-agent: *
+Allow: /
+
+# Bloquear areas de administracion
+Disallow: /admin
+Disallow: /admin/
+Disallow: /super-admin
+Disallow: /super-admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /scripts/
+
+# Sitemap
+Sitemap: https://tol.ar/sitemap.xml

@@ -1,0 +1,352 @@
+================================================================================
+                    BACKUP COMPLETO - TOL.AR
+                    Fecha: Enero 2025
+                    5 días de trabajo
+================================================================================
+
+INSTRUCCIONES DE RECUPERACIÓN:
+Si perdés todo, con este archivo + el ZIP del código podés recuperar el proyecto.
+
+================================================================================
+1. VARIABLES DE ENTORNO NECESARIAS (copiar en Vercel/v0)
+================================================================================
+
+NEXT_PUBLIC_SUPABASE_URL=        [Tu URL de Supabase]
+NEXT_PUBLIC_SUPABASE_ANON_KEY=   [Tu anon key]
+SUPABASE_ANON_KEY=               [Misma anon key]
+SUPABASE_URL=                    [Tu URL de Supabase]
+SUPABASE_SERVICE_ROLE_KEY=       [Tu service role key]
+SUPABASE_JWT_SECRET=             [Tu JWT secret]
+
+POSTGRES_URL=                    [Connection string de Postgres]
+POSTGRES_PRISMA_URL=             [Connection string Prisma]
+POSTGRES_URL_NON_POOLING=        [Connection string sin pooling]
+POSTGRES_USER=                   [Usuario postgres]
+POSTGRES_PASSWORD=               [Password postgres]
+POSTGRES_DATABASE=               [Nombre de la DB]
+POSTGRES_HOST=                   [Host de postgres]
+
+RESEND_API_KEY=                  [Tu API key de Resend para emails]
+BLOB_READ_WRITE_TOKEN=           [Token de Vercel Blob para imágenes]
+NEXT_PUBLIC_APP_URL=             https://tol.ar
+SUPER_ADMIN_PASSWORD=            [Tu password de super admin]
+
+IMPORTANTE: Los valores reales están en:
+- v0.app → Tu proyecto → Vars (barra lateral)
+- O en Supabase: supabase.com → Proyecto → Settings → API
+
+================================================================================
+2. ESQUEMA DE BASE DE DATOS (12 tablas en Supabase)
+================================================================================
+
+TABLA: stores
+- id: uuid (primary key)
+- username: varchar
+- email: varchar
+- subdomain: varchar
+- site_title: varchar
+- template: varchar
+- admin_password: varchar
+- status: varchar
+- admin_url: varchar
+- store_url: varchar
+- banner_image: text
+- banner_title: text
+- banner_subtitle: text
+- top_bar_text: text
+- top_bar_enabled: boolean
+- social_instagram: text
+- social_facebook: text
+- social_twitter: text
+- social_tiktok: text
+- social_whatsapp: text
+- social_youtube: text
+- footer_subtitle: text
+- ai_design: jsonb
+- allow_indexing: boolean
+- google_merchant_id: text
+- google_merchant_enabled: boolean
+- template_type: varchar
+- plan: varchar
+- plan_features: jsonb
+- marketing_settings: jsonb
+- prices_in_usd: boolean
+- created_at: timestamp
+
+---
+
+TABLA: products
+- id: uuid (primary key)
+- store_id: uuid (foreign key → stores)
+- name: varchar
+- slug: varchar
+- description: text
+- price: numeric
+- compare_price: numeric
+- stock: integer
+- image_url: text
+- featured: boolean
+- active: boolean
+- category_id: uuid
+- sizes: jsonb
+- created_at: timestamp
+
+---
+
+TABLA: categories
+- id: uuid (primary key)
+- store_id: uuid (foreign key → stores)
+- name: varchar
+- slug: varchar
+- created_at: timestamp
+
+---
+
+TABLA: orders
+- id: uuid (primary key)
+- store_id: uuid (foreign key → stores)
+- customer_name: varchar
+- customer_email: varchar
+- customer_phone: varchar
+- shipping_address: text
+- shipping_city: varchar
+- shipping_postal_code: varchar
+- shipping_method: varchar
+- shipping_notes: text
+- items: jsonb
+- total: numeric
+- status: varchar
+- payment_method: varchar
+- payment_id: text
+- created_at: timestamp
+- updated_at: timestamp
+
+---
+
+TABLA: payment_methods
+- id: uuid (primary key)
+- store_id: uuid (foreign key → stores)
+- mercadopago_enabled: boolean
+- mercadopago_access_token: text
+- mercadopago_link: text
+- mercadopago_test_mode: boolean
+- mercadopago_test_token: text
+- mercadopago_checkout_type: text
+- cash_enabled: boolean
+- cash_instructions: text
+- transfer_enabled: boolean
+- transfer_cbu: varchar
+- transfer_alias: varchar
+- transfer_bank_name: varchar
+- transfer_account_holder: varchar
+- card_enabled: boolean
+- card_instructions: text
+- rapipago_enabled: boolean
+- rapipago_instructions: text
+- uala_enabled: boolean
+- uala_link: text
+- modo_enabled: boolean
+- modo_phone: varchar
+- created_at: timestamp
+- updated_at: timestamp
+
+---
+
+TABLA: shipping_methods
+- id: uuid (primary key)
+- store_id: uuid (foreign key → stores)
+- pickup_enabled: boolean
+- pickup_address: text
+- pickup_hours: text
+- pickup_instructions: text
+- delivery_enabled: boolean
+- delivery_fixed_cost: numeric
+- delivery_free_above: numeric
+- delivery_provider: varchar
+- delivery_api_key: text
+- delivery_instructions: text
+- own_delivery_enabled: boolean
+- own_delivery_cost: text
+- own_delivery_zones: text
+- own_delivery_time: text
+- own_delivery_instructions: text
+- enviamelo_enabled: boolean
+- enviamelo_token: text
+- enviamelo_user: text
+- andreani_enabled: boolean
+- andreani_token: text
+- andreani_contract: text
+- andreani_user: text
+- andreani_password: text
+- andreani_account: text
+- origin_postal_code: text
+- origin_street: text
+- origin_number: text
+- origin_city: text
+- origin_province: text
+- oca_enabled: boolean
+- oca_operativa: text
+- oca_cuit: text
+- correo_enabled: boolean
+- correo_contract: text
+- created_at: timestamp
+- updated_at: timestamp
+
+---
+
+TABLA: store_pages
+- id: uuid (primary key)
+- store_id: uuid (foreign key → stores)
+- title: varchar
+- slug: varchar
+- content: text
+- show_in_menu: boolean
+- created_at: timestamp
+- updated_at: timestamp
+
+---
+
+TABLA: store_features
+- id: uuid (primary key)
+- code: varchar
+- name: varchar
+- description: text
+- icon: varchar
+- price: numeric
+- is_active: boolean
+- created_at: timestamp
+
+---
+
+TABLA: store_purchased_features
+- id: uuid (primary key)
+- store_id: uuid (foreign key → stores)
+- feature_code: varchar
+- is_active: boolean
+- purchased_at: timestamp
+- expires_at: timestamp
+
+---
+
+TABLA: page_views
+- id: uuid (primary key)
+- store_id: uuid (foreign key → stores)
+- page_path: text
+- visitor_id: text
+- referrer: text
+- user_agent: text
+- country: text
+- created_at: timestamp
+
+---
+
+TABLA: platform_settings
+- key: varchar (primary key)
+- value: jsonb
+- created_at: timestamp
+- updated_at: timestamp
+
+================================================================================
+3. ESTRUCTURA DE CARPETAS DEL PROYECTO
+================================================================================
+
+tol.ar (Super Admin + Landing):
+├── app/
+│   ├── page.tsx                    (Landing principal)
+│   ├── layout.tsx                  (Layout global)
+│   ├── globals.css                 (Estilos globales)
+│   ├── super-admin/                (Panel super admin)
+│   └── api/
+│       └── super-admin/            (APIs del super admin)
+├── components/
+│   ├── super-admin/                (6 componentes)
+│   ├── landing/                    (6 componentes)
+│   └── ui/                         (57 componentes shadcn)
+└── lib/
+    ├── supabase/server.ts
+    └── utils.ts
+
+Template1 (Tienda + Admin del dueño):
+├── app/
+│   ├── tienda/[subdomain]/         (7 páginas de tienda)
+│   ├── admin/                      (Admin del dueño)
+│   └── api/
+│       ├── orders/
+│       ├── products/
+│       ├── categories/
+│       ├── mercadopago/
+│       ├── shipping/
+│       ├── store/
+│       └── upload/
+├── components/
+│   ├── store/                      (12 componentes)
+│   └── admin/                      (12 componentes)
+└── lib/
+    ├── services/                   (5 archivos)
+    ├── types.ts
+    ├── store-context.ts
+    └── supabase/server.ts
+
+================================================================================
+4. INTEGRACIONES CONFIGURADAS
+================================================================================
+
+- Supabase: Base de datos y autenticación
+- Vercel Blob: Almacenamiento de imágenes
+- Resend: Envío de emails
+- MercadoPago: Pagos (modo prueba y producción)
+- Andreani: Envíos (cotización y tracking)
+
+================================================================================
+5. FUNCIONALIDADES IMPLEMENTADAS
+================================================================================
+
+SUPER ADMIN (tol.ar):
+- Login con contraseña
+- Ver todas las tiendas
+- Activar/desactivar tiendas
+- Ver estadísticas globales
+- Gestionar planes
+
+ADMIN DE TIENDA (Template1):
+- Login con contraseña
+- Gestión de productos (crear, editar, borrar)
+- Gestión de categorías
+- Ver y gestionar pedidos
+- Configurar métodos de pago
+- Configurar métodos de envío
+- Configurar redes sociales
+- Configurar banner y diseño
+- Estadísticas de la tienda
+
+TIENDA PÚBLICA (Template1):
+- Página principal con banner y productos destacados
+- Catálogo de productos con filtros
+- Página de producto individual
+- Carrito de compras (localStorage)
+- Checkout completo
+- Integración MercadoPago (redirect y popup)
+- Cálculo de envío con Andreani
+- Páginas personalizadas
+
+================================================================================
+6. CÓMO RECUPERAR EL PROYECTO
+================================================================================
+
+PASO 1: Crear proyecto nuevo en v0.app
+
+PASO 2: Subir el ZIP del código
+
+PASO 3: Configurar variables de entorno en Vars
+
+PASO 4: La base de datos ya está en Supabase (no se pierde)
+
+PASO 5: Publicar a Vercel
+
+PASO 6: Configurar dominios en Vercel:
+- tol.ar → Proyecto principal
+- template1.tol.ar → Proyecto Template1
+
+================================================================================
+FIN DEL BACKUP
+================================================================================
