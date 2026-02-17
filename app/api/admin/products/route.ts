@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase/server"
+import { notifyGoogleIndex } from "@/lib/google-indexing"
 
 export async function GET(request: NextRequest) {
   try {
@@ -82,6 +83,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
+    // Notificar a Google Indexing API
+    const { data: store } = await supabase.from("stores").select("subdomain").eq("id", storeId).single()
+    if (store && data) {
+      const productUrl = `https://${store.subdomain}.tol.ar/producto/${data.slug}`
+      notifyGoogleIndex(productUrl).catch(() => {})
+    }
+
     return NextResponse.json({ product: data })
   } catch (error) {
     console.error("Error creating product:", error)
@@ -143,6 +151,15 @@ export async function PUT(request: NextRequest) {
     if (error) {
       console.error("Error updating product:", error)
       return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+
+    // Notificar a Google Indexing API
+    if (storeId && data) {
+      const { data: store } = await supabase.from("stores").select("subdomain").eq("id", storeId).single()
+      if (store) {
+        const productUrl = `https://${store.subdomain}.tol.ar/producto/${data.slug}`
+        notifyGoogleIndex(productUrl).catch(() => {})
+      }
     }
 
     return NextResponse.json({ product: data })
