@@ -85,7 +85,7 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
       {value ? (
         <div className="relative">
           <img
-            src={value || "/placeholder.svg"}
+            src={value || "/images/placeholders/placeholder.svg"}
             alt="Producto"
             className="w-full h-48 object-cover rounded-lg border"
           />

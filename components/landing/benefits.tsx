@@ -77,7 +77,7 @@ export function Benefits() {
         {/* Texto adicional para SEO - contenido valioso */}
         <div className="mt-16 max-w-4xl mx-auto">
           <h3 className="text-2xl font-bold mb-4 text-center">
-            Por que crear tu tienda online con tol.ar en 2025
+            Por que crear tu tienda online con tol.ar en 2026
           </h3>
           <div className="prose prose-slate max-w-none text-muted-foreground space-y-4">
             <p>

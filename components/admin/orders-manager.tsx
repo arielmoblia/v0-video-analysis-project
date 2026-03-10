@@ -499,7 +499,7 @@ export function OrdersManager({ storeId, storeName = "Tienda" }: OrdersManagerPr
                             <div className="flex items-center gap-3">
                               {item.image_url && (
                                 <img
-                                  src={item.image_url || "/placeholder.svg"}
+                                  src={item.image_url || "/images/placeholders/placeholder.svg"}
                                   alt={item.name}
                                   className="w-12 h-12 object-cover rounded"
                                 />

@@ -172,10 +172,10 @@ export default function PagosPage() {
                 <video 
                   controls 
                   className="w-full h-full object-contain"
-                  poster="/placeholder.svg?height=720&width=1280"
+                  poster="/images/placeholders/placeholder.svg?height=720&width=1280"
                 >
                   <source 
-                    src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/MERCADO%20PAGO-K2onX8QsD7YoIdejqJw8ekSlrP2VG3.mp4"
+                    src="/videos/mercado-pago-tutorial.mp4"
                     type="video/mp4" 
                   />
                   Tu navegador no soporta el elemento de video.

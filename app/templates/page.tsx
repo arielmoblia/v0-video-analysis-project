@@ -25,7 +25,7 @@ const templatesFree = [
     subtitle: "Productos simples",
     description: "Productos con unidades (ml, gr, oz) sin variantes de talla.",
     idealFor: ["Cosméticos", "Perfumería", "Accesorios", "Artesanías"],
-    image: "/cosmetics-store-pink-elegant-beauty-products.jpg",
+    image: "/images/templates/cosmetics-store-pink-elegant-beauty-products.jpg",
     previewUrl: "https://template-cosmeticos.tol.ar",
     color: "from-pink-500 to-rose-500",
     icon: Sparkles,
@@ -36,7 +36,7 @@ const templatesFree = [
     subtitle: "Tallas de letras",
     description: "Productos con tallas XS, S, M, L, XL, XXL.",
     idealFor: ["Remeras", "Pantalones", "Vestidos", "Camperas"],
-    image: "/clothing-fashion-store-modern-shirts-pants-apparel.jpg",
+    image: "/images/templates/clothing-fashion-store-modern-shirts-pants-apparel.jpg",
     previewUrl: "https://template-ropa.tol.ar",
     color: "from-blue-500 to-indigo-500",
     icon: Shirt,
@@ -48,7 +48,7 @@ const templatesFree = [
     subtitle: "Tallas numéricas",
     description: "Productos con tallas numéricas (34 al 46).",
     idealFor: ["Zapatos", "Zapatillas", "Botas", "Sandalias"],
-    image: "/footwear-shoes-store-modern-sneakers-boots-elegant.jpg",
+    image: "/images/templates/footwear-shoes-store-modern-sneakers-boots-elegant.jpg",
     previewUrl: "https://template-calzado.tol.ar",
     color: "from-amber-500 to-orange-500",
     icon: Footprints,
@@ -60,7 +60,7 @@ const templatesFree = [
     subtitle: "Solo cantidad",
     description: "Productos sin tallas, ideal para tecnología.",
     idealFor: ["Celulares", "Computación", "Gaming", "Audio"],
-    image: "/electronics-store-modern-phones-gadgets-tech-devic.jpg",
+    image: "/images/templates/electronics-store-modern-phones-gadgets-tech-devic.jpg",
     previewUrl: "https://template-electronica.tol.ar",
     color: "from-emerald-500 to-teal-500",
     icon: Smartphone,
@@ -74,7 +74,7 @@ const templatesPaid = [
     name: "Luxury",
     subtitle: "Elegante y premium",
     description: "Diseño oscuro con detalles dorados para marcas premium.",
-    image: "/luxury-elegant-store-dark-gold.jpg",
+    image: "/images/templates/luxury-elegant-store-dark-gold.jpg",
     previewUrl: "https://template-luxury.tol.ar",
     price: 2,
   },
@@ -83,7 +83,7 @@ const templatesPaid = [
     name: "Minimal",
     subtitle: "Limpio y moderno",
     description: "Diseño minimalista con mucho espacio en blanco.",
-    image: "/minimal-clean-white-store-modern.jpg",
+    image: "/images/templates/minimal-clean-white-store-modern.jpg",
     previewUrl: "https://template-minimal.tol.ar",
     price: 2,
   },
@@ -92,7 +92,7 @@ const templatesPaid = [
     name: "Bold",
     subtitle: "Colorido y vibrante",
     description: "Colores llamativos para marcas jóvenes y dinámicas.",
-    image: "/bold-colorful-vibrant-store-young.jpg",
+    image: "/images/templates/bold-colorful-vibrant-store-young.jpg",
     previewUrl: "https://template-bold.tol.ar",
     price: 2,
   },
@@ -101,7 +101,7 @@ const templatesPaid = [
     name: "Vintage",
     subtitle: "Clásico y artesanal",
     description: "Estilo retro para productos artesanales o vintage.",
-    image: "/vintage-retro-store-classic-artisan.jpg",
+    image: "/images/templates/vintage-retro-store-classic-artisan.jpg",
     previewUrl: "https://template-vintage.tol.ar",
     price: 2,
   },
@@ -209,7 +209,7 @@ export default function TemplatesPage() {
 
 <div className="relative h-40 overflow-hidden">
                                             <Image
-                                              src={template.image || "/placeholder.svg"}
+                                              src={template.image || "/images/placeholders/placeholder.svg"}
                                               alt={template.name}
                                               fill
                                               className="object-cover"
@@ -342,7 +342,7 @@ export default function TemplatesPage() {
 
 <div className="relative h-48 overflow-hidden">
                                           <Image
-                                            src={template.image || "/placeholder.svg"}
+                                            src={template.image || "/images/placeholders/placeholder.svg"}
                                             alt={template.name}
                                             fill
                                             className="object-cover group-hover:scale-105 transition-transform duration-300"

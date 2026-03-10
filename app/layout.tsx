@@ -98,15 +98,15 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/icon-light-32x32.png",
+        url: "/icons/icon-light-32x32.png",
         media: "(prefers-color-scheme: light)",
       },
       {
-        url: "/icon-dark-32x32.png",
+        url: "/icons/icon-dark-32x32.png",
         media: "(prefers-color-scheme: dark)",
       },
       {
-        url: "/icon.svg",
+        url: "/icons/icon.svg",
         type: "image/svg+xml",
       },
     ],
@@ -133,7 +133,7 @@ export default function RootLayout({
         {/* Precargar imagen hero (LCP) - CRITICO para performance */}
         <link
           rel="preload"
-          href="/hero-woman-video.png"
+          href="/images/heroes/hero-woman-video.png"
           as="image"
           type="image/png"
           fetchPriority="high"

@@ -129,7 +129,7 @@ export function ChatFlotante() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/30">
             <Image
-              src={asistente.foto || "/placeholder.svg"}
+              src={asistente.foto || "/images/placeholders/placeholder.svg"}
               alt={asistente.nombre}
               width={40}
               height={40}
@@ -173,7 +173,7 @@ export function ChatFlotante() {
               <div className="text-center py-8">
                 <div className="w-16 h-16 rounded-full overflow-hidden mx-auto mb-4 border-2 border-green-200">
                   <Image
-                    src={asistente.foto || "/placeholder.svg"}
+                    src={asistente.foto || "/images/placeholders/placeholder.svg"}
                     alt={asistente.nombre}
                     width={64}
                     height={64}

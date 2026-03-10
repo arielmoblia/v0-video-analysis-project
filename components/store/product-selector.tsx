@@ -42,7 +42,7 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false }: 
   
   // Si no hay imagenes, usar placeholder
   if (allImages.length === 0) {
-    allImages.push("/placeholder.svg")
+    allImages.push("/images/placeholders/placeholder.svg")
   }
   
   const [selectedImage, setSelectedImage] = useState(0)
@@ -73,7 +73,7 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false }: 
                 }`}
               >
                 <Image
-                  src={img || "/placeholder.svg"}
+                  src={img || "/images/placeholders/placeholder.svg"}
                   alt={`${product.name} - Imagen ${index + 1}`}
                   fill
                   className="object-cover"
@@ -87,7 +87,7 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false }: 
         {/* Imagen principal */}
         <div className="relative flex-1 aspect-square bg-neutral-100 rounded-lg overflow-hidden">
           <Image
-            src={allImages[selectedImage] || "/placeholder.svg"}
+            src={allImages[selectedImage] || "/images/placeholders/placeholder.svg"}
             alt={product.name}
             fill
             className="object-cover"

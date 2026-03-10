@@ -2,35 +2,37 @@ import { createClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export async function GET() {
   try {
-    // Verificar autenticacion del super admin
     const cookieStore = await cookies()
-    const authCookie = cookieStore.get("super_admin_auth")
-    
-    if (!authCookie || authCookie.value !== "true") {
+    const adminCookie = cookieStore.get("super_admin")
+    if (!adminCookie || adminCookie.value !== "true") {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
-    // Obtener tiendas borradas
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
     const { data: stores, error } = await supabase
-      .from("deleted_stores")
-      .select("*")
-      .order("deleted_at", { ascending: false })
+      .from("stores")
+      .select("id, username, email, subdomain, site_title, plan, created_at, updated_at, status")
+      .eq("status", "inactive")
+      .order("updated_at", { ascending: false })
 
     if (error) {
-      console.error("Error fetching deleted stores:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ stores: stores || [] })
+    const mapped = (stores || []).map((s) => ({
+      ...s,
+      deleted_at: s.updated_at,
+      reason: "inactividad",
+    }))
+
+    return NextResponse.json({ stores: mapped })
   } catch (error) {
-    console.error("Error in deleted-stores API:", error)
     return NextResponse.json({ error: "Error interno" }, { status: 500 })
   }
 }

@@ -633,7 +633,7 @@ export function SEOManager({ storeId, subdomain, storeName }: SEOManagerProps) {
                 <div className="border rounded-lg overflow-hidden">
                   <div className="bg-slate-200 h-40 flex items-center justify-center">
                     {seoData.og_image ? (
-                      <img src={seoData.og_image || "/placeholder.svg"} alt="Preview" className="w-full h-full object-cover" />
+                      <img src={seoData.og_image || "/images/placeholders/placeholder.svg"} alt="Preview" className="w-full h-full object-cover" />
                     ) : (
                       <ImageIcon className="w-12 h-12 text-slate-400" />
                     )}

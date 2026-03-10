@@ -102,7 +102,7 @@ export function MultiImageUpload({ value = [], onChange, maxImages = 5 }: MultiI
       {value.length > 0 && (
         <div className="relative">
           <img
-            src={value[0] || "/placeholder.svg"}
+            src={value[0] || "/images/placeholders/placeholder.svg"}
             alt="Imagen principal"
             className="w-full h-48 object-cover rounded-lg border-2 border-green-500"
           />
@@ -131,7 +131,7 @@ export function MultiImageUpload({ value = [], onChange, maxImages = 5 }: MultiI
               onClick={() => handleSetPrimary(index + 1)}
             >
               <img
-                src={url || "/placeholder.svg"}
+                src={url || "/images/placeholders/placeholder.svg"}
                 alt={`Imagen ${index + 2}`}
                 className="w-16 h-16 object-cover rounded border hover:border-green-500 transition-colors"
               />

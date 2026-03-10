@@ -651,7 +651,7 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
                     <div className="relative h-16 w-16 bg-neutral-100 rounded flex-shrink-0">
                       {item.product.image_url ? (
                         <Image
-                          src={item.product.image_url || "/placeholder.svg"}
+                          src={item.product.image_url || "/images/placeholders/placeholder.svg"}
                           alt={item.product.name}
                           fill
                           className="object-cover rounded"

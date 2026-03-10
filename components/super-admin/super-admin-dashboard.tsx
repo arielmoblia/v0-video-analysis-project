@@ -552,7 +552,7 @@ export function SuperAdminDashboard() {
                 onClick={() => setPlanFilter("deleted")}
                 className={planFilter === "deleted" ? "bg-red-600 text-white" : "bg-transparent border-red-300 text-red-600 hover:bg-red-50"}
               >
-                BORRADAS POR INACTIVIDAD ({deletedStores.length})
+                INACTIVAS ({deletedStores.length})
               </Button>
             </div>
 

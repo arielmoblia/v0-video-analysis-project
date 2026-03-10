@@ -21,7 +21,7 @@ export function StoreHero({ store }: StoreHeroProps) {
   // Usar imagen de la tienda, o fallback segun el subdomain, o default
   const subdomain = (store as any).subdomain || ""
   const fallbackBanner = FALLBACK_BANNERS[subdomain] || FALLBACK_BANNERS.default
-  const bannerImage = store.banner_image && store.banner_image !== "/placeholder.svg" 
+  const bannerImage = store.banner_image && store.banner_image !== "/images/placeholders/placeholder.svg" 
     ? store.banner_image 
     : fallbackBanner
   
@@ -32,7 +32,7 @@ export function StoreHero({ store }: StoreHeroProps) {
     <section className="relative h-[70vh] min-h-[500px] flex items-center justify-center overflow-hidden">
       {/* Background Image - Optimizado con next/image */}
       <Image
-        src={bannerImage || "/placeholder.svg"}
+        src={bannerImage || "/images/placeholders/placeholder.svg"}
         alt={`Banner de ${store.site_title}`}
         fill
         className="object-cover"

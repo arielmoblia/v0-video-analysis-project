@@ -69,7 +69,7 @@ export function ProductGrid({ products, subdomain }: ProductGridProps) {
       {products.map((product, index) => {
         // Usar imagen del producto o fallback segun subdomain
         const productImage = product.image_url && 
-          product.image_url !== "/placeholder.svg" && 
+          product.image_url !== "/images/placeholders/placeholder.svg" && 
           !product.image_url.includes("placeholder")
             ? product.image_url 
             : getProductFallbackImage(subdomain, index)
@@ -79,7 +79,7 @@ export function ProductGrid({ products, subdomain }: ProductGridProps) {
           <Link href={`${basePath}/producto/${product.slug}`}>
             <div className="aspect-[3/4] relative overflow-hidden bg-neutral-100 mb-4">
               <Image
-                src={productImage || "/placeholder.svg"}
+                src={productImage || "/images/placeholders/placeholder.svg"}
                 alt={product.name}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-500"

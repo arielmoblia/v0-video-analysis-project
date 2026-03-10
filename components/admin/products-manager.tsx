@@ -674,7 +674,7 @@ export function ProductsManager({ storeId, template = "default", customVariants,
                   <td className="py-3">
                     {product.image_url ? (
                       <img
-                        src={product.image_url || "/placeholder.svg"}
+                        src={product.image_url || "/images/placeholders/placeholder.svg"}
                         alt={product.name}
                         className="w-12 h-12 object-cover rounded"
                       />

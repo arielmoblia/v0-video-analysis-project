@@ -29,7 +29,7 @@ export function Hero() {
           aria-label="Ver video tutorial de como crear tu tienda"
         >
           <Image
-            src="/hero-woman-video.png"
+            src="/images/heroes/hero-woman-video.png"
             alt="Ver video tutorial - Cómo hacer una tienda en tol.ar"
             fill
             className="object-contain object-bottom"

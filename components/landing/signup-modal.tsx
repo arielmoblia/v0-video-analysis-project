@@ -79,7 +79,7 @@ const premiumTemplates = [
     name: "Luxury",
     subtitle: "Diseño premium",
     description: "Estilo elegante y sofisticado para marcas de alta gama.",
-    image: "/luxury-elegant-store-dark-gold.jpg",
+    image: "/images/templates/luxury-elegant-store-dark-gold.jpg",
     previewUrl: "#",
     price: 2000,
     comingSoon: true,
@@ -89,7 +89,7 @@ const premiumTemplates = [
     name: "Minimal",
     subtitle: "Diseño minimalista",
     description: "Líneas limpias y espacios amplios para destacar tus productos.",
-    image: "/minimal-clean-white-store-modern.jpg",
+    image: "/images/templates/minimal-clean-white-store-modern.jpg",
     previewUrl: "#",
     price: 2000,
     comingSoon: true,
@@ -99,7 +99,7 @@ const premiumTemplates = [
     name: "Bold",
     subtitle: "Diseño audaz",
     description: "Colores vibrantes y tipografías impactantes para marcas jóvenes.",
-    image: "/bold-colorful-vibrant-store-young.jpg",
+    image: "/images/templates/bold-colorful-vibrant-store-young.jpg",
     previewUrl: "#",
     price: 2000,
     comingSoon: true,
@@ -109,7 +109,7 @@ const premiumTemplates = [
     name: "Vintage",
     subtitle: "Diseño retro",
     description: "Estética clásica con toques nostálgicos para productos artesanales.",
-    image: "/vintage-retro-store-classic-artisan.jpg",
+    image: "/images/templates/vintage-retro-store-classic-artisan.jpg",
     previewUrl: "#",
     price: 2000,
     comingSoon: true,
@@ -454,7 +454,7 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
                           className="relative aspect-[3/4] bg-gray-100 group block"
                         >
                           <Image
-                            src={template.image || "/placeholder.svg"}
+                            src={template.image || "/images/placeholders/placeholder.svg"}
                             alt={template.name}
                             fill
                             className="object-cover object-top"
@@ -518,7 +518,7 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
 
 <div className="relative h-16 rounded-lg overflow-hidden mb-2 bg-muted">
                                           <Image
-                                            src={template.image || "/placeholder.svg"}
+                                            src={template.image || "/images/placeholders/placeholder.svg"}
                                             alt={template.name}
                                             fill
                                             className="object-cover grayscale"
