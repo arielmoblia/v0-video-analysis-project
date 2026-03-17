@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // Dominios raíz que NO son subdominios de tienda
-const ROOT_DOMAINS = ['tol.ar', 'www.tol.ar', 'localhost']
+const ROOT_DOMAINS = ['tol.ar', 'www.tol.ar', 'localhost', '157.173.212.229']
 
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || ''
