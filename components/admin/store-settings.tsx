@@ -30,6 +30,8 @@ export function StoreSettings({ store }: StoreSettingsProps) {
   const [socialFacebook, setSocialFacebook] = useState(store.social_facebook || "")
   const [socialTwitter, setSocialTwitter] = useState(store.social_twitter || "")
   const [socialTiktok, setSocialTiktok] = useState(store.social_tiktok || "")
+  const [storeAddress, setStoreAddress] = useState(store.address || "")
+  const [storePhone, setStorePhone] = useState(store.phone || "")
   const [socialWhatsapp, setSocialWhatsapp] = useState(store.social_whatsapp || "")
   const [socialYoutube, setSocialYoutube] = useState(store.social_youtube || "")
 
@@ -69,6 +71,8 @@ export function StoreSettings({ store }: StoreSettingsProps) {
           social_whatsapp: socialWhatsapp,
           social_youtube: socialYoutube,
           footer_subtitle: footerSubtitle,
+          address: storeAddress,
+          phone: storePhone,
         }),
       })
 
@@ -122,7 +126,23 @@ export function StoreSettings({ store }: StoreSettingsProps) {
             <Label>Estado</Label>
             <Input value={store.status} disabled />
           </div>
-          <p className="text-sm text-neutral-500">Para modificar estos datos, contactá a soporte.</p>
+          <div>
+            <Label>Dirección</Label>
+            <Input
+              value={storeAddress}
+              onChange={(e) => setStoreAddress(e.target.value)}
+              placeholder="Ej: Av. Corrientes 1234, Buenos Aires"
+            />
+          </div>
+          <div>
+            <Label>Teléfono</Label>
+            <Input
+              value={storePhone}
+              onChange={(e) => setStorePhone(e.target.value)}
+              placeholder="Ej: +54 11 1234-5678"
+            />
+          </div>
+          <p className="text-sm text-neutral-500">Para modificar nombre, subdominio o email, contactá a soporte.</p>
         </CardContent>
       </Card>
 

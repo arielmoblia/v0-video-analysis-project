@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { encryptFields, decryptFields } from "@/lib/crypto"
 import { type NextRequest, NextResponse } from "next/server"
 
 export async function GET(request: NextRequest) {
@@ -16,7 +17,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json(data || null)
+  if (data) {
+    const decrypted = decryptFields(data, ["mercadopago_access_token","mercadopago_test_token","mobbex_api_key","mobbex_access_token"])
+    return NextResponse.json(decrypted)
+  }
+  return NextResponse.json(null)
 }
 
 export async function POST(request: NextRequest) {
@@ -39,10 +44,11 @@ export async function POST(request: NextRequest) {
 
   if (existing) {
     // Actualizar
+    const encryptedData = encryptFields(paymentData, ["mercadopago_access_token","mercadopago_test_token","mobbex_api_key","mobbex_access_token"])
     const { error } = await supabase
       .from("payment_methods")
       .update({
-        ...paymentData,
+        ...encryptedData,
         updated_at: new Date().toISOString(),
       })
       .eq("store_id", storeId)
@@ -54,9 +60,10 @@ export async function POST(request: NextRequest) {
     }
   } else {
     // Insertar
+    const encryptedDataInsert = encryptFields(paymentData, ["mercadopago_access_token","mercadopago_test_token","mobbex_api_key","mobbex_access_token"])
     const { error } = await supabase.from("payment_methods").insert({
       store_id: storeId,
-      ...paymentData,
+      ...encryptedDataInsert,
     })
 
     console.log("[v0] Insert result - Error:", error?.message)

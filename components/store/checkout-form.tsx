@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { ArrowLeft, CreditCard, Banknote, Building2, Smartphone, Truck, CheckCircle, Loader2 } from "lucide-react"
+import { ArrowLeft, CreditCard, Banknote, Building2, Smartphone, Wallet, Truck, CheckCircle, Loader2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -38,9 +38,22 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
   })
   const [paymentSettings, setPaymentSettings] = useState<{
     cash_enabled?: boolean
+    cash_instructions?: string
     transfer_enabled?: boolean
+    transfer_cbu?: string
+    transfer_alias?: string
+    transfer_bank_name?: string
+    transfer_account_holder?: string
     card_enabled?: boolean
+    card_instructions?: string
     mercadopago_enabled?: boolean
+    modo_enabled?: boolean
+    modo_phone?: string
+    uala_enabled?: boolean
+    uala_link?: string
+    mobbex_enabled?: boolean
+    rapipago_enabled?: boolean
+    rapipago_instructions?: string
   } | null>(null)
   const [loadingPayments, setLoadingPayments] = useState(true)
 
@@ -54,19 +67,36 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
         const normalizedData = data ? {
           ...data,
           cash_enabled: data.cash_enabled === true || data.cash_enabled === 1,
+          cash_instructions: data.cash_instructions || "",
           transfer_enabled: data.transfer_enabled === true || data.transfer_enabled === 1,
+          transfer_cbu: data.transfer_cbu || "",
+          transfer_alias: data.transfer_alias || "",
+          transfer_bank_name: data.transfer_bank_name || "",
+          transfer_account_holder: data.transfer_account_holder || "",
           card_enabled: data.card_enabled === true || data.card_enabled === 1,
+          card_instructions: data.card_instructions || "",
           mercadopago_enabled: data.mercadopago_enabled === true || data.mercadopago_enabled === 1,
+          modo_enabled: data.modo_enabled === true || data.modo_enabled === 1,
+          modo_phone: data.modo_phone || "",
+          uala_enabled: data.uala_enabled === true || data.uala_enabled === 1,
+          uala_link: data.uala_link || "",
+          mobbex_enabled: data.mobbex_enabled === true || data.mobbex_enabled === 1,
+          rapipago_enabled: data.rapipago_enabled === true || data.rapipago_enabled === 1,
+          rapipago_instructions: data.rapipago_instructions || "",
         } : null
         
         setPaymentSettings(normalizedData)
         
         // Seleccionar el primer metodo habilitado por defecto
         if (normalizedData) {
-          if (normalizedData.cash_enabled) setOrderData(prev => ({ ...prev, paymentMethod: "cash" }))
+          if (normalizedData.mercadopago_enabled) setOrderData(prev => ({ ...prev, paymentMethod: "mercadopago" }))
+          else if (normalizedData.mobbex_enabled) setOrderData(prev => ({ ...prev, paymentMethod: "mobbex" }))
           else if (normalizedData.transfer_enabled) setOrderData(prev => ({ ...prev, paymentMethod: "transfer" }))
+          else if (normalizedData.cash_enabled) setOrderData(prev => ({ ...prev, paymentMethod: "cash" }))
           else if (normalizedData.card_enabled) setOrderData(prev => ({ ...prev, paymentMethod: "card" }))
-          else if (normalizedData.mercadopago_enabled) setOrderData(prev => ({ ...prev, paymentMethod: "mercadopago" }))
+          else if (normalizedData.modo_enabled) setOrderData(prev => ({ ...prev, paymentMethod: "modo" }))
+          else if (normalizedData.uala_enabled) setOrderData(prev => ({ ...prev, paymentMethod: "uala" }))
+          else if (normalizedData.rapipago_enabled) setOrderData(prev => ({ ...prev, paymentMethod: "rapipago" }))
           else setOrderData(prev => ({ ...prev, paymentMethod: "" }))
         } else {
           setOrderData(prev => ({ ...prev, paymentMethod: "" }))
@@ -202,6 +232,40 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
       const data = await response.json()
 
       if (response.ok) {
+        // Si eligió Mobbex, redirigir al checkout de Mobbex
+        if (orderData.paymentMethod === "mobbex") {
+          try {
+            const mobbexResponse = await fetch("/api/payments/mobbex/create-checkout", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                storeId: store.id,
+                orderId: data.orderId,
+                items: items.map((item) => ({
+                  name: item.product.name,
+                  price: Number(item.product.price),
+                  quantity: item.quantity,
+                })),
+                customer: {
+                  name: orderData.name,
+                  email: orderData.email,
+                  phone: orderData.phone,
+                },
+              }),
+            })
+            const mobbexData = await mobbexResponse.json()
+            if (mobbexResponse.ok && mobbexData.checkoutUrl) {
+              window.location.href = mobbexData.checkoutUrl
+              return
+            } else {
+              alert("Error al conectar con Mobbex: " + (mobbexData.error || "Error desconocido") + ". El pedido fue creado, te contactaremos para coordinar el pago.")
+            }
+          } catch (mobbexError) {
+            console.error("Error al crear checkout Mobbex:", mobbexError)
+            alert("Error al conectar con Mobbex. El pedido fue creado, te contactaremos para coordinar el pago.")
+          }
+        }
+
         // Si eligió MercadoPago, redirigir al checkout de MP
         if (orderData.paymentMethod === "mercadopago") {
           try {
@@ -304,9 +368,68 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
           <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
           <h1 className="text-2xl font-light mb-2">¡Pedido confirmado!</h1>
           {orderId && <p className="text-sm text-neutral-500 mb-2">Orden #{orderId.slice(0, 8).toUpperCase()}</p>}
-          <p className="text-neutral-600 mb-6">
-            Recibimos tu pedido. Te contactaremos pronto para coordinar el pago y envío.
-          </p>
+          <p className="text-sm text-neutral-500 mb-4">Te enviamos un email con todos los datos de tu compra.</p>
+          {/* Instrucciones de pago según el método */}
+          {orderData.paymentMethod === "transfer" && paymentSettings?.transfer_cbu && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-left">
+              <p className="font-medium text-blue-800 mb-2">Datos para la transferencia</p>
+              {paymentSettings.transfer_bank_name && <p className="text-sm text-blue-700">Banco: <strong>{paymentSettings.transfer_bank_name}</strong></p>}
+              {paymentSettings.transfer_account_holder && <p className="text-sm text-blue-700">Titular: <strong>{paymentSettings.transfer_account_holder}</strong></p>}
+              <p className="text-sm text-blue-700">CBU: <strong>{paymentSettings.transfer_cbu}</strong></p>
+              {paymentSettings.transfer_alias && <p className="text-sm text-blue-700">Alias: <strong>{paymentSettings.transfer_alias}</strong></p>}
+              <p className="text-xs text-blue-600 mt-2">Una vez realizada la transferencia el vendedor confirmará tu pedido.</p>
+            </div>
+          )}
+
+          {orderData.paymentMethod === "cash" && paymentSettings?.cash_instructions && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4 text-left">
+              <p className="font-medium text-green-800 mb-2">Instrucciones para el pago en efectivo</p>
+              <p className="text-sm text-green-700">{paymentSettings.cash_instructions}</p>
+            </div>
+          )}
+
+          {orderData.paymentMethod === "modo" && paymentSettings?.modo_phone && (
+            <div className="bg-violet-50 border border-violet-200 rounded-lg p-4 mb-4 text-left">
+              <p className="font-medium text-violet-800 mb-2">Pagá con MODO</p>
+              <p className="text-sm text-violet-700">Buscá al vendedor en MODO con el número:</p>
+              <p className="text-lg font-bold text-violet-800 mt-1">{paymentSettings.modo_phone}</p>
+              <p className="text-xs text-violet-600 mt-2">Sin comisión · El dinero llega directo a la cuenta del vendedor.</p>
+            </div>
+          )}
+
+          {orderData.paymentMethod === "uala" && paymentSettings?.uala_link && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 text-left">
+              <p className="font-medium text-red-800 mb-2">Pagá con Ualá Bis</p>
+              <p className="text-sm text-red-700 mb-2">Hacé click en el link para completar tu pago:</p>
+              <a href={paymentSettings.uala_link} target="_blank" rel="noopener noreferrer" className="inline-block bg-red-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-red-700">
+                Pagar con Ualá Bis
+              </a>
+            </div>
+          )}
+
+          {orderData.paymentMethod === "rapipago" && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4 text-left">
+              <p className="font-medium text-orange-800 mb-2">Rapipago / Pago Fácil</p>
+              {paymentSettings?.rapipago_instructions
+                ? <p className="text-sm text-orange-700">{paymentSettings.rapipago_instructions}</p>
+                : <p className="text-sm text-orange-700">El vendedor te enviará el código de pago por email.</p>
+              }
+            </div>
+          )}
+
+          {orderData.paymentMethod === "card" && paymentSettings?.card_instructions && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-left">
+              <p className="font-medium text-blue-800 mb-2">Pago con tarjeta</p>
+              <p className="text-sm text-blue-700">{paymentSettings.card_instructions}</p>
+            </div>
+          )}
+
+          {!["transfer","cash","modo","uala","rapipago","card","mercadopago","mobbex"].includes(orderData.paymentMethod) && (
+            <p className="text-neutral-600 mb-4">
+            Recibimos tu pedido. En breve te contactaremos para coordinar.
+            </p>
+          )}
+
           <Link href={getStoreUrl()}>
             <Button className="w-full">Volver a la tienda</Button>
           </Link>
@@ -570,8 +693,64 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
                         </div>
                       )}
                       
+                      {/* Mobbex */}
+                      {paymentSettings?.mobbex_enabled && (
+                        <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:border-black">
+                          <RadioGroupItem value="mobbex" id="mobbex" />
+                          <Label htmlFor="mobbex" className="flex items-center gap-3 cursor-pointer flex-1">
+                            <CreditCard className="h-5 w-5" />
+                            <div>
+                              <p className="font-medium">Mobbex</p>
+                              <p className="text-sm text-neutral-500">Todas las tarjetas y billeteras</p>
+                            </div>
+                          </Label>
+                        </div>
+                      )}
+
+                      {/* MODO */}
+                      {paymentSettings?.modo_enabled && (
+                        <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:border-black">
+                          <RadioGroupItem value="modo" id="modo" />
+                          <Label htmlFor="modo" className="flex items-center gap-3 cursor-pointer flex-1">
+                            <Smartphone className="h-5 w-5" />
+                            <div>
+                              <p className="font-medium">MODO</p>
+                              <p className="text-sm text-neutral-500">Pagá con QR desde tu banco · Sin comisión</p>
+                            </div>
+                          </Label>
+                        </div>
+                      )}
+
+                      {/* Ualá Bis */}
+                      {paymentSettings?.uala_enabled && (
+                        <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:border-black">
+                          <RadioGroupItem value="uala" id="uala" />
+                          <Label htmlFor="uala" className="flex items-center gap-3 cursor-pointer flex-1">
+                            <Wallet className="h-5 w-5" />
+                            <div>
+                              <p className="font-medium">Ualá Bis</p>
+                              <p className="text-sm text-neutral-500">Link de pago Ualá</p>
+                            </div>
+                          </Label>
+                        </div>
+                      )}
+
+                      {/* Rapipago */}
+                      {paymentSettings?.rapipago_enabled && (
+                        <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:border-black">
+                          <RadioGroupItem value="rapipago" id="rapipago" />
+                          <Label htmlFor="rapipago" className="flex items-center gap-3 cursor-pointer flex-1">
+                            <Building2 className="h-5 w-5" />
+                            <div>
+                              <p className="font-medium">Rapipago / Pago Fácil</p>
+                              <p className="text-sm text-neutral-500">Pagá en efectivo en puntos de cobranza</p>
+                            </div>
+                          </Label>
+                        </div>
+                      )}
+
                       {/* Si no hay ningún método habilitado, mostrar mensaje */}
-                      {!paymentSettings?.cash_enabled && !paymentSettings?.transfer_enabled && !paymentSettings?.card_enabled && !paymentSettings?.mercadopago_enabled && (
+                      {!paymentSettings?.cash_enabled && !paymentSettings?.transfer_enabled && !paymentSettings?.card_enabled && !paymentSettings?.mercadopago_enabled && !paymentSettings?.mobbex_enabled && !paymentSettings?.modo_enabled && !paymentSettings?.uala_enabled && !paymentSettings?.rapipago_enabled && (
                         <div className="text-center py-4 text-neutral-500">
                           <p>No hay métodos de pago configurados.</p>
                           <p className="text-sm">Contacta al vendedor para coordinar el pago.</p>
@@ -622,8 +801,12 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
                     <p className="font-medium">
                       {orderData.paymentMethod === "cash" && "Efectivo"}
                       {orderData.paymentMethod === "transfer" && "Transferencia bancaria"}
-                      {orderData.paymentMethod === "card" && "Tarjeta"}
+                      {orderData.paymentMethod === "card" && "Tarjeta presencial"}
                       {orderData.paymentMethod === "mercadopago" && "Mercado Pago"}
+                      {orderData.paymentMethod === "mobbex" && "Mobbex"}
+                      {orderData.paymentMethod === "modo" && "MODO"}
+                      {orderData.paymentMethod === "uala" && "Ualá Bis"}
+                      {orderData.paymentMethod === "rapipago" && "Rapipago / Pago Fácil"}
                     </p>
                   </div>
                 </div>

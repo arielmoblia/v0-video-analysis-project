@@ -3,6 +3,7 @@
 // ===========================================
 
 import { createClient } from "@/lib/supabase/server"
+import { decryptFields } from "@/lib/crypto"
 import type { PaymentMethods
  } from "@/lib/types"
 
@@ -52,7 +53,7 @@ export async function getMercadoPagoToken(storeId: string): Promise<{ token: str
     return {
       token,
       isTestMode,
-      checkoutType: data.mercadopago_checkout_type || "redirect"
+      checkoutType: decrypted.mercadopago_checkout_type || "redirect"
     }
   } catch (e) {
     console.error("[payments] Error in getMercadoPagoToken:", e)

@@ -64,8 +64,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Actualizar stock de cada producto
-    for (const item of items) {
+    // Actualizar stock solo si NO es pago online (MP/Mobbex descuentan en el webhook)
+    const skipStock = paymentMethod === "mercadopago" || paymentMethod === "mobbex"
+    if (!skipStock) for (const item of items) {
       if (item.productId) {
         // Obtener el producto actual
         const { data: product } = await supabase
@@ -99,7 +100,8 @@ export async function POST(request: Request) {
       }
     }
 
-    const { data: store } = await supabase.from("stores").select("site_title, email").eq("id", storeId).single()
+    const { data: store } = await supabase.from("stores").select("site_title, email, whatsapp_number, address, phone").eq("id", storeId).single()
+    const { data: paymentMethods } = await supabase.from("payment_methods").select("*").eq("store_id", storeId).single()
 
     const emailItems = items.map((item: any) => ({
       id: item.productId,
@@ -124,6 +126,21 @@ export async function POST(request: Request) {
       paymentMethod: paymentMethod,
       status: "pending",
       notes: shipping.notes,
+      paymentData: paymentMethods ? {
+        transfer_bank_name: paymentMethods.transfer_bank_name,
+        transfer_account_holder: paymentMethods.transfer_account_holder,
+        transfer_cbu: paymentMethods.transfer_cbu,
+        transfer_alias: paymentMethods.transfer_alias,
+        store_email: store?.email,
+        whatsapp_number: store?.whatsapp_number,
+        store_address: store?.address,
+        store_phone: store?.phone,
+        modo_phone: paymentMethods.modo_phone,
+        uala_link: paymentMethods.uala_link,
+        rapipago_instructions: paymentMethods.rapipago_instructions,
+        cash_instructions: paymentMethods.cash_instructions,
+        card_instructions: paymentMethods.card_instructions,
+      } : undefined,
     })
 
     return NextResponse.json({ success: true, orderId: order.id })

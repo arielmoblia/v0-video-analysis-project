@@ -45,12 +45,14 @@ const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 import { FeaturesAdmin } from "./features-admin"
+import { PlansDashboard } from "./plans-dashboard"
 import { PaymentsConfig } from "./payments-config"
 import { PlatformMarketing } from "./platform-marketing"
 import { SeoModule } from "./seo-module"
 import { CoreManager } from "./core-manager"
 import { TemplateManager } from "./template-manager"
 import { PromoMail } from "./promo-mail"
+import { PaisDominio } from "./pais-dominio"
 import { ScraperAdmin } from "./scraper-admin"
 
 interface StoreData {
@@ -90,6 +92,7 @@ export function SuperAdminDashboard() {
   const [stores, setStores] = useState<StoreData[]>([])
   const [deletedStores, setDeletedStores] = useState<DeletedStoreData[]>([])
   const [loading, setLoading] = useState(true)
+  const [deployStatus, setDeployStatus] = useState<'idle'|'building'|'done'|'error'>('idle')
   const [deleting, setDeleting] = useState<string | null>(null)
   
   // Estado para modal de features
@@ -98,10 +101,21 @@ export function SuperAdminDashboard() {
   const [loadingFeatures, setLoadingFeatures] = useState(false)
   const [savingFeature, setSavingFeature] = useState<string | null>(null)
 
+  async function handleDeploy() {
+    setDeployStatus('building')
+    await fetch('/api/super-admin/deploy', { method: 'POST' })
+    const interval = setInterval(async () => {
+      const res = await fetch('/api/super-admin/deploy')
+      const data = await res.json()
+      if (data.status === 'done') { setDeployStatus('done'); clearInterval(interval); setTimeout(() => setDeployStatus('idle'), 3000) }
+      if (data.status === 'error') { setDeployStatus('error'); clearInterval(interval) }
+    }, 3000)
+  }
+
   const fetchStores = async () => {
     setLoading(true)
     try {
-      const res = await fetch("/api/super-admin/stores")
+      const res = await fetch("/api/super-admin/stores", { cache: "no-store" })
       if (res.ok) {
         const data = await res.json()
         setStores(data.stores || [])
@@ -291,7 +305,7 @@ export function SuperAdminDashboard() {
     </th>
   )
   
-  const freeStores = stores.filter((s) => !s.plan || s.plan === "free").length
+  const freeStores = stores.filter((s) => !s.plan || s.plan === "free" || s.plan === "gratis").length
   const paidStores = stores.filter((s) => s.plan === "paid" || s.plan === "pro").length
   const templates = stores.filter((s) => s.plan === "templates").length
   const cositas = stores.filter((s) => s.plan === "cositas").length
@@ -301,7 +315,10 @@ export function SuperAdminDashboard() {
 
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  const inactiveStores = stores.filter((s) => s.plan !== "templates" && s.trial_expires_at && new Date(s.trial_expires_at) < new Date())
   const abandonedStores = stores.filter((s) => {
+    if (s.plan === "templates") return false
+    if (s.plan === "templates") return false
     const createdDate = new Date(s.created_at)
     return createdDate < thirtyDaysAgo && s.status === "active"
   }).length
@@ -316,6 +333,7 @@ export function SuperAdminDashboard() {
       if (planFilter === "socios") return s.plan === "socios"
       if (planFilter === "custom") return s.plan === "custom"
       if (planFilter === "mayoristas") return s.plan === "mayoristas"
+      if (planFilter === "inactive") return s.plan !== "templates" && !!s.trial_expires_at && new Date(s.trial_expires_at) < new Date()
       return true
     })
     .sort((a, b) => {
@@ -364,7 +382,7 @@ export function SuperAdminDashboard() {
   return (
     <div className="min-h-screen bg-slate-100">
       {/* Header */}
-      <header className="bg-slate-800 border-b border-slate-700 px-6 py-4">
+      <header className="bg-slate-800 border-b border-slate-700 px-6 py-4 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
@@ -375,6 +393,27 @@ export function SuperAdminDashboard() {
               <p className="text-sm text-slate-400">Panel de administración</p>
             </div>
           </div>
+          {deployStatus === 'building' && (
+            <button onClick={() => {}} className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm" style={{background:'#ca8a04',color:'white',cursor:'default'}}>
+              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+              Buildeando...
+            </button>
+          )}
+          {deployStatus === 'idle' && (
+            <button onClick={handleDeploy} className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm" style={{background:'#22c55e',color:'white'}}>
+              🚀 Subir a Producción
+            </button>
+          )}
+          {deployStatus === 'done' && (
+            <button onClick={() => setDeployStatus('idle')} className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm" style={{background:'#3b82f6',color:'white'}}>
+              ✅ ¡Listo!
+            </button>
+          )}
+          {deployStatus === 'error' && (
+            <button onClick={() => setDeployStatus('idle')} className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm" style={{background:'#ef4444',color:'white'}}>
+              ❌ Error — click para reintentar
+            </button>
+          )}
           <Button variant="ghost" onClick={handleLogout} className="text-slate-300 hover:text-white hover:bg-slate-700">
             <LogOut className="w-4 h-4 mr-2" />
             Salir
@@ -386,6 +425,10 @@ export function SuperAdminDashboard() {
         {/* Tabs for Stores, Plans, Analytics, and Payments */}
         <Tabs defaultValue="stores" className="space-y-6">
           <TabsList className="bg-white border border-slate-200 shadow-sm">
+            <TabsTrigger value="pais-dominio" className="data-[state=active]:bg-slate-100 text-slate-600 data-[state=active]:text-slate-900">
+              <Globe className="w-4 h-4 mr-2" />
+              País/Dominio
+            </TabsTrigger>
             <TabsTrigger value="stores" className="data-[state=active]:bg-slate-100 text-slate-600 data-[state=active]:text-slate-900">
               <Store className="w-4 h-4 mr-2" />
               Tiendas
@@ -394,13 +437,13 @@ export function SuperAdminDashboard() {
               <CreditCard className="w-4 h-4 mr-2" />
               Planes
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="data-[state=active]:bg-slate-100 text-slate-600 data-[state=active]:text-slate-900">
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Analytics
-            </TabsTrigger>
             <TabsTrigger value="payments" className="data-[state=active]:bg-slate-100 text-slate-600 data-[state=active]:text-slate-900">
               <CreditCard className="w-4 h-4 mr-2" />
               Pagos
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="data-[state=active]:bg-slate-100 text-slate-600 data-[state=active]:text-slate-900">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Estadísticas
             </TabsTrigger>
             <TabsTrigger value="marketing" className="data-[state=active]:bg-slate-100 text-slate-600 data-[state=active]:text-slate-900">
               <Megaphone className="w-4 h-4 mr-2" />
@@ -422,10 +465,7 @@ export function SuperAdminDashboard() {
               <Layers className="w-4 h-4 mr-1" />
               Templates
             </TabsTrigger>
-            <TabsTrigger value="promo-mail" className="data-[state=active]:bg-slate-100 text-slate-600 data-[state=active]:text-slate-900">
-              <Mail className="w-4 h-4 mr-1" />
-              Promo Mail
-            </TabsTrigger>
+
           </TabsList>
 
           <TabsContent value="stores" className="space-y-6">
@@ -547,12 +587,12 @@ export function SuperAdminDashboard() {
                 MAYORISTAS ({mayoristas})
               </Button>
               <Button
-                variant={planFilter === "deleted" ? "default" : "outline"}
+                variant={planFilter === "inactive" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setPlanFilter("deleted")}
-                className={planFilter === "deleted" ? "bg-red-600 text-white" : "bg-transparent border-red-300 text-red-600 hover:bg-red-50"}
+                onClick={() => setPlanFilter("inactive")}
+                className={planFilter === "inactive" ? "bg-red-600 text-white" : "bg-transparent border-red-300 text-red-600 hover:bg-red-50"}
               >
-                INACTIVAS ({deletedStores.length})
+                INACTIVAS ({inactiveStores.length})
               </Button>
             </div>
 
@@ -573,10 +613,9 @@ export function SuperAdminDashboard() {
               <CardContent>
                 {loading ? (
                   <div className="text-center py-8 text-slate-500">Cargando tiendas...</div>
-                ) : planFilter === "deleted" ? (
-                  /* Tabla de tiendas borradas */
-                  deletedStores.length === 0 ? (
-                    <div className="text-center py-8 text-slate-500">No hay tiendas borradas por inactividad</div>
+                ) : planFilter === "NUNCA" ? (
+                  filteredStores.length === 0 ? (
+                    <div className="text-center py-8 text-slate-500">No hay tiendas inactivas por el momento</div>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full">
@@ -738,7 +777,7 @@ export function SuperAdminDashboard() {
 
           {/* Plans Tab */}
           <TabsContent value="plans">
-            <FeaturesAdmin />
+            <PlansDashboard stores={stores} />
           </TabsContent>
 
           {/* Analytics Tab */}
@@ -776,8 +815,9 @@ export function SuperAdminDashboard() {
             <TemplateManager />
           </TabsContent>
 
-          <TabsContent value="promo-mail">
-            <PromoMail stores={stores} />
+
+          <TabsContent value="pais-dominio">
+            <PaisDominio />
           </TabsContent>
         </Tabs>
       </main>

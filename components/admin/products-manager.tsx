@@ -143,6 +143,9 @@ export function ProductsManager({ storeId, template = "default", customVariants,
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [showCsvImporter, setShowCsvImporter] = useState(false)
+  const [editableVariants, setEditableVariants] = useState<string[]>([])
+  const [newVariantInput, setNewVariantInput] = useState("")
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -158,6 +161,17 @@ export function ProductsManager({ storeId, template = "default", customVariants,
     fetchProducts()
     fetchCategories()
   }, [storeId])
+
+  useEffect(() => {
+    if (dialogOpen) {
+      setEditableVariants([...AVAILABLE_SIZES])
+      setNewVariantInput("")
+    }
+  }, [dialogOpen])
+
+  useEffect(() => {
+    setEditableVariants([...AVAILABLE_SIZES])
+  }, [variantMode])
 
   const fetchProducts = async () => {
     try {
@@ -348,6 +362,23 @@ export function ProductsManager({ storeId, template = "default", customVariants,
       ))
     } catch (error) {
       console.error("Error updating order:", error)
+    }
+  }
+
+  const handleDrop = async (dropIndex: number) => {
+    if (dragIndex === null || dragIndex === dropIndex) return
+    const reordered = [...products]
+    const [moved] = reordered.splice(dragIndex, 1)
+    reordered.splice(dropIndex, 0, moved)
+    const updated = reordered.map((p, i) => ({ ...p, display_order: i + 1 }))
+    setProducts(updated)
+    setDragIndex(null)
+    for (const p of updated) {
+      await fetch("/api/admin/products/order", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: p.id, displayOrder: p.display_order }),
+      })
     }
   }
 
@@ -570,51 +601,56 @@ export function ProductsManager({ storeId, template = "default", customVariants,
                     }
                   </p>
                   <div className="grid grid-cols-4 gap-2">
-                    {AVAILABLE_SIZES.map((size) => {
+                    {editableVariants.map((size, vIdx) => {
                       const sizeData = formData.sizeStocks.find((s) => s.size === size)
                       const isSelected = !!sizeData
                       return (
-                        <div key={size} className="flex flex-col items-center">
-                          <button
-                            type="button"
-                            onClick={() => toggleSize(size)}
-                            className={`
-                              w-full min-w-12 h-12 rounded-md border text-sm font-medium transition-colors px-2
-                              ${
-                                isSelected
-                                  ? "bg-black text-white border-black"
-                                  : "bg-white text-neutral-700 border-neutral-300 hover:border-neutral-400"
-                              }
-                            `}
-                          >
-                            {size}
-                          </button>
+                        <div key={vIdx} className="flex flex-col items-center gap-1">
+                          <div className="relative w-full">
+                            <button
+                              type="button"
+                              onClick={() => toggleSize(size)}
+                              className={`w-full min-w-12 h-10 rounded-md border text-xs font-medium transition-colors px-1 ${isSelected ? "bg-black text-white border-black" : "bg-white text-neutral-700 border-neutral-300 hover:border-neutral-400"}`}
+                            >{size}</button>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setEditableVariants(prev => prev.filter((_, i) => i !== vIdx)); setFormData(prev => ({ ...prev, sizeStocks: prev.sizeStocks.filter(s => s.size !== size) })) }}
+                              className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600 leading-none"
+                            >×</button>
+                          </div>
+                          <input
+                            type="text"
+                            value={size}
+                            onChange={(e) => { const nv = [...editableVariants]; nv[vIdx] = e.target.value; setEditableVariants(nv); if (isSelected) setFormData(prev => ({ ...prev, sizeStocks: prev.sizeStocks.map(s => s.size === size ? { ...s, size: e.target.value } : s) })) }}
+                            className="w-full h-6 text-center text-xs border border-neutral-200 rounded p-0.5 focus:outline-none focus:border-neutral-400"
+                            placeholder="Nombre"
+                          />
                           {isSelected && (
-                            <div className="flex flex-col gap-1 mt-1 w-full">
-                              <Input
-                                type="number"
-                                min="0"
-                                value={sizeData.stock}
-                                onChange={(e) => updateSizeStock(size, Number.parseInt(e.target.value) || 0)}
-                                className="w-full h-7 text-center text-xs p-1"
-                                placeholder="Stock"
-                              />
+                            <div className="flex flex-col gap-1 w-full">
+                              <Input type="number" min="0" value={sizeData.stock} onChange={(e) => updateSizeStock(size, Number.parseInt(e.target.value) || 0)} className="w-full h-7 text-center text-xs p-1" placeholder="Stock" />
                               {(variantConfig.type === "specs" || variantConfig.type === "volumes") && (
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  value={sizeData.price || ""}
-                                  onChange={(e) => updateSizePrice(size, Number.parseFloat(e.target.value) || 0)}
-                                  className="w-full h-7 text-center text-xs p-1"
-                                  placeholder="$ Precio"
-                                />
+                                <Input type="number" min="0" step="0.01" value={sizeData.price || ""} onChange={(e) => updateSizePrice(size, Number.parseFloat(e.target.value) || 0)} className="w-full h-7 text-center text-xs p-1" placeholder="$ Precio" />
                               )}
                             </div>
                           )}
                         </div>
                       )
                     })}
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <input
+                      type="text"
+                      value={newVariantInput}
+                      onChange={(e) => setNewVariantInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (newVariantInput.trim()) { setEditableVariants(prev => [...prev, newVariantInput.trim()]); setNewVariantInput("") } } }}
+                      placeholder="Nueva variante..."
+                      className="h-8 text-sm flex-1 border border-neutral-300 rounded px-3 focus:outline-none focus:border-neutral-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { if (newVariantInput.trim()) { setEditableVariants(prev => [...prev, newVariantInput.trim()]); setNewVariantInput("") } }}
+                      className="h-8 px-3 bg-neutral-800 hover:bg-black text-white text-sm rounded"
+                    >+ Agregar</button>
                   </div>
                   {formData.sizeStocks.length > 0 && (
                     <p className="text-xs text-neutral-500 mt-2">
@@ -661,15 +697,16 @@ export function ProductsManager({ storeId, template = "default", customVariants,
             </thead>
             <tbody>
               {products.map((product, index) => (
-                <tr key={product.id} className="border-b hover:bg-neutral-50">
-                  <td className="py-3">
-                    <input
-                      type="number"
-                      min="1"
-                      value={product.display_order || index + 1}
-                      onChange={(e) => handleOrderChange(product.id, Number.parseInt(e.target.value) || 1)}
-                      className="w-12 h-8 text-center text-red-600 font-bold border border-red-200 rounded focus:border-red-500 focus:outline-none"
-                    />
+                <tr
+                  key={product.id}
+                  draggable
+                  onDragStart={() => setDragIndex(index)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => handleDrop(index)}
+                  className={`border-b hover:bg-neutral-50 cursor-grab ${dragIndex === index ? 'opacity-40' : ''}`}
+                >
+                  <td className="py-3 text-center text-neutral-400 select-none">
+                    <span className="text-lg">⠿</span>
                   </td>
                   <td className="py-3">
                     {product.image_url ? (

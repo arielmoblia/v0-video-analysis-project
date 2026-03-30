@@ -25,6 +25,8 @@ export interface Store {
   social_whatsapp?: string | null
   social_youtube?: string | null
   footer_subtitle?: string | null
+  address?: string | null
+  phone?: string | null
   created_at?: string
   last_login?: string
 }

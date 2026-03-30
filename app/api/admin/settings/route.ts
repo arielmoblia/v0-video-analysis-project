@@ -17,6 +17,8 @@ export async function PUT(request: NextRequest) {
       social_tiktok,
       social_whatsapp,
       footer_subtitle,
+      address,
+      phone,
     } = body
 
     if (!storeId) {
@@ -39,6 +41,8 @@ export async function PUT(request: NextRequest) {
         social_tiktok,
         social_whatsapp,
         footer_subtitle,
+        address,
+        phone,
       })
       .eq("id", storeId)
       .select()

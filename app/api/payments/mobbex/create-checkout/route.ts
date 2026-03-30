@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { createMobbexClient } from "@/lib/payments/mobbex"
+import { decryptFields } from "@/lib/crypto"
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,6 +19,10 @@ export async function POST(request: NextRequest) {
       .select("mobbex_api_key, mobbex_access_token, site_title, subdomain")
       .eq("id", storeId)
       .single()
+
+    if (store) {
+      Object.assign(store, decryptFields(store, ["mobbex_api_key", "mobbex_access_token"]))
+    }
 
     if (!store?.mobbex_api_key || !store?.mobbex_access_token) {
       return NextResponse.json(

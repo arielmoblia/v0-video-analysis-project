@@ -22,14 +22,16 @@ import {
 } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
+import { PromoMail } from "@/components/super-admin/promo-mail"
 
 interface PlatformMarketingProps {
-  defaultTab?: "pixels" | "seo" | "integrations"
+  defaultTab?: "pixels" | "seo" | "integrations" | "promomail"
 }
 
 export function PlatformMarketing({ defaultTab = "pixels" }: PlatformMarketingProps) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [stores, setStores] = useState<any[]>([])
   
   const [pixels, setPixels] = useState({
     meta_pixel_id: "",
@@ -61,6 +63,11 @@ export function PlatformMarketing({ defaultTab = "pixels" }: PlatformMarketingPr
 
   const loadSettings = async () => {
     try {
+      const storesRes = await fetch("/api/super-admin/stores")
+      if (storesRes.ok) {
+        const data = await storesRes.json()
+        setStores(data.stores || data || [])
+      }
       // Cargar configuracion de marketing (pixels, payments)
       const marketingRes = await fetch("/api/super-admin/platform-marketing")
       if (marketingRes.ok) {
@@ -133,6 +140,10 @@ export function PlatformMarketing({ defaultTab = "pixels" }: PlatformMarketingPr
             <TabsTrigger value="seo" className="flex items-center gap-2">
               <Search className="w-4 h-4" />
               SEO
+            </TabsTrigger>
+            <TabsTrigger value="promomail" className="flex items-center gap-2">
+              <Mail className="w-4 h-4" />
+              Promo Mail
             </TabsTrigger>
           </TabsList>
         )}
@@ -694,6 +705,9 @@ export function PlatformMarketing({ defaultTab = "pixels" }: PlatformMarketingPr
               </Card>
             </div>
           </div>
+        </TabsContent>
+        <TabsContent value="promomail">
+          <PromoMail stores={stores} />
         </TabsContent>
       </Tabs>
     </div>

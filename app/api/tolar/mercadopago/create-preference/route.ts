@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient as createSupabaseAdmin } from "@supabase/supabase-js"
 import { type NextRequest, NextResponse } from "next/server"
 
 // Esta API crea preferencias de pago para que los clientes paguen a TOL.AR
@@ -12,31 +12,30 @@ export async function POST(request: NextRequest) {
     if (!storeId || !features || !totalARS) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 })
     }
-
-    // Verificar que el usuario tenga acceso a esta tienda
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-    }
-
-    // Verificar que la tienda pertenezca al usuario
+    // Verificar que la tienda existe
+    const supabase = createSupabaseAdmin(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
     const { data: store, error: storeError } = await supabase
       .from("stores")
-      .select("id, subdomain, site_title, user_id")
+      .select("id, subdomain, site_title, email")
       .eq("id", storeId)
       .single()
-
-    if (storeError || !store || store.user_id !== user.id) {
+    if (storeError || !store) {
       return NextResponse.json({ error: "Tienda no encontrada" }, { status: 404 })
     }
+    const user = { id: store.id, email: store.email || "merchant@tol.ar" }
 
     // Access Token de TOL.AR (tu cuenta de MercadoPago)
-    const accessToken = process.env.TOLAR_MP_ACCESS_TOKEN
+    // Leer keys de Supabase
+    const { data: paymentConfig } = await supabase
+      .from("platform_settings")
+      .select("value")
+      .eq("key", "payments_config")
+      .maybeSingle()
+
+    const accessToken = paymentConfig?.value?.mp_access_token || process.env.MP_ACCESS_TOKEN
 
     if (!accessToken) {
-      console.error("[v0] TOLAR_MP_ACCESS_TOKEN no configurado")
+      console.error("[v0] MP_ACCESS_TOKEN no configurado")
       return NextResponse.json(
         { error: "MercadoPago no configurado. Contacta al soporte." },
         { status: 500 }

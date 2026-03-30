@@ -12,13 +12,27 @@ export async function POST(request: NextRequest) {
     }
 
     const userAgent = request.headers.get("user-agent") || ""
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0] || request.headers.get("x-real-ip") || ""
+
+    // Geolocalización por IP
+    let country = null, city = null
+    if (ip) {
+      try {
+        const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=country,city&lang=es`)
+        const geo = await geoRes.json()
+        if (geo.country) { country = geo.country; city = geo.city || null }
+      } catch {}
+    }
 
     await supabase.from("page_views").insert({
       store_id: storeId,
       page_path: pagePath,
       visitor_id: visitorId,
       user_agent: userAgent,
+      ip: ip || null,
       referrer: referrer || null,
+      country,
+      city,
     })
 
     return NextResponse.json({ success: true })

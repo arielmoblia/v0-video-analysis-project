@@ -5,17 +5,17 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
 
 async function getDolarBlueRate(): Promise<number> {
   try {
-    const response = await fetch("https://dolarapi.com/v1/dolares/blue", {
+    const response = await fetch("https://dolarapi.com/v1/dolares/bolsa", {
       next: { revalidate: 3600 }, // Cache por 1 hora
     })
     if (response.ok) {
       const data = await response.json()
-      return data.venta || 1100
+      return data.venta || 1400
     }
   } catch (error) {
     console.error("Error fetching dolar blue:", error)
   }
-  return 1100 // Fallback
+  return 1400 // Fallback
 }
 
 export async function GET(request: NextRequest) {

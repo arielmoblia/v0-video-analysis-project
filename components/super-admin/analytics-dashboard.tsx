@@ -1,198 +1,403 @@
 "use client"
-
+import React from "react"
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Eye, Users, TrendingUp, Globe, BarChart3, RefreshCw } from "lucide-react"
+import { RefreshCw } from "lucide-react"
 
 interface AnalyticsData {
   totalViews: number
   uniqueVisitors: number
   dailyViews: { date: string; views: number }[]
+  dailyPlatformViews?: { date: string; views: number }[]
   topStores: { subdomain: string; title: string; views: number }[]
   topPages: { path: string; views: number }[]
+  devices?: { mobile: number; desktop: number }
+  hourlyViews?: { hour: number; views: number }[]
+  topCountries?: { name: string; views: number }[]
+  topCities?: { name: string; views: number }[]
+  platformViews?: number
+  topPlatformPages?: { path: string; views: number }[]
+  conversionRate?: number
+  newStoresInPeriod?: number
+  mrr?: number
+  topRubros?: { name: string; views: number }[]
+}
+
+interface PlatformData {
+  totalStores: number
+  newStoresThisMonth: number
+  storesWithNoVisits: number
+  planDistribution: Record<string, number>
+  planIncome?: Record<string, number>
+  planCounts?: Record<string, number>
 }
 
 export function AnalyticsDashboard() {
-  const [data, setData] = useState<AnalyticsData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
+  const [platform, setPlatform] = useState<PlatformData | null>(null)
   const [days, setDays] = useState(30)
+  const [loading, setLoading] = useState(true)
+  const [tooltip, setTooltip] = useState<string | null>(null)
+  const [modal, setModal] = useState<string | null>(null)
+  const [smartlook, setSmartlook] = useState<{sessions:number,url:string}|null>(null)
 
-  const fetchAnalytics = async () => {
+  const fetchData = () => {
     setLoading(true)
-    try {
-      const response = await fetch(`/api/super-admin/analytics?days=${days}`)
-      if (response.ok) {
-        const result = await response.json()
-        setData(result)
-      }
-    } catch (error) {
-      console.error("Error fetching analytics:", error)
-    } finally {
-      setLoading(false)
-    }
+    Promise.all([
+      fetch("/api/super-admin/analytics?days=" + days).then(r => r.json()),
+      fetch("/api/super-admin/platform-stats").then(r => r.json()),
+      fetch("/api/super-admin/smartlook-stats").then(r => r.json()),
+    ]).then(([a, p, sl]) => { setAnalytics(a); setPlatform(p); setSmartlook(sl); setLoading(false) })
   }
 
-  useEffect(() => {
-    fetchAnalytics()
-  }, [days])
+  useEffect(() => { fetchData() }, [days])
 
-  const maxViews = data?.dailyViews ? Math.max(...data.dailyViews.map((d) => d.views), 1) : 1
+  const maxViews = Math.max(...(analytics?.dailyViews.map(d => d.views) || [1]))
+  const maxPlatform = Math.max(...(analytics?.dailyPlatformViews?.map(d => d.views) || [1]))
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-12">
-        <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
+  const tip = (id: string, text: string) => (
+    <>
+      <span onClick={() => setTooltip(tooltip === id ? null : id)} style={{ cursor:"pointer", color:"#93c5fd", fontSize:"14px", fontWeight:700 }}>ⓘ</span>
+      {tooltip === id && (
+        <div style={{ position:"absolute", top:"40px", right:"8px", zIndex:100, background:"#1e293b", color:"#fff", borderRadius:"8px", padding:"10px 14px", fontSize:"12px", maxWidth:"220px", lineHeight:"1.5", boxShadow:"0 4px 12px rgba(0,0,0,0.2)" }}>{text}</div>
+      )}
+    </>
+  )
+
+  const card = (label: string, value: any, sub: string, color: string, info?: string) => (
+    <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+        <p style={{ margin:"0 0 8px", color:"#666", fontSize:"13px" }}>{label}</p>
+        {info && tip(label, info)}
       </div>
-    )
-  }
+      <p style={{ margin:"0 0 4px", fontSize:"32px", fontWeight:700, color: loading ? "#ccc" : color }}>{loading ? "..." : value}</p>
+      <p style={{ margin:0, fontSize:"12px", color:"#999" }}>{sub}</p>
+    </div>
+  )
 
   return (
-    <div className="space-y-6">
-      {/* Filtros */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Analytics de la Plataforma</h2>
-        <div className="flex gap-2">
-          {[7, 30, 90].map((d) => (
-            <Button key={d} variant={days === d ? "default" : "outline"} size="sm" onClick={() => setDays(d)}>
-              {d} días
-            </Button>
+    <div style={{ padding:"24px", color:"#1a1a1a" }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"28px" }}>
+        <div>
+          <h1 style={{ margin:0, fontSize:"22px", fontWeight:700 }}>Estadísticas de la Plataforma</h1>
+        </div>
+        <div style={{ display:"flex", gap:"8px", alignItems:"center" }}>
+          {[7,30,90].map(d => (
+            <button key={d} onClick={() => setDays(d)} style={{ padding:"6px 14px", borderRadius:"8px", border:"1px solid #e5e7eb", background: days===d ? "#1a1a1a" : "#fff", color: days===d ? "#fff" : "#666", cursor:"pointer", fontSize:"13px" }}>{d} dias</button>
           ))}
-          <Button variant="outline" size="sm" onClick={fetchAnalytics}>
-            <RefreshCw className="h-4 w-4" />
-          </Button>
+          <button onClick={fetchData} style={{ padding:"6px 10px", borderRadius:"8px", border:"1px solid #e5e7eb", background:"#fff", cursor:"pointer" }}>
+            <RefreshCw style={{ width:"14px", height:"14px" }} />
+          </button>
         </div>
       </div>
 
-      {/* Métricas principales */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Visitas Totales</CardTitle>
-            <Eye className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{data?.totalViews?.toLocaleString() || 0}</div>
-            <p className="text-xs text-gray-500">Últimos {days} días</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Visitantes Únicos</CardTitle>
-            <Users className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{data?.uniqueVisitors?.toLocaleString() || 0}</div>
-            <p className="text-xs text-gray-500">Últimos {days} días</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Promedio Diario</CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {data?.totalViews ? Math.round(data.totalViews / days).toLocaleString() : 0}
+      <div style={{ background:"#f8fafc", borderRadius:"16px", padding:"24px" }}>
+        <h2 style={{ fontSize:"13px", fontWeight:600, color:"#888", marginBottom:"16px", textTransform:"uppercase", letterSpacing:"0.05em" }}>Estado de la Plataforma (tol.ar)</h2>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:"16px", marginBottom:"16px" }}>
+          {card("Tiendas Totales", platform?.totalStores ?? "—", "Sin contar templates", "#1a1a1a", "Cuántas tiendas hay abiertas en tol.ar ahora mismo")}
+          {card("Nuevas este mes", platform?.newStoresThisMonth ?? "—", "Registros nuevos", "#10b981", "Cuántas tiendas nuevas abrieron este mes")}
+          {card("Sin visitas (30d)", platform?.storesWithNoVisits ?? "—", "Posibles abandonadas", "#ef4444", "Tiendas que nadie visitó en 30 días. Están dormidas")}
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+              <p style={{ margin:"0 0 10px", color:"#666", fontSize:"13px" }}>Distribucion de Planes</p>
+              {tip("dist-planes", "Cuántas tiendas usan cada plan en este momento")}
             </div>
-            <p className="text-xs text-gray-500">Visitas por día</p>
-          </CardContent>
-        </Card>
+            {loading ? <p style={{ color:"#ccc" }}>...</p> :
+              platform?.planDistribution && Object.entries(platform.planDistribution).map(([plan, count]) => (
+                <div key={plan} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"6px" }}>
+                  <span style={{ fontSize:"13px", color:"#555", textTransform:"capitalize" }}>{plan}</span>
+                  <span style={{ fontSize:"15px", fontWeight:700, color: (count as number) > 0 ? "#8b5cf6" : "#ccc" }}>{count as number}</span>
+                </div>
+              ))
+            }
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Tiendas Activas</CardTitle>
-            <Globe className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{data?.topStores?.length || 0}</div>
-            <p className="text-xs text-gray-500">Con visitas</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Gráfico de visitas por día */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Visitas por Día
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-64 flex items-end gap-1">
-            {data?.dailyViews?.map((day, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                <div
-                  className="w-full bg-blue-500 rounded-t transition-all hover:bg-blue-600"
-                  style={{ height: `${(day.views / maxViews) * 200}px`, minHeight: day.views > 0 ? "4px" : "0" }}
-                  title={`${day.date}: ${day.views} visitas`}
-                />
-                {i % Math.ceil(data.dailyViews.length / 10) === 0 && (
-                  <span className="text-xs text-gray-500 -rotate-45 origin-left">
-                    {new Date(day.date).toLocaleDateString("es-AR", { day: "2-digit", month: "short" })}
-                  </span>
-                )}
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:"16px", marginBottom:"16px" }}>
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+              <p style={{ margin:"0 0 8px", color:"#666", fontSize:"13px" }}>Visitas a tol.ar</p>
+              {tip("visitas-tolar", "Cuánta gente entró a la página principal de tol.ar")}
+            </div>
+            <p style={{ margin:"0 0 4px", fontSize:"32px", fontWeight:700, color: loading ? "#ccc" : "#3b82f6" }}>{loading ? "..." : platform?.totalStores ? analytics?.platformViews ?? 0 : "—"}</p>
+            <p style={{ margin:"0 0 8px", fontSize:"12px", color:"#999" }}>Landing principal</p>
+            {!loading && analytics?.topPlatformPages?.slice(0,3).map((p,i) => (
+              <div key={i} style={{ display:"flex", justifyContent:"space-between" }}>
+                <span style={{ fontSize:"12px", color:"#999" }}>{p.path}</span>
+                <span style={{ fontSize:"12px", fontWeight:700, color:"#3b82f6" }}>{p.views}</span>
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+              <p style={{ margin:"0 0 8px", color:"#666", fontSize:"13px" }}>Tasa de conversion</p>
+              {tip("tasa-conv", "De cada 100 personas que entraron a tol.ar, cuántas abrieron una tienda")}
+            </div>
+            <p style={{ margin:"0 0 4px", fontSize:"32px", fontWeight:700, color: loading ? "#ccc" : "#10b981" }}>{loading ? "..." : (analytics?.conversionRate ?? 0) + "%"}</p>
+            <p style={{ margin:"0 0 4px", fontSize:"12px", color:"#999" }}>De cada 100 visitas a tol.ar, cuantas crean una tienda</p>
+            <p style={{ margin:0, fontSize:"11px", color:"#bbb" }}>{analytics?.newStoresInPeriod ?? 0} registros en {days} dias</p>
+          </div>
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+              <p style={{ margin:"0 0 8px", color:"#666", fontSize:"13px", fontWeight:600 }}>Total de Planes</p>
+              {tip("total-planes", "Cuánta plata juntamos. Cuando alguien pague, aparece acá")}
+            </div>
+            <p style={{ margin:"0 0 12px", fontSize:"28px", fontWeight:700, color: loading ? "#ccc" : "#10b981" }}>
+              {loading ? "..." : "$" + Object.values(analytics?.planIncome ?? {}).reduce((a,b) => a+b, 0).toLocaleString("es-AR")}
+            </p>
+            {loading ? <p style={{ color:"#ccc" }}>...</p> : (
+              <table style={{ width:"100%", fontSize:"12px", borderCollapse:"collapse" }}>
+                <tbody>
+                  {[["Gratis","gratis"],["Cositas","cositas"],["Socios","socios"],["Mayoristas","mayorista"]].map(([label, key]) => (
+                    <tr key={key} style={{ borderTop:"1px solid #f0f0f0" }}>
+                      <td style={{ padding:"4px 0", color:"#555" }}>{label}</td>
+                      <td style={{ padding:"4px 0", color:"#888", textAlign:"center" }}>{(platform?.planCounts as any)?.[key] ?? 0}</td>
+                      <td style={{ padding:"4px 0", color:"#10b981", textAlign:"right", fontWeight:600 }}>${((platform?.planIncome as any)?.[key] ?? 0).toLocaleString("es-AR")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+              <p style={{ margin:"0 0 8px", color:"#666", fontSize:"13px" }}>Smartlook</p>
+              {tip("smartlook-info", "Cuántas personas grabamos navegando en tol.ar este mes")}
+            </div>
+            <p style={{ margin:"0 0 4px", fontSize:"32px", fontWeight:700, color: loading ? "#ccc" : "#3b82f6" }}>{loading ? "..." : smartlook?.sessions ?? 0}</p>
+            <p style={{ margin:"0 0 12px", fontSize:"12px", color:"#999" }}>Sesiones grabadas este mes</p>
+            <a href={smartlook?.url || "https://app.smartlook.com"} target="_blank" rel="noopener noreferrer" style={{ display:"block", textAlign:"center", padding:"8px 16px", background:"#1a1a1a", color:"#fff", borderRadius:"8px", fontSize:"12px", textDecoration:"none" }}>Ver grabaciones</a>
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Top tiendas */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Tiendas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {data?.topStores?.length === 0 ? (
-                <p className="text-gray-500 text-sm">Sin datos aún</p>
-              ) : (
-                data?.topStores?.map((store, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg font-bold text-gray-400 w-6">{i + 1}</span>
-                      <div>
-                        <p className="font-medium">{store.title}</p>
-                        <p className="text-xs text-gray-500">{store.subdomain}.tol.ar</p>
+        <h2 style={{ fontSize:"13px", fontWeight:600, color:"#888", marginBottom:"16px", marginTop:"24px", textTransform:"uppercase", letterSpacing:"0.05em" }}>Visitas a Tiendas (subdominios.tol.ar)</h2>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:"16px", marginBottom:"16px" }}>
+          {card("Visitas Totales", analytics?.totalViews ?? "—", "Ultimos 30 dias", "#3b82f6", "Cuántas veces entraron a las tiendas de los merchants en los últimos 30 días")}
+          {card("Visitantes Unicos", analytics?.uniqueVisitors ?? "—", "Ultimos 30 dias", "#10b981", "Personas distintas que visitaron alguna tienda. Un mismo cliente cuenta una sola vez")}
+          {card("Promedio Diario", analytics ? Math.round((analytics.totalViews||0)/days) : "—", "Visitas por dia", "#8b5cf6", "Cuántas visitas reciben las tiendas por día en promedio")}
+          {card("Tiendas Activas", analytics?.topStores.length ?? "—", "Con visitas", "#f59e0b", "Tiendas que recibieron al menos una visita en el período seleccionado")}
+        </div>
+
+        <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", marginBottom:"16px" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"16px" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
+              <p style={{ margin:0, fontWeight:600, fontSize:"14px" }}>Visitas por</p>
+              <select onChange={e => setDays(Number(e.target.value))} value={days} style={{ padding:"4px 10px", borderRadius:"6px", border:"1px solid #e5e7eb", fontSize:"13px", color:"#333", fontWeight:600, cursor:"pointer" }}>
+                <option value={1}>Día</option>
+                <option value={7}>Semana</option>
+                <option value={30}>Mes</option>
+                <option value={365}>Año</option>
+              </select>
+            </div>
+            <div style={{ display:"flex", gap:"16px", fontSize:"12px", color:"#666" }}>
+              <span><span style={{ display:"inline-block", width:"12px", height:"12px", borderRadius:"2px", background:"#3b82f6", marginRight:"5px", verticalAlign:"middle" }}></span>tol.ar</span>
+              <span><span style={{ display:"inline-block", width:"12px", height:"12px", borderRadius:"2px", background:"#f97316", marginRight:"5px", verticalAlign:"middle" }}></span>Tiendas</span>
+            </div>
+          </div>
+          <div style={{ display:"flex", alignItems:"flex-end", gap:"6px", height:"180px", paddingBottom:"28px", position:"relative" }}>
+            {loading ? <p style={{ color:"#ccc" }}>Cargando...</p> :
+             !analytics?.dailyViews.length ? <p style={{ color:"#999" }}>Sin datos aun</p> :
+              analytics.dailyViews.map((d, i) => {
+                const platformDay = analytics?.dailyPlatformViews?.find(p => p.date === d.date)
+                const pViews = platformDay?.views || 0
+                const totalMax = Math.max(maxViews, maxPlatform, 1)
+                const tolH = Math.max(pViews>0?12:0, (pViews/totalMax)*150)
+                const tiendasH = Math.max(d.views>0?12:0, (d.views/totalMax)*150)
+                const fecha = d.date ? d.date.slice(5) : ""
+                return (
+                  <div key={i} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"flex-end", height:"100%", position:"relative" }}>
+                    <div style={{ display:"flex", alignItems:"flex-end", gap:"2px", width:"100%" }}>
+                      <div style={{ flex:1, position:"relative" }}>
+                        {pViews > 0 && <span style={{ position:"absolute", top:"-18px", left:"50%", transform:"translateX(-50%)", fontSize:"11px", color:"#3b82f6", fontWeight:800, whiteSpace:"nowrap" }}>{pViews}</span>}
+                        <div style={{ background:"#3b82f6", borderRadius:"4px 4px 0 0", height: tolH + "px", width:"100%" }}/>
+                      </div>
+                      <div style={{ flex:1, position:"relative" }}>
+                        {d.views > 0 && <span style={{ position:"absolute", top:"-18px", left:"50%", transform:"translateX(-50%)", fontSize:"11px", color:"#f97316", fontWeight:800, whiteSpace:"nowrap" }}>{d.views}</span>}
+                        <div style={{ background:"#f97316", borderRadius:"4px 4px 0 0", height: tiendasH + "px", width:"100%" }}/>
                       </div>
                     </div>
-                    <span className="font-semibold text-blue-600">{store.views.toLocaleString()}</span>
+                    <span style={{ fontSize:"9px", color:"#999", marginTop:"4px", position:"absolute", bottom:"-18px" }}>{fecha}</span>
                   </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                )
+              })
+            }
+          </div>
+        </div>
 
-        {/* Top páginas */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Páginas Más Visitadas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {data?.topPages?.length === 0 ? (
-                <p className="text-gray-500 text-sm">Sin datos aún</p>
-              ) : (
-                data?.topPages?.map((page, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg font-bold text-gray-400 w-6">{i + 1}</span>
-                      <p className="font-medium text-sm truncate max-w-[200px]">{page.path}</p>
-                    </div>
-                    <span className="font-semibold text-blue-600">{page.views.toLocaleString()}</span>
-                  </div>
-                ))
-              )}
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px", marginBottom:"16px" }}>
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", position:"relative" }}>
+              <p style={{ margin:"0 0 12px", fontWeight:600, fontSize:"14px" }}>Top Tiendas</p>
+              {tip("top-tiendas", "Las 5 tiendas que más visitas recibieron. Hacé click en el nombre para abrirla")}
             </div>
-          </CardContent>
-        </Card>
+            {loading ? <p style={{ color:"#ccc" }}>...</p> :
+             !analytics?.topStores.length ? <p style={{ color:"#999", fontSize:"13px" }}>Sin datos aun</p> :
+              analytics.topStores.slice(0,5).map((s,i) => (
+                <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:"1px solid #f0f0f0" }}>
+                  <div>
+                    <a href={"https://" + s.subdomain + ".tol.ar"} target="_blank" rel="noopener noreferrer" style={{ margin:0, fontSize:"13px", fontWeight:500, color:"#1d4ed8", textDecoration:"none" }}>{s.title}</a>
+                    <p style={{ margin:0, fontSize:"11px", color:"#999" }}>{s.subdomain}.tol.ar</p>
+                  </div>
+                  <span style={{ fontWeight:700, color:"#3b82f6" }}>{s.views}</span>
+                </div>
+              ))
+            }
+          </div>
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", position:"relative" }}>
+              <p style={{ margin:"0 0 12px", fontWeight:600, fontSize:"14px" }}>Paginas Mas Visitadas</p>
+              {tip("top-paginas", "Las páginas más vistas dentro de las tiendas")}
+            </div>
+            {loading ? <p style={{ color:"#ccc" }}>...</p> :
+             !analytics?.topPages.length ? <p style={{ color:"#999", fontSize:"13px" }}>Sin datos aun</p> :
+              analytics.topPages.slice(0,5).map((p,i) => (
+                <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:"1px solid #f0f0f0" }}>
+                  <span style={{ fontSize:"13px", color:"#555" }}>{p.path}</span>
+                  <span style={{ fontWeight:700, color:"#3b82f6" }}>{p.views}</span>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:"16px", marginBottom:"16px" }}>
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+              <p style={{ margin:"0 0 10px", color:"#666", fontSize:"13px" }}>Pais / Ciudad</p>
+              {tip("pais-ciudad", "De dónde vienen los visitantes de las tiendas")}
+            </div>
+            {loading ? <p style={{ color:"#ccc" }}>...</p> : !analytics?.topCountries?.length ? <p style={{ color:"#999", fontSize:"12px" }}>Sin datos aun</p> : (
+              <div>
+                {analytics.topCountries.slice(0,3).map((c,i) => (
+                  <div key={i} style={{ display:"flex", justifyContent:"space-between", marginBottom:"4px" }}>
+                    <span style={{ fontSize:"12px", color:"#555" }}>{c.name}</span>
+                    <span style={{ fontWeight:700, color:"#10b981", fontSize:"13px" }}>{c.views}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+              <p style={{ margin:"0 0 10px", color:"#666", fontSize:"13px" }}>Celular vs PC</p>
+              {tip("cel-pc", "Si la gente entra desde el celular o desde la computadora")}
+            </div>
+            {loading ? <p style={{ color:"#ccc" }}>...</p> : !analytics?.devices ? <p style={{ color:"#ccc" }}>...</p> : (
+              <div>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"6px" }}>
+                  <span style={{ fontSize:"13px", color:"#555" }}>📱 Celular</span>
+                  <span style={{ fontWeight:700, color:"#3b82f6" }}>{analytics.devices.mobile}</span>
+                </div>
+                <div style={{ display:"flex", justifyContent:"space-between" }}>
+                  <span style={{ fontSize:"13px", color:"#555" }}>🖥️ PC</span>
+                  <span style={{ fontWeight:700, color:"#8b5cf6" }}>{analytics.devices.desktop}</span>
+                </div>
+              </div>
+            )}
+          </div>
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px" }}>
+            <p style={{ margin:"0 0 10px", color:"#666", fontSize:"13px" }}>Horarios pico</p>
+            {loading ? <p style={{ color:"#ccc" }}>...</p> : !analytics?.hourlyViews ? <p style={{ color:"#ccc" }}>...</p> : (() => {
+              const topHours = [...analytics.hourlyViews].sort((a,b) => b.views-a.views).slice(0,3)
+              return (
+                <div>
+                  {topHours.map((h,i) => (
+                    <div key={i} style={{ display:"flex", justifyContent:"space-between", marginBottom:"4px" }}>
+                      <span style={{ fontSize:"12px", color:"#555" }}>{h.hour}:00 - {h.hour+1}:00</span>
+                      <span style={{ fontWeight:700, color:"#f59e0b", fontSize:"13px" }}>{h.views}</span>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
+          </div>
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px" }}>
+            <p style={{ margin:"0 0 10px", color:"#666", fontSize:"13px" }}>Productos mas vistos</p>
+            {loading ? <p style={{ color:"#ccc" }}>...</p> :
+             !analytics?.topRubros?.length ? <p style={{ color:"#999", fontSize:"12px" }}>Sin datos aun</p> :
+              analytics.topRubros.map((r,i) => (
+                <div key={i} style={{ display:"flex", justifyContent:"space-between", marginBottom:"4px" }}>
+                  <span style={{ fontSize:"12px", color:"#555" }}>{r.name}</span>
+                  <span style={{ fontWeight:700, color:"#f59e0b", fontSize:"13px" }}>{r.views}</span>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+
+        {/* SALUD DE LOS MERCHANTS */}
+        <h2 style={{ fontSize:"13px", fontWeight:600, color:"#888", marginBottom:"16px", marginTop:"24px", textTransform:"uppercase", letterSpacing:"0.05em" }}>Salud de los Clientes</h2>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:"16px", marginBottom:"16px" }}>
+          {[
+            { id:"ventas-reales", label:"Con ventas reales", sub:"Este mes", color:"#10b981", info:"Merchants que registraron al menos una venta este mes." },
+            { id:"riesgo-abandono", label:"En riesgo de abandono", sub:"Sin actividad 30d", color:"#ef4444", info:"Merchants que no entraron al admin en más de 30 días." },
+            { id:"incompletas", label:"Tiendas incompletas", sub:"Sin productos o logo", color:"#f59e0b", info:"Tiendas sin productos o sin logo. Difícilmente vendan algo así." },
+            { id:"cositas-top", label:"Cositas más compradas", sub:"Plan Cositas", color:"#8b5cf6", info:"Las funciones extra que más contratan los merchants del plan Cositas." },
+          ].map(({ id, label, sub, color, info }) => (
+            <div key={id} style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
+              <div style={{ display:"flex", justifyContent:"space-between" }}>
+                <p style={{ margin:"0 0 8px", color:"#666", fontSize:"13px" }}>{label}</p>
+                {tip(id, info)}
+              </div>
+              <p style={{ margin:"0 0 4px", fontSize:"32px", fontWeight:700, color }}>🔜</p>
+              <p style={{ margin:"0 0 10px", fontSize:"12px", color:"#999" }}>{sub}</p>
+              <button onClick={() => setModal(id)} style={{ width:"100%", padding:"6px", background:"#f8fafc", border:"1px solid #e2e8f0", borderRadius:"6px", fontSize:"11px", color:"#64748b", cursor:"pointer" }}>Ver detalle →</button>
+            </div>
+          ))}
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:"16px" }}>
+          {[
+            { id:"fuente-trafico", label:"Fuente de tráfico", sub:"Google / Directo / Redes", color:"#3b82f6", info:"De dónde vienen los nuevos merchants: Google, directo, redes sociales." },
+            { id:"upgrade", label:"Cerca de upgrade", sub:"Listos para Cositas", color:"#10b981", info:"Merchants del plan Gratis con mucha actividad, listos para pasarse a Cositas." },
+            { id:"errores-404", label:"Errores 404", sub:"Últimos 30 días", color:"#ef4444", info:"Páginas que no existen y dan error. Si hay muchas, algo está roto." },
+            { id:"keywords", label:"Keywords que traen gente", sub:"Search Console", color:"#f59e0b", info:"Las palabras que la gente escribe en Google antes de llegar a tol.ar." },
+          ].map(({ id, label, sub, color, info }) => (
+            <div key={id} style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
+              <div style={{ display:"flex", justifyContent:"space-between" }}>
+                <p style={{ margin:"0 0 8px", color:"#666", fontSize:"13px" }}>{label}</p>
+                {tip(id, info)}
+              </div>
+              <p style={{ margin:"0 0 4px", fontSize:"32px", fontWeight:700, color }}>🔜</p>
+              <p style={{ margin:"0 0 10px", fontSize:"12px", color:"#999" }}>{sub}</p>
+              <button onClick={() => setModal(id)} style={{ width:"100%", padding:"6px", background:"#f8fafc", border:"1px solid #e2e8f0", borderRadius:"6px", fontSize:"11px", color:"#64748b", cursor:"pointer" }}>Ver detalle →</button>
+            </div>
+          ))}
+        </div>
+
       </div>
+
+      {modal && (
+        <div onClick={() => setModal(null)} style={{ position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(0,0,0,0.5)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:"#fff", borderRadius:"16px", padding:"32px", maxWidth:"480px", width:"90%", boxShadow:"0 20px 60px rgba(0,0,0,0.2)" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"16px" }}>
+              <h3 style={{ margin:0, fontSize:"16px", fontWeight:700 }}>
+                {{
+                  "ventas-reales":"Merchants con ventas reales",
+                  "riesgo-abandono":"En riesgo de abandono",
+                  "incompletas":"Tiendas incompletas",
+                  "cositas-top":"Cositas más compradas",
+                  "fuente-trafico":"Fuente de tráfico",
+                  "upgrade":"Cerca de upgrade",
+                  "errores-404":"Errores 404",
+                  "keywords":"Keywords que traen gente"
+                }[modal] || modal}
+              </h3>
+              <button onClick={() => setModal(null)} style={{ background:"none", border:"none", fontSize:"20px", cursor:"pointer", color:"#999" }}>✕</button>
+            </div>
+            <p style={{ color:"#64748b", fontSize:"14px", lineHeight:"1.6" }}>
+              {{
+                "ventas-reales":"Próximamente — se conectará con el sistema de pagos para mostrar qué tiendas vendieron este mes.",
+                "riesgo-abandono":"Próximamente — mostrará los merchants que no entraron al admin en más de 30 días.",
+                "incompletas":"Próximamente — listará las tiendas sin productos cargados o sin logo.",
+                "cositas-top":"Próximamente — mostrará qué funciones extra del plan Cositas se contratan más.",
+                "fuente-trafico":"Próximamente — se conectará con Google Analytics para mostrar de dónde viene la gente.",
+                "upgrade":"Próximamente — identificará merchants del plan Gratis con alta actividad listos para Cositas.",
+                "errores-404":"Próximamente — detectará páginas rotas en las tiendas.",
+                "keywords":"Próximamente — se conectará con Search Console para ver qué búsquedas traen visitantes."
+              }[modal] || "Próximamente."}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

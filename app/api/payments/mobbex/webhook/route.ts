@@ -30,21 +30,13 @@ export async function POST(request: NextRequest) {
     const status = mapMobbexStatus(statusCode)
 
     // Actualizar orden en la base de datos
+    const orderStatus = status === "approved" ? "pagado" : status === "pending" ? "pendiente_pago" : "cancelado"
     const { error } = await supabase
       .from("orders")
       .update({
-        payment_status: status,
+        status: orderStatus,
         payment_method: "mobbex",
         payment_id: payment.id,
-        payment_details: {
-          mobbex_status_code: statusCode,
-          mobbex_status_text: payment.status?.text,
-          mobbex_payment_id: payment.id,
-          total: payment.total,
-          currency: payment.currency,
-          customer: data.customer,
-          entity: data.entity,
-        },
         updated_at: new Date().toISOString(),
       })
       .eq("id", orderId)

@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
+import { decryptFields } from "@/lib/crypto"
 import { type NextRequest, NextResponse } from "next/server"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
@@ -18,6 +19,10 @@ export async function POST(request: NextRequest) {
       .select("mercadopago_access_token, mercadopago_test_mode, mercadopago_test_token, mercadopago_checkout_type")
       .eq("store_id", storeId)
       .single()
+
+    if (paymentMethods) {
+      Object.assign(paymentMethods, decryptFields(paymentMethods, ["mercadopago_access_token", "mercadopago_test_token"]))
+    }
 
     if (paymentError) {
       return NextResponse.json(

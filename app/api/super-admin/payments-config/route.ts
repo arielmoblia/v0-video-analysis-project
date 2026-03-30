@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
+import { encryptFields, decryptFields } from "@/lib/crypto"
 import { NextResponse } from "next/server"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
@@ -38,8 +39,11 @@ export async function GET() {
       payout_currency: "USD",
     }
 
+    const rawConfig = config?.value || defaultConfig
+    const decryptedConfig = decryptFields(rawConfig, ["stripe_secret_key","stripe_webhook_secret","mp_access_token","paypal_client_secret","mobbex_api_key","mobbex_access_token"])
+
     return NextResponse.json({
-      config: config?.value || defaultConfig,
+      config: decryptedConfig,
       stats,
     })
   } catch (error) {
@@ -70,11 +74,14 @@ export async function POST(request: Request) {
   try {
     const config = await request.json()
 
+    // Cifrar campos sensibles antes de guardar
+    const encryptedConfig = encryptFields(config, ["stripe_secret_key","stripe_webhook_secret","mp_access_token","paypal_client_secret","mobbex_api_key","mobbex_access_token"])
+
     // Guardar configuración
     const { error } = await supabase.from("platform_settings").upsert(
       {
         key: "payments_config",
-        value: config,
+        value: encryptedConfig,
         updated_at: new Date().toISOString(),
       },
       {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { Button } from "@/components/ui/button"
@@ -38,6 +38,62 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { CositasCheckout } from "@/components/cositas-checkout"
+
+
+function EditableText({ field, value, isAdmin, onSave, tag = "span", className = "" }: {
+  field: string; value: string; isAdmin: boolean; onSave: (k: string, v: string) => Promise<void>; tag?: string; className?: string
+}) {
+  const [editing, setEditing] = useState(false)
+  const [hover, setHover] = useState(false)
+  const [text, setText] = useState(value)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const ref = useRef<HTMLTextAreaElement>(null)
+  useEffect(() => { setText(value) }, [value])
+  useEffect(() => { if (editing && ref.current) { ref.current.focus(); ref.current.select() } }, [editing])
+  const handleSave = async () => {
+    setSaving(true); await onSave(field, text); setSaving(false); setSaved(true); setEditing(false)
+    setTimeout(() => setSaved(false), 2000)
+  }
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSave() }
+    if (e.key === "Escape") { setText(value); setEditing(false) }
+  }
+  if (!isAdmin) { const Tag = tag as any; return <Tag className={className}>{value}</Tag> }
+  if (editing) return (
+    <span style={{ display: "inline-block", width: "100%" }}>
+      <textarea ref={ref} value={text} onChange={e => setText(e.target.value)} onKeyDown={handleKeyDown} rows={2}
+style={{ width: "100%", padding: "6px 10px", fontSize: "inherit", fontFamily: "inherit", fontWeight: "inherit",
+          color: "#62162f", background: "rgba(255,255,255,0.95)", border: "2px solid #96305a", borderRadius: "8px",
+          resize: "vertical", outline: "none", lineHeight: "1.5", textAlign: "center" }} />
+      <span style={{ display: "flex", gap: "8px", marginTop: "4px", justifyContent: "center" }}>
+        <button onClick={() => { setText(value); setEditing(false) }}
+          style={{ padding: "3px 10px", borderRadius: "6px", border: "1px solid #e2e8f0", background: "white", cursor: "pointer", fontSize: "12px" }}>Cancelar</button>
+        <button onClick={handleSave} disabled={saving}
+          style={{ padding: "3px 12px", borderRadius: "6px", border: "none", background: saving ? "#ca678e" : "#62162f", color: "white", cursor: "pointer", fontSize: "12px", fontWeight: 600 }}>
+          {saving ? "Guardando..." : "Guardar"}</button>
+      </span>
+    </span>
+  )
+  const Tag = tag as any
+  return (
+    <span style={{ position: "relative", display: "inline-block" }}
+      onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+      <Tag className={className}
+        style={{ cursor: "text", borderRadius: "4px", transition: "all 0.15s",
+          outline: hover ? "2px dashed #ca678e" : "2px dashed transparent", outlineOffset: "3px",
+          background: hover ? "rgba(255,159,197,0.1)" : "transparent" }}>
+        {text}
+      </Tag>
+      {hover && <button onClick={() => setEditing(true)}
+        style={{ position: "absolute", top: "-12px", right: "-12px", background: "#62162f", color: "white",
+          border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", fontSize: "12px",
+          display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(98,22,47,0.4)", zIndex: 10 }}>✏️</button>}
+      {saved && <span style={{ position: "absolute", top: "-12px", right: "20px", background: "#10b981",
+        color: "white", borderRadius: "4px", padding: "2px 7px", fontSize: "11px", fontWeight: 600 }}>✓</span>}
+    </span>
+  )
+}
 
 type Cosita = {
   code: string
@@ -204,31 +260,27 @@ const CATEGORIAS: Category[] = [
 // Flatten para cálculos
 const ALL_COSITAS = CATEGORIAS.flatMap(cat => cat.items)
 
-const BENEFITS = [
-  {
-    icon: CreditCard,
-    title: "Pagás una sola vez",
-    description: "Sin suscripciones ni pagos recurrentes",
-  },
-  {
-    icon: Zap,
-    title: "Activación inmediata",
-    description: "Tu cosita se activa al instante",
-  },
-  {
-    icon: Clock,
-    title: "Para siempre",
-    description: "Una vez que pagás, es tuyo",
-  },
-  {
-    icon: Shield,
-    title: "Sin compromisos",
-    description: "Elegí solo lo que necesitás",
-  },
+const BENEFITS_DEFAULT = [
+  { icon: CreditCard, titleKey: "benefit1_titulo", descKey: "benefit1_desc", title: "Pagás una sola vez", description: "Sin suscripciones ni pagos recurrentes" },
+  { icon: Zap,        titleKey: "benefit2_titulo", descKey: "benefit2_desc", title: "Activación inmediata", description: "Tu cosita se activa al instante" },
+  { icon: Clock,      titleKey: "benefit3_titulo", descKey: "benefit3_desc", title: "Para siempre", description: "Una vez que pagás, es tuyo" },
+  { icon: Shield,     titleKey: "benefit4_titulo", descKey: "benefit4_desc", title: "Sin compromisos", description: "Elegí solo lo que necesitás" },
 ]
 
 export default function PlanCositasPage() {
   const [selected, setSelected] = useState<string[]>([])
+  const [content, setContent] = useState<Record<string,string>>({})
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    fetch("/api/plan-cositas").then(r=>r.json()).then(setContent).catch(()=>{})
+    fetch("/api/super-admin/check-auth").then(r=>r.json()).then(d=>setIsAdmin(d?.authenticated===true)).catch(()=>{})
+  }, [])
+
+  const handleSave = async (key: string, value: string) => {
+    const res = await fetch("/api/plan-cositas", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key, value }) })
+    if (res.ok) setContent(prev => ({ ...prev, [key]: value }))
+  }
 
   const toggleFeature = (code: string) => {
     setSelected((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]))
@@ -247,6 +299,12 @@ export default function PlanCositasPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#ff9fc5]/20 via-white to-[#ca678e]/10">
       <Header />
+      {isAdmin && (
+        <div style={{ background: "linear-gradient(90deg, #62162f, #96305a)", color: "white", padding: "8px 20px", display: "flex", alignItems: "center", gap: "10px", fontSize: "13px" }}>
+          <span style={{ background: "rgba(255,255,255,0.2)", borderRadius: "20px", padding: "2px 10px", fontSize: "11px", fontWeight: 700 }}>MODO EDICIÓN</span>
+          Pasá el mouse sobre los textos del hero para editarlos
+        </div>
+      )}
 
       {/* Hero */}
       <section className="py-16 md:py-24">
@@ -256,30 +314,36 @@ export default function PlanCositasPage() {
             Personalizá tu tienda
           </div>
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Plan{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#62162f] to-[#96305a]">
-              Cositas
-            </span>
+            <EditableText field="titulo" value={content.titulo || "Plan Cositas"} isAdmin={isAdmin} onSave={handleSave}
+              tag="span" className={isAdmin ? "text-[#62162f]" : "text-transparent bg-clip-text bg-gradient-to-r from-[#62162f] to-[#96305a]"} />
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-4">
-            Armá tu propio plan eligiendo solo lo que necesitás. Sin paquetes cerrados, sin pagar de más.
+            <EditableText field="subtitulo" value={content.subtitulo || "Armá tu propio plan eligiendo solo lo que necesitás. Sin paquetes cerrados, sin pagar de más."} isAdmin={isAdmin} onSave={handleSave} tag="span" />
           </p>
-          <p className="text-lg text-[#96305a] font-medium">Pagás una sola vez, tuyo para siempre</p>
+          <p className="text-lg text-[#96305a] font-medium">
+            <EditableText field="cta_footer" value={content.cta_footer || "Pagás una sola vez, tuyo para siempre"} isAdmin={isAdmin} onSave={handleSave} tag="span" />
+          </p>
         </div>
       </section>
 
       {/* Beneficios */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">¿Por qué elegir Cositas?</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">
+            <EditableText field="seccion_beneficios_titulo" value={content.seccion_beneficios_titulo || "¿Por qué elegir Cositas?"} isAdmin={isAdmin} onSave={handleSave} tag="span" />
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {BENEFITS.map((benefit, index) => (
+            {BENEFITS_DEFAULT.map((benefit, index) => (
               <div key={index} className="text-center">
                 <div className="w-16 h-16 bg-[#ff9fc5]/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <benefit.icon className="w-8 h-8 text-[#62162f]" />
                 </div>
-                <h3 className="font-semibold mb-2">{benefit.title}</h3>
-                <p className="text-sm text-muted-foreground">{benefit.description}</p>
+                <h3 className="font-semibold mb-2">
+                  <EditableText field={benefit.titleKey} value={content[benefit.titleKey] || benefit.title} isAdmin={isAdmin} onSave={handleSave} tag="span" />
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  <EditableText field={benefit.descKey} value={content[benefit.descKey] || benefit.description} isAdmin={isAdmin} onSave={handleSave} tag="span" />
+                </p>
               </div>
             ))}
           </div>
@@ -289,9 +353,11 @@ export default function PlanCositasPage() {
 {/* Cositas por categorías */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-4">Elegí tus cositas</h2>
+          <h2 className="text-3xl font-bold text-center mb-4">
+            <EditableText field="seccion_cositas_titulo" value={content.seccion_cositas_titulo || "Elegí tus cositas"} isAdmin={isAdmin} onSave={handleSave} tag="span" />
+          </h2>
           <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-            Seleccioná las funcionalidades que querés agregar a tu tienda. Organizadas por categoría para que encuentres fácil lo que necesitás.
+            <EditableText field="seccion_cositas_subtitulo" value={content.seccion_cositas_subtitulo || "Seleccioná las funcionalidades que querés agregar a tu tienda. Organizadas por categoría para que encuentres fácil lo que necesitás."} isAdmin={isAdmin} onSave={handleSave} tag="span" />
           </p>
           <div className="max-w-4xl mx-auto space-y-8">
             {CATEGORIAS.map((categoria) => (
@@ -417,49 +483,47 @@ export default function PlanCositasPage() {
       {/* FAQ Section */}
       <section className="py-16 bg-white mb-20">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Preguntas frecuentes</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">
+            <EditableText field="faq_titulo" value={content.faq_titulo || "Preguntas frecuentes"} isAdmin={isAdmin} onSave={handleSave} tag="span" />
+          </h2>
           <div className="max-w-2xl mx-auto space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">¿Cómo funciona el pago?</CardTitle>
+                <CardTitle className="text-lg"><EditableText field="faq1_pregunta" value={content.faq1_pregunta || "¿Cómo funciona el pago?"} isAdmin={isAdmin} onSave={handleSave} tag="span" /></CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Pagás una sola vez por cada cosita que elijas. No hay suscripciones mensuales ni pagos recurrentes. Una
-                  vez que pagás, la funcionalidad queda activa para siempre en tu tienda.
+                  {isAdmin ? <EditableText field="faq1_respuesta" value={content.faq1_respuesta || "Pagás una sola vez por cada cosita que elijas. No hay suscripciones mensuales ni pagos recurrentes. Una vez que pagás, la funcionalidad queda activa para siempre en tu tienda."} isAdmin={isAdmin} onSave={handleSave} tag="span" /> : (content.faq1_respuesta || "Pagás una sola vez por cada cosita que elijas. No hay suscripciones mensuales ni pagos recurrentes. Una vez que pagás, la funcionalidad queda activa para siempre en tu tienda.")}
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">¿Puedo agregar más cositas después?</CardTitle>
+                <CardTitle className="text-lg"><EditableText field="faq2_pregunta" value={content.faq2_pregunta || "¿Puedo agregar más cositas después?"} isAdmin={isAdmin} onSave={handleSave} tag="span" /></CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Sí, podés comprar más cositas cuando quieras. Cada una se activa al instante después del pago.
+                  {isAdmin ? <EditableText field="faq2_respuesta" value={content.faq2_respuesta || "Sí, podés comprar más cositas cuando quieras. Cada una se activa al instante después del pago."} isAdmin={isAdmin} onSave={handleSave} tag="span" /> : (content.faq2_respuesta || "Sí, podés comprar más cositas cuando quieras. Cada una se activa al instante después del pago.")}
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">¿Qué incluye el plan gratis?</CardTitle>
+                <CardTitle className="text-lg"><EditableText field="faq3_pregunta" value={content.faq3_pregunta || "¿Qué incluye el plan gratis?"} isAdmin={isAdmin} onSave={handleSave} tag="span" /></CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  El plan gratis incluye tu tienda funcionando con hasta 20 productos, categorías, carrito de compras,
-                  checkout, gestión de pedidos y todas las funciones básicas. Las cositas son extras opcionales para
-                  potenciar tu tienda.
+                  {isAdmin ? <EditableText field="faq3_respuesta" value={content.faq3_respuesta || "El plan gratis incluye tu tienda funcionando con hasta 20 productos, categorías, carrito de compras, checkout, gestión de pedidos y todas las funciones básicas. Las cositas son extras opcionales para potenciar tu tienda."} isAdmin={isAdmin} onSave={handleSave} tag="span" /> : (content.faq3_respuesta || "El plan gratis incluye tu tienda funcionando con hasta 20 productos, categorías, carrito de compras, checkout, gestión de pedidos y todas las funciones básicas. Las cositas son extras opcionales para potenciar tu tienda.")}
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">¿Cómo funciona el dominio propio?</CardTitle>
+                <CardTitle className="text-lg"><EditableText field="faq4_pregunta" value={content.faq4_pregunta || "¿Cómo funciona el dominio propio?"} isAdmin={isAdmin} onSave={handleSave} tag="span" /></CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Comprás tu dominio en cualquier registrador (ej: NIC Argentina, GoDaddy) y nosotros te ayudamos a
-                  conectarlo a tu tienda. En lugar de mitienda.tol.ar, tus clientes entran a www.mitienda.com.
+                  {isAdmin ? <EditableText field="faq4_respuesta" value={content.faq4_respuesta || "Comprás tu dominio en cualquier registrador (ej: NIC Argentina, GoDaddy) y nosotros te ayudamos a conectarlo a tu tienda. En lugar de mitienda.tol.ar, tus clientes entran a www.mitienda.com."} isAdmin={isAdmin} onSave={handleSave} tag="span" /> : (content.faq4_respuesta || "Comprás tu dominio en cualquier registrador (ej: NIC Argentina, GoDaddy) y nosotros te ayudamos a conectarlo a tu tienda. En lugar de mitienda.tol.ar, tus clientes entran a www.mitienda.com.")}
                 </p>
               </CardContent>
             </Card>

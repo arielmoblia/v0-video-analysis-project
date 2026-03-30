@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import Script from "next/script"
 import { ChatFlotante } from "@/components/chat-flotante"
+import { PageTracker } from "@/components/store/page-tracker"
 import "./globals.css"
 
 const geistSans = Geist({ 
@@ -77,7 +78,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "tol.ar - Crea tu tienda online gratis en minutos",
-    description: "Crea tu tienda online gratis en 2 minutos. Sin conocimientos tecnicos. Empieza a vender hoy.",
+    description: "Crea tu tienda online gratis y sin comisiones en Argentina. Sin conocimientos técnicos. Con MercadoPago integrado. Empezá a vender en 2 minutos.",
     images: ["/og-image.jpg"],
     creator: "@taborja",
   },
@@ -192,14 +193,24 @@ export default function RootLayout({
             })
           }}
         />
+      
+      <script dangerouslySetInnerHTML={{ __html: `
+        window.smartlook||(function(d) {
+          var o=smartlook=function(){ o.api.push(arguments)},h=d.getElementsByTagName('head')[0];
+          var c=d.createElement('script');o.api=new Array();c.async=true;c.type='text/javascript';
+          c.charset='utf-8';c.src='https://web-sdk.smartlook.com/recorder.js';h.appendChild(c);
+        })(document);
+        smartlook('init', '3f0fde2205d89a1258ddfc7741f15fe6888a2902', { region: 'eu' });
+      ` }} />
       </head>
       <body className="font-sans antialiased">
+      <PageTracker storeId="a921029f-9dc7-40ed-ae14-732491c37eee" />
         {children}
         <ChatFlotante />
         <Analytics />
-        {/* Google Analytics 4 - ID: G-WZ9B737ZBV */}
+        {/* Google Analytics 4 - ID: G-BRLNYVV46F */}
         <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-WZ9B737ZBV"
+          src="https://www.googletagmanager.com/gtag/js?id=G-BRLNYVV46F"
           strategy="afterInteractive"
         />
         <Script id="google-analytics" strategy="afterInteractive">
@@ -207,7 +218,7 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-WZ9B737ZBV');
+            gtag('config', 'G-BRLNYVV46F');
           `}
         </Script>
       </body>

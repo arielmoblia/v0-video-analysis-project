@@ -42,7 +42,7 @@ export function Hero() {
         {/* Contenedor derecho - Contenido */}
         <div className="flex-1 text-center pb-8 pt-8 ml-0 md:ml-[40px]">
           <h1 className="text-4xl md:text-5xl mb-2 text-balance">
-            <span className="font-bold">Crea tu Tienda Online Gratis en Argentina</span>
+            <span className="font-bold">Crea tu Tienda Online Gratis y Sin Comisiones en Argentina</span>
             <span className="block text-xl md:text-2xl font-semibold mt-2">
               con <span className="font-bold">tol</span><span className="font-normal text-gray-400">.ar</span> en solo 2 minutos
             </span>

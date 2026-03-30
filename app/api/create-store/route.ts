@@ -88,6 +88,7 @@ const { data: templateStore } = await supabase
       trial_expires_at: trialExpiresAt.toISOString(),
       last_activity_at: new Date().toISOString(),
       warning_emails_sent: 0,
+      is_active: true,
     }
 
     // Clone banner and customization settings from template if available
@@ -285,6 +286,25 @@ const { data: templateStore } = await supabase
       } catch (emailError) {
         console.error("Error sending email:", emailError)
       }
+    }
+
+    // PING A GOOGLE INDEXING API
+    try {
+      const { GoogleAuth } = await import('google-auth-library');
+      const auth = new GoogleAuth({
+        keyFile: '/root/tolar-seo-credentials.json',
+        scopes: ['https://www.googleapis.com/auth/indexing'],
+      });
+      const client = await auth.getClient();
+      const storeIndexUrl = storeUrl;
+      await client.request({
+        url: 'https://indexing.googleapis.com/v3/urlNotifications:publish',
+        method: 'POST',
+        data: { url: storeIndexUrl, type: 'URL_UPDATED' },
+      });
+      console.log('[SEO] Google ping OK:', storeIndexUrl);
+    } catch (seoError) {
+      console.error('[SEO] Google ping error:', seoError);
     }
 
     return NextResponse.json({

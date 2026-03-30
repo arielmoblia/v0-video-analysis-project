@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -28,6 +28,61 @@ import {
   Send,
 } from "lucide-react"
 
+
+function EditableText({ field, value, isAdmin, onSave, tag = "span", className = "" }: {
+  field: string; value: string; isAdmin: boolean; onSave: (k: string, v: string) => Promise<void>; tag?: string; className?: string
+}) {
+  const [editing, setEditing] = useState(false)
+  const [hover, setHover] = useState(false)
+  const [text, setText] = useState(value)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const ref = useRef<HTMLTextAreaElement>(null)
+  useEffect(() => { setText(value) }, [value])
+  useEffect(() => { if (editing && ref.current) { ref.current.focus(); ref.current.select() } }, [editing])
+  const handleSave = async () => {
+    setSaving(true); await onSave(field, text); setSaving(false); setSaved(true); setEditing(false)
+    setTimeout(() => setSaved(false), 2000)
+  }
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSave() }
+    if (e.key === "Escape") { setText(value); setEditing(false) }
+  }
+  if (!isAdmin) { const Tag = tag as any; return <Tag className={className}>{value}</Tag> }
+  if (editing) return (
+    <span style={{ display: "inline-block", width: "100%" }}>
+      <textarea ref={ref} value={text} onChange={e => setText(e.target.value)} onKeyDown={handleKeyDown} rows={2}
+        style={{ width: "100%", padding: "6px 10px", fontSize: "inherit", fontFamily: "inherit", fontWeight: "inherit",
+          color: "#92400e", background: "rgba(255,255,255,0.95)", border: "2px solid #d97706", borderRadius: "8px",
+          resize: "vertical", outline: "none", lineHeight: "1.5", textAlign: "center" }} />
+      <span style={{ display: "flex", gap: "8px", marginTop: "4px", justifyContent: "center" }}>
+        <button onClick={() => { setText(value); setEditing(false) }}
+          style={{ padding: "3px 10px", borderRadius: "6px", border: "1px solid #e2e8f0", background: "white", cursor: "pointer", fontSize: "12px" }}>Cancelar</button>
+        <button onClick={handleSave} disabled={saving}
+          style={{ padding: "3px 12px", borderRadius: "6px", border: "none", background: saving ? "#fbbf24" : "#d97706", color: "white", cursor: "pointer", fontSize: "12px", fontWeight: 600 }}>
+          {saving ? "Guardando..." : "Guardar"}</button>
+      </span>
+    </span>
+  )
+  const Tag = tag as any
+  return (
+    <span style={{ position: "relative", display: "inline-block" }}
+      onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+      <Tag className={className}
+        style={{ cursor: "text", borderRadius: "4px", transition: "all 0.15s",
+          outline: hover ? "2px dashed #fbbf24" : "2px dashed transparent", outlineOffset: "3px" }}>
+        {text}
+      </Tag>
+      {hover && <button onClick={() => setEditing(true)}
+        style={{ position: "absolute", top: "-12px", right: "-12px", background: "#d97706", color: "white",
+          border: "none", borderRadius: "50%", width: "26px", height: "26px", cursor: "pointer", fontSize: "12px",
+          display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(217,119,6,0.4)", zIndex: 10 }}>✏️</button>}
+      {saved && <span style={{ position: "absolute", top: "-12px", right: "20px", background: "#10b981",
+        color: "white", borderRadius: "4px", padding: "2px 7px", fontSize: "11px", fontWeight: 600 }}>✓</span>}
+    </span>
+  )
+}
+
 const TODAS_LAS_COSITAS = [
   { icon: BarChart3, name: "Estadísticas de visitas" },
   { icon: Video, name: "Video en portada" },
@@ -40,6 +95,18 @@ const TODAS_LAS_COSITAS = [
 
 export default function PlanSocioPage() {
   const [ventasMensuales, setVentasMensuales] = useState("")
+  const [content, setContent] = useState<Record<string,string>>({})
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    fetch("/api/plan-socio").then(r=>r.json()).then(setContent).catch(()=>{})
+    fetch("/api/super-admin/check-auth").then(r=>r.json()).then(d=>setIsAdmin(d?.authenticated===true)).catch(()=>{})
+  }, [])
+
+  const handleSave = async (key: string, value: string) => {
+    const res = await fetch("/api/plan-socio", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key, value }) })
+    if (res.ok) setContent(prev => ({ ...prev, [key]: value }))
+  }
   const [formData, setFormData] = useState({
     nombre: "",
     tienda: "",
@@ -89,20 +156,25 @@ export default function PlanSocioPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
       <Header />
+      {isAdmin && (
+        <div style={{ background: "linear-gradient(90deg, #92400e, #d97706)", color: "white", padding: "8px 20px", display: "flex", alignItems: "center", gap: "10px", fontSize: "13px" }}>
+          <span style={{ background: "rgba(255,255,255,0.2)", borderRadius: "20px", padding: "2px 10px", fontSize: "11px", fontWeight: 700 }}>MODO EDICIÓN</span>
+          Pasá el mouse sobre los textos para editarlos
+        </div>
+      )}
 
       {/* Hero */}
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-4xl text-center">
           <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
             <Handshake className="w-4 h-4" />
-            Crecemos juntos
+            {isAdmin ? <EditableText field="badge" value={content.badge || "Crecemos juntos"} isAdmin={isAdmin} onSave={handleSave} tag="span" /> : (content.badge || "Crecemos juntos")}
           </div>
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Plan <span className="text-amber-600">Socio</span>
+            <EditableText field="titulo" value={content.titulo || "Plan Socio"} isAdmin={isAdmin} onSave={handleSave} tag="span" className={isAdmin ? "text-amber-600" : "text-amber-600"} />
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            No pagás mensualidad. Solo compartís el <span className="font-bold text-amber-600">10% de tus ventas</span>.
-            Nosotros invertimos en publicidad para que vendas más.
+            {isAdmin ? <EditableText field="subtitulo" value={content.subtitulo || "No pagás mensualidad. Solo compartís el 10% de tus ventas. Nosotros invertimos en publicidad para que vendas más."} isAdmin={isAdmin} onSave={handleSave} tag="span" /> : (content.subtitulo || <>No pagás mensualidad. Solo compartís el <span className="font-bold text-amber-600">10% de tus ventas</span>. Nosotros invertimos en publicidad para que vendas más.</>)}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="bg-amber-600 hover:bg-amber-700" asChild>
@@ -121,7 +193,7 @@ export default function PlanSocioPage() {
       {/* Cómo funciona */}
       <section id="como-funciona" className="py-20 px-4 bg-white">
         <div className="container mx-auto max-w-5xl">
-          <h2 className="text-3xl font-bold text-center mb-12">¿Cómo funciona?</h2>
+          <h2 className="text-3xl font-bold text-center mb-12"><EditableText field="como_funciona_titulo" value={content.como_funciona_titulo || "¿Cómo funciona?"} isAdmin={isAdmin} onSave={handleSave} tag="span" /></h2>
 
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="border-2 border-amber-200 bg-amber-50/50">
@@ -129,11 +201,10 @@ export default function PlanSocioPage() {
                 <div className="w-16 h-16 bg-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl font-bold text-white">1</span>
                 </div>
-                <CardTitle>Vos vendés</CardTitle>
+                <CardTitle><EditableText field="paso1_titulo" value={content.paso1_titulo || "Vos vendés"} isAdmin={isAdmin} onSave={handleSave} tag="span" /></CardTitle>
               </CardHeader>
               <CardContent className="text-center text-muted-foreground">
-                Tu tienda funciona con todas las funcionalidades premium incluidas. Vos te enfocás en tus productos y
-                clientes.
+                {isAdmin ? <EditableText field="paso1_desc" value={content.paso1_desc || "Tu tienda funciona con todas las funcionalidades premium incluidas. Vos te enfocás en tus productos y clientes."} isAdmin={isAdmin} onSave={handleSave} tag="span" /> : (content.paso1_desc || "Tu tienda funciona con todas las funcionalidades premium incluidas. Vos te enfocás en tus productos y clientes.")}
               </CardContent>
             </Card>
 
@@ -142,11 +213,10 @@ export default function PlanSocioPage() {
                 <div className="w-16 h-16 bg-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl font-bold text-white">2</span>
                 </div>
-                <CardTitle>Nosotros invertimos</CardTitle>
+                <CardTitle><EditableText field="paso2_titulo" value={content.paso2_titulo || "Nosotros invertimos"} isAdmin={isAdmin} onSave={handleSave} tag="span" /></CardTitle>
               </CardHeader>
               <CardContent className="text-center text-muted-foreground">
-                Invertimos en publicidad (Google Ads, Meta Ads, etc.) para que tu tienda reciba más visitas y más
-                clientes.
+                {isAdmin ? <EditableText field="paso2_desc" value={content.paso2_desc || "Invertimos en publicidad (Google Ads, Meta Ads, etc.) para que tu tienda reciba más visitas y más clientes."} isAdmin={isAdmin} onSave={handleSave} tag="span" /> : (content.paso2_desc || "Invertimos en publicidad (Google Ads, Meta Ads, etc.) para que tu tienda reciba más visitas y más clientes.")}
               </CardContent>
             </Card>
 
@@ -155,10 +225,10 @@ export default function PlanSocioPage() {
                 <div className="w-16 h-16 bg-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl font-bold text-white">3</span>
                 </div>
-                <CardTitle>Compartimos el éxito</CardTitle>
+                <CardTitle><EditableText field="paso3_titulo" value={content.paso3_titulo || "Compartimos el éxito"} isAdmin={isAdmin} onSave={handleSave} tag="span" /></CardTitle>
               </CardHeader>
               <CardContent className="text-center text-muted-foreground">
-                Solo pagás el 10% de lo que vendés. Si no vendés, no pagás nada. Crecemos juntos.
+                {isAdmin ? <EditableText field="paso3_desc" value={content.paso3_desc || "Solo pagás el 10% de lo que vendés. Si no vendés, no pagás nada. Crecemos juntos."} isAdmin={isAdmin} onSave={handleSave} tag="span" /> : (content.paso3_desc || "Solo pagás el 10% de lo que vendés. Si no vendés, no pagás nada. Crecemos juntos.")}
               </CardContent>
             </Card>
           </div>
@@ -168,9 +238,9 @@ export default function PlanSocioPage() {
       {/* Beneficios */}
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-5xl">
-          <h2 className="text-3xl font-bold text-center mb-4">Todo incluido</h2>
+          <h2 className="text-3xl font-bold text-center mb-4"><EditableText field="incluido_titulo" value={content.incluido_titulo || "Todo incluido"} isAdmin={isAdmin} onSave={handleSave} tag="span" /></h2>
           <p className="text-center text-muted-foreground mb-12">
-            Como socio tenés TODAS las cositas incluidas sin costo adicional
+            {isAdmin ? <EditableText field="incluido_subtitulo" value={content.incluido_subtitulo || "Como socio tenés TODAS las cositas incluidas sin costo adicional"} isAdmin={isAdmin} onSave={handleSave} tag="span" /> : (content.incluido_subtitulo || "Como socio tenés TODAS las cositas incluidas sin costo adicional")}
           </p>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
@@ -200,28 +270,28 @@ export default function PlanSocioPage() {
                 <div>
                   <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
                     <TrendingUp className="w-5 h-5 text-amber-600" />
-                    Ventajas del Plan Socio
+                    {isAdmin ? <EditableText field="ventajas_titulo" value={content.ventajas_titulo || "Ventajas del Plan Socio"} isAdmin={isAdmin} onSave={handleSave} tag="span" /> : (content.ventajas_titulo || "Ventajas del Plan Socio")}
                   </h3>
                   <ul className="space-y-3">
                     <li className="flex items-start gap-2">
                       <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span>No pagás nada si no vendés</span>
+                      <span>{isAdmin ? <EditableText field="ventaja1" value={content.ventaja1 || "No pagás nada si no vendés"} isAdmin={isAdmin} onSave={handleSave} tag="span" /> : (content.ventaja1 || "No pagás nada si no vendés")}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span>Publicidad profesional sin que vos tengas que saber de marketing</span>
+                      <span>{isAdmin ? <EditableText field="ventaja2" value={content.ventaja2 || "Publicidad profesional sin que vos tengas que saber de marketing"} isAdmin={isAdmin} onSave={handleSave} tag="span" /> : (content.ventaja2 || "Publicidad profesional sin que vos tengas que saber de marketing")}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span>Todas las funcionalidades premium incluidas</span>
+                      <span>{isAdmin ? <EditableText field="ventaja3" value={content.ventaja3 || "Todas las funcionalidades premium incluidas"} isAdmin={isAdmin} onSave={handleSave} tag="span" /> : (content.ventaja3 || "Todas las funcionalidades premium incluidas")}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span>Nosotros ponemos la plata de la publicidad</span>
+                      <span>{isAdmin ? <EditableText field="ventaja4" value={content.ventaja4 || "Nosotros ponemos la plata de la publicidad"} isAdmin={isAdmin} onSave={handleSave} tag="span" /> : (content.ventaja4 || "Nosotros ponemos la plata de la publicidad")}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span>Soporte personalizado para hacer crecer tu negocio</span>
+                      <span>{isAdmin ? <EditableText field="ventaja5" value={content.ventaja5 || "Soporte personalizado para hacer crecer tu negocio"} isAdmin={isAdmin} onSave={handleSave} tag="span" /> : (content.ventaja5 || "Soporte personalizado para hacer crecer tu negocio")}</span>
                     </li>
                   </ul>
                 </div>
@@ -312,7 +382,7 @@ export default function PlanSocioPage() {
       {/* Formulario */}
       <section id="aplicar" className="py-20 px-4 bg-gradient-to-b from-amber-50 to-amber-100">
         <div className="container mx-auto max-w-xl">
-          <h2 className="text-3xl font-bold text-center mb-4">Quiero ser socio</h2>
+          <h2 className="text-3xl font-bold text-center mb-4"><EditableText field="form_titulo" value={content.form_titulo || "Quiero ser socio"} isAdmin={isAdmin} onSave={handleSave} tag="span" /></h2>
           <p className="text-center text-muted-foreground mb-8">
             Completá el formulario y nos ponemos en contacto para conocer tu negocio
           </p>

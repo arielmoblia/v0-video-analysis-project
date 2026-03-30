@@ -57,6 +57,7 @@ export function Footer() {
               <li><Link href="/templates" className="hover:text-white transition-colors">Templates</Link></li>
               <li><Link href="/pagos" className="hover:text-white transition-colors">Métodos de Pago</Link></li>
               <li><Link href="/contacto" className="hover:text-white transition-colors">Contacto</Link></li>
+              <li><Link href="/empleos" className="hover:text-white transition-colors">Puestos de trabajo</Link></li>
             </ul>
           </div>
 
