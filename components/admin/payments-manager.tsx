@@ -231,19 +231,43 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                 ))}
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               <div className="bg-slate-50 rounded-lg p-4 border">
                 <p className="text-xs text-muted-foreground mb-1">Total vendido</p>
                 <p className="text-2xl font-semibold text-green-600">$0</p>
               </div>
               <div className="bg-slate-50 rounded-lg p-4 border">
-                <p className="text-xs text-muted-foreground mb-1">Dinero en cuenta</p>
-                <p className="text-2xl font-semibold text-blue-600">$0</p>
+                <p className="text-xs text-muted-foreground mb-1">Dinero en cuenta (MP)</p>
+                <p className="text-2xl font-semibold text-blue-600">$—</p>
               </div>
               <div className="bg-slate-50 rounded-lg p-4 border">
-                <p className="text-xs text-muted-foreground mb-1">Dinero retirado</p>
-                <p className="text-2xl font-semibold text-slate-600">$0</p>
+                <p className="text-xs text-muted-foreground mb-1">Ticket promedio</p>
+                <p className="text-2xl font-semibold text-amber-600">$—</p>
               </div>
+              <div className="bg-slate-50 rounded-lg p-4 border">
+                <p className="text-xs text-muted-foreground mb-1">Método más usado</p>
+                <p className="text-base font-semibold text-slate-700">—</p>
+                <p className="text-xs text-amber-700 mt-1">— % de ventas</p>
+              </div>
+            </div>
+            {/* Gráfico de barras por método */}
+            <div className="bg-slate-50 rounded-lg p-4 border space-y-3">
+              <p className="text-xs font-medium text-muted-foreground">Ventas por método de pago</p>
+              {[
+                { label: "MercadoPago", pct: 0, color: "#378add", amt: "$0" },
+                { label: "Transferencia", pct: 0, color: "#1d9e75", amt: "$0" },
+                { label: "Efectivo", pct: 0, color: "#ba7517", amt: "$0" },
+                { label: "Mobbex", pct: 0, color: "#7f77dd", amt: "$0" },
+              ].map(m => (
+                <div key={m.label} className="flex items-center gap-3">
+                  <span className="text-xs text-muted-foreground w-28 flex-shrink-0">{m.label}</span>
+                  <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: m.pct + "%", background: m.color }} />
+                  </div>
+                  <span className="text-xs text-muted-foreground w-8 text-right">{m.pct}%</span>
+                  <span className="text-xs font-medium text-slate-700 w-16 text-right">{m.amt}</span>
+                </div>
+              ))}
             </div>
           </div>
           <div className="flex justify-end">
@@ -572,6 +596,12 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                         </CardTitle>
                         <CardDescription>Alternativa argentina a MercadoPago - Todas las tarjetas y billeteras</CardDescription>
                       </div>
+                      <div className="flex items-center gap-4 text-xs border-l pl-4 ml-2">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-muted-foreground">Ventas del período</span>
+                          <span className="font-medium text-slate-700">0 · $0</span>
+                        </div>
+                      </div>
                     </div>
                     <Switch
                       checked={payments.mobbex_enabled}
@@ -641,6 +671,12 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                         <CardTitle className="text-lg">MODO</CardTitle>
                         <CardDescription>Pagos con QR desde la app del banco - Sin comision</CardDescription>
                       </div>
+                      <div className="flex items-center gap-4 text-xs border-l pl-4 ml-2">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-muted-foreground">Ventas del período</span>
+                          <span className="font-medium text-slate-700">0 · $0</span>
+                        </div>
+                      </div>
                     </div>
                     <Switch
                       checked={payments.modo_enabled}
@@ -691,6 +727,12 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                       <div>
                         <CardTitle className="text-lg">Ualá Bis</CardTitle>
                         <CardDescription>Link de pago de Ualá para comercios</CardDescription>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs border-l pl-4 ml-2">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-muted-foreground">Ventas del período</span>
+                          <span className="font-medium text-slate-700">0 · $0</span>
+                        </div>
                       </div>
                     </div>
                     <Switch
@@ -750,6 +792,12 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                         <CardTitle className="text-lg">Efectivo</CardTitle>
                         <CardDescription>Pago en efectivo contra entrega</CardDescription>
                       </div>
+                      <div className="flex items-center gap-4 text-xs border-l pl-4 ml-2">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-muted-foreground">Ventas del período</span>
+                          <span className="font-medium text-slate-700">0 · $0</span>
+                        </div>
+                      </div>
                     </div>
                     <Switch
                       checked={payments.cash_enabled}
@@ -788,6 +836,12 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                       <div>
                         <CardTitle className="text-lg">Posnet / Tarjeta presencial</CardTitle>
                         <CardDescription>Pago con tarjeta al momento de la entrega</CardDescription>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs border-l pl-4 ml-2">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-muted-foreground">Ventas del período</span>
+                          <span className="font-medium text-slate-700">0 · $0</span>
+                        </div>
                       </div>
                     </div>
                     <Switch
@@ -828,6 +882,12 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                       <div>
                         <CardTitle className="text-lg">Rapipago / Pago Fácil</CardTitle>
                         <CardDescription>Pago en efectivo en puntos de cobranza</CardDescription>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs border-l pl-4 ml-2">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-muted-foreground">Ventas del período</span>
+                          <span className="font-medium text-slate-700">0 · $0</span>
+                        </div>
                       </div>
                     </div>
                     <Switch
@@ -874,6 +934,12 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                       <CardTitle className="text-lg">Transferencia Bancaria</CardTitle>
                       <CardDescription>Transferencia directa a tu cuenta</CardDescription>
                     </div>
+                      <div className="flex items-center gap-4 text-xs border-l pl-4 ml-2">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-muted-foreground">Ventas del período</span>
+                          <span className="font-medium text-slate-700">0 · $0</span>
+                        </div>
+                      </div>
                   </div>
                   <Switch
                     checked={payments.transfer_enabled}
@@ -1040,6 +1106,12 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                       </CardTitle>
                       <CardDescription>Transferencia directa sin comisión</CardDescription>
                     </div>
+                      <div className="flex items-center gap-4 text-xs border-l pl-4 ml-2">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-muted-foreground">Ventas del período</span>
+                          <span className="font-medium text-slate-700">0 · $0</span>
+                        </div>
+                      </div>
                   </div>
                   <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-300">Sin comisión</Badge>
                 </div>
