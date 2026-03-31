@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Info, ShoppingBag, Receipt } from "lucide-react"
+import { Info } from "lucide-react"
 import {
   Banknote,
   CreditCard,
@@ -211,30 +211,42 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold">Pagos</h2>
-          <p className="text-muted-foreground">Gestioná los pagos de tu tienda y tu suscripción</p>
+          <h2 className="text-2xl font-semibold">Cobros</h2>
+          <p className="text-muted-foreground">Métodos de cobro para tus clientes</p>
         </div>
       </div>
 
       <Tabs defaultValue="tienda" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="tienda" className="flex items-center gap-2">
-            <ShoppingBag className="w-4 h-4" />
-            Para tu tienda
-          </TabsTrigger>
-          <TabsTrigger value="suscripcion" className="flex items-center gap-2">
-            <Receipt className="w-4 h-4" />
-            Tu suscripción
-          </TabsTrigger>
-        </TabsList>
 
-        {/* TAB 1: Pagos para la tienda */}
+        {/* TAB 1: Cobros */}
         <TabsContent value="tienda" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-medium">Métodos de pago para tus clientes</h3>
-              <p className="text-sm text-muted-foreground">Configurá cómo tus clientes te pagan</p>
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <input type="date" id="desde" className="border rounded-md px-3 py-1.5 text-sm" />
+              <span className="text-sm text-muted-foreground">hasta</span>
+              <input type="date" id="hasta" className="border rounded-md px-3 py-1.5 text-sm" />
+              <div className="flex gap-1 ml-2">
+                {["Hoy","Semana","Mes","Año"].map(p => (
+                  <button key={p} className="px-3 py-1.5 text-xs border rounded-md hover:bg-slate-100">{p}</button>
+                ))}
+              </div>
             </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-slate-50 rounded-lg p-4 border">
+                <p className="text-xs text-muted-foreground mb-1">Total vendido</p>
+                <p className="text-2xl font-semibold text-green-600">$0</p>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-4 border">
+                <p className="text-xs text-muted-foreground mb-1">Dinero en cuenta</p>
+                <p className="text-2xl font-semibold text-blue-600">$0</p>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-4 border">
+                <p className="text-xs text-muted-foreground mb-1">Dinero retirado</p>
+                <p className="text-2xl font-semibold text-slate-600">$0</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end">
             <Button onClick={handleSave} disabled={saving}>
               {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               Guardar Cambios
@@ -260,6 +272,20 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                           <span className="text-xs bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full">Recomendado</span>
                         </CardTitle>
                         <CardDescription>Tarjetas, débito, saldo MP y cuotas sin interés</CardDescription>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs border-l pl-4 ml-2">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-muted-foreground">Saldo disponible</span>
+                          <span className="font-medium text-green-700">$—</span>
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-muted-foreground">En proceso</span>
+                          <span className="font-medium text-blue-700">$—</span>
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-muted-foreground">Ventas del período</span>
+                          <span className="font-medium text-slate-700">0 · $0</span>
+                        </div>
                       </div>
                     </div>
                     <Switch
