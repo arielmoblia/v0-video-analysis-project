@@ -291,9 +291,9 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
 
             <div className="grid gap-6">
               {/* Mercado Pago */}
-              <Card className={payments.mercadopago_enabled ? "border-sky-200" : "border-slate-200 opacity-50 grayscale"}>
+              <Card className={payments.mercadopago_enabled ? "border-sky-200" : "border-slate-200 opacity-60"}>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-sky-100 rounded-lg">
                         <Wallet className="w-5 h-5 text-sky-600" />
@@ -334,7 +334,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                         
                         {/* MODO PRUEBA (SANDBOX) - Arriba */}
                         <div className="space-y-3">
-                          <div className="flex items-center justify-between">
+                          <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
                             <Label className="flex items-center gap-2">
                               Modo Prueba (Sandbox)
                               <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">Testing</span>
@@ -373,7 +373,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
 
                         {/* MODO PRODUCCION - Abajo */}
                         <div className="space-y-3 border-t pt-4">
-                          <div className="flex items-center justify-between">
+                          <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
                             <Label className="flex items-center gap-2">
                               Modo Producción
                             </Label>
@@ -596,10 +596,10 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
               </Card>
 
               {/* Mobbex - Alternativa a MercadoPago */}
-              <Card className={payments.mobbex_enabled ? "border-green-200" : "border-slate-200 opacity-50 grayscale"}>
+              <Card className={payments.mobbex_enabled ? "border-green-200" : "border-slate-200 opacity-60"}>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
+                    <div className={`flex items-center gap-3 flex-1 ${!payments.mobbex_enabled ? "opacity-40" : ""}`}>
                       <div className="p-2 bg-green-100 rounded-lg">
                         <CreditCard className="w-5 h-5 text-green-600" />
                       </div>
@@ -610,19 +610,17 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                         </CardTitle>
                         <CardDescription>Alternativa argentina a MercadoPago - Todas las tarjetas y billeteras</CardDescription>
                       </div>
-                      <div className="flex items-center gap-4 text-xs border-l pl-4 ml-2">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-muted-foreground">Ventas del período</span>
-                          <span className="font-medium text-slate-700">0 · $0</span>
-                        </div>
-                      </div>
-                      <span className="ml-4 px-2 py-0.5 text-xs font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-full tracking-wide">Próximamente</span>
                     </div>
-                    <Switch
-                      checked={false}
-                      disabled
-                      onCheckedChange={setMobbexOpen}
-                    />
+                    <div className="flex items-center justify-center border-l border-r px-4 mx-2 w-40 flex-shrink-0">
+                      <div className="flex flex-col gap-0.5 text-xs text-center">
+                        <span className="text-muted-foreground">Ventas del período</span>
+                        <span className="font-medium text-slate-700">0 · $0</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 justify-end w-48 flex-shrink-0">
+                      <span className="px-3 py-1 text-sm font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-lg tracking-wide">PRÓXIMAMENTE</span>
+                      <Switch checked={false} disabled onCheckedChange={setMobbexOpen} />
+                    </div>
                   </div>
                 </CardHeader>
                 {mobbexOpen && (
@@ -682,10 +680,10 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
               </Card>
 
               {/* MODO */}
-              <Card className={payments.modo_enabled ? "border-violet-200" : "border-slate-200 opacity-50 grayscale"}>
+              <Card className={payments.modo_enabled ? "border-violet-200" : "border-slate-200 opacity-60"}>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
+                    <div className={`flex items-center gap-3 flex-1 ${!payments.modo_enabled ? "opacity-40" : ""}`}>
                       <div className="p-2 bg-violet-100 rounded-lg">
                         <Smartphone className="w-5 h-5 text-violet-600" />
                       </div>
@@ -693,19 +691,17 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                         <CardTitle className="text-lg">MODO</CardTitle>
                         <CardDescription>Pagos con QR desde la app del banco - Sin comision</CardDescription>
                       </div>
-                      <div className="flex items-center gap-4 text-xs border-l pl-4 ml-2">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-muted-foreground">Ventas del período</span>
-                          <span className="font-medium text-slate-700">0 · $0</span>
-                        </div>
-                      </div>
-                      <span className="ml-4 px-2 py-0.5 text-xs font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-full tracking-wide">Próximamente</span>
                     </div>
-                    <Switch
-                      checked={false}
-                      disabled
-                      onCheckedChange={setModoOpen}
-                    />
+                    <div className="flex items-center justify-center border-l border-r px-4 mx-2 w-40 flex-shrink-0">
+                      <div className="flex flex-col gap-0.5 text-xs text-center">
+                        <span className="text-muted-foreground">Ventas del período</span>
+                        <span className="font-medium text-slate-700">0 · $0</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 justify-end w-48 flex-shrink-0">
+                      <span className="px-3 py-1 text-sm font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-lg tracking-wide">PRÓXIMAMENTE</span>
+                      <Switch checked={false} disabled onCheckedChange={setModoOpen} />
+                    </div>
                   </div>
                 </CardHeader>
                 {modoOpen && (
@@ -747,9 +743,9 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
               </Card>
 
               {/* Ualá Bis */}
-              <Card className={payments.uala_enabled ? "border-red-200" : "border-slate-200 opacity-50 grayscale"}>
+              <Card className={payments.uala_enabled ? "border-red-200" : "border-slate-200 opacity-60"}>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-red-100 rounded-lg">
                         <CreditCard className="w-5 h-5 text-red-600" />
@@ -758,19 +754,17 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                         <CardTitle className="text-lg">Ualá Bis</CardTitle>
                         <CardDescription>Link de pago de Ualá para comercios</CardDescription>
                       </div>
-                      <div className="flex items-center gap-4 text-xs border-l pl-4 ml-2">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-muted-foreground">Ventas del período</span>
-                          <span className="font-medium text-slate-700">0 · $0</span>
-                        </div>
-                      </div>
-                      <span className="ml-4 px-2 py-0.5 text-xs font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-full tracking-wide">Próximamente</span>
                     </div>
-                    <Switch
-                      checked={false}
-                      disabled
-                      onCheckedChange={setUalaOpen}
-                    />
+                    <div className="flex items-center justify-center border-l border-r px-4 mx-2 w-40 flex-shrink-0">
+                      <div className="flex flex-col gap-0.5 text-xs text-center">
+                        <span className="text-muted-foreground">Ventas del período</span>
+                        <span className="font-medium text-slate-700">0 · $0</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 justify-end w-48 flex-shrink-0">
+                      <span className="px-3 py-1 text-sm font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-lg tracking-wide">PRÓXIMAMENTE</span>
+                      <Switch checked={false} disabled onCheckedChange={setUalaOpen} />
+                    </div>
                   </div>
                 </CardHeader>
                 {ualaOpen && (
@@ -819,9 +813,9 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
 
             <div className="grid gap-6">
               {/* Efectivo */}
-              <Card className={payments.cash_enabled ? "" : "border-slate-200 opacity-50 grayscale"}>
+              <Card className={payments.cash_enabled ? "" : "border-slate-200 opacity-60"}>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-green-100 rounded-lg">
                         <Banknote className="w-5 h-5 text-green-600" />
@@ -830,17 +824,16 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                         <CardTitle className="text-lg">Efectivo</CardTitle>
                         <CardDescription>Pago en efectivo contra entrega</CardDescription>
                       </div>
-                      <div className="flex items-center gap-4 text-xs border-l pl-4 ml-2">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-muted-foreground">Ventas del período</span>
-                          <span className="font-medium text-slate-700">0 · $0</span>
-                        </div>
+                    </div>
+                    <div className="flex items-center justify-center border-l border-r px-4 mx-2 w-40 flex-shrink-0">
+                      <div className="flex flex-col gap-0.5 text-xs text-center">
+                        <span className="text-muted-foreground">Ventas del período</span>
+                        <span className="font-medium text-slate-700">0 · $0</span>
                       </div>
                     </div>
-                    <Switch
-                      checked={cashOpen}
-                      onCheckedChange={setCashOpen}
-                    />
+                    <div className="flex items-center gap-3 justify-end w-48 flex-shrink-0">
+                      <Switch checked={cashOpen} onCheckedChange={setCashOpen} />
+                    </div>
                   </div>
                 </CardHeader>
                 {cashOpen && (
@@ -870,9 +863,9 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
               </Card>
 
               {/* Posnet / Tarjeta presencial */}
-              <Card className={payments.card_enabled ? "" : "border-slate-200 opacity-50 grayscale"}>
+              <Card className={payments.card_enabled ? "" : "border-slate-200 opacity-60"}>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-blue-100 rounded-lg">
                         <CreditCard className="w-5 h-5 text-blue-600" />
@@ -881,17 +874,16 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                         <CardTitle className="text-lg">Posnet / Tarjeta presencial</CardTitle>
                         <CardDescription>Pago con tarjeta al momento de la entrega</CardDescription>
                       </div>
-                      <div className="flex items-center gap-4 text-xs border-l pl-4 ml-2">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-muted-foreground">Ventas del período</span>
-                          <span className="font-medium text-slate-700">0 · $0</span>
-                        </div>
+                    </div>
+                    <div className="flex items-center justify-center border-l border-r px-4 mx-2 w-40 flex-shrink-0">
+                      <div className="flex flex-col gap-0.5 text-xs text-center">
+                        <span className="text-muted-foreground">Ventas del período</span>
+                        <span className="font-medium text-slate-700">0 · $0</span>
                       </div>
                     </div>
-                    <Switch
-                      checked={cardOpen}
-                      onCheckedChange={setCardOpen}
-                    />
+                    <div className="flex items-center gap-3 justify-end w-48 flex-shrink-0">
+                      <Switch checked={cardOpen} onCheckedChange={setCardOpen} />
+                    </div>
                   </div>
                 </CardHeader>
                 {cardOpen && (
@@ -921,9 +913,9 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
               </Card>
 
               {/* Rapipago / Pago Fácil */}
-              <Card className={payments.rapipago_enabled ? "" : "border-slate-200 opacity-50 grayscale"}>
+              <Card className={payments.rapipago_enabled ? "" : "border-slate-200 opacity-60"}>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-orange-100 rounded-lg">
                         <Store className="w-5 h-5 text-orange-600" />
@@ -932,19 +924,17 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                         <CardTitle className="text-lg">Rapipago / Pago Fácil</CardTitle>
                         <CardDescription>Pago en efectivo en puntos de cobranza</CardDescription>
                       </div>
-                      <div className="flex items-center gap-4 text-xs border-l pl-4 ml-2">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-muted-foreground">Ventas del período</span>
-                          <span className="font-medium text-slate-700">0 · $0</span>
-                        </div>
-                      </div>
-                      <span className="ml-4 px-2 py-0.5 text-xs font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-full tracking-wide">Próximamente</span>
                     </div>
-                    <Switch
-                      checked={false}
-                      disabled
-                      onCheckedChange={setRapipagoOpen}
-                    />
+                    <div className="flex items-center justify-center border-l border-r px-4 mx-2 w-40 flex-shrink-0">
+                      <div className="flex flex-col gap-0.5 text-xs text-center">
+                        <span className="text-muted-foreground">Ventas del período</span>
+                        <span className="font-medium text-slate-700">0 · $0</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 justify-end w-48 flex-shrink-0">
+                      <span className="px-3 py-1 text-sm font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-lg tracking-wide">PRÓXIMAMENTE</span>
+                      <Switch checked={false} disabled onCheckedChange={setRapipagoOpen} />
+                    </div>
                   </div>
                 </CardHeader>
                 {rapipagoOpen && (
@@ -980,9 +970,9 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold border-b pb-2">🏦 Transferencia Bancaria</h3>
 
-            <Card className={payments.transfer_enabled ? "" : "border-slate-200 opacity-50 grayscale"}>
+            <Card className={payments.transfer_enabled ? "" : "border-slate-200 opacity-60"}>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-emerald-100 rounded-lg">
                       <Building2 className="w-5 h-5 text-emerald-600" />
@@ -991,18 +981,17 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                       <CardTitle className="text-lg">Transferencia Bancaria</CardTitle>
                       <CardDescription>Transferencia directa a tu cuenta</CardDescription>
                     </div>
-                      <div className="flex items-center gap-4 text-xs border-l pl-4 ml-2">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-muted-foreground">Ventas del período</span>
-                          <span className="font-medium text-slate-700">0 · $0</span>
-                        </div>
+                    </div>
+                    <div className="flex items-center justify-center border-l border-r px-4 mx-2 w-40 flex-shrink-0">
+                      <div className="flex flex-col gap-0.5 text-xs text-center">
+                        <span className="text-muted-foreground">Ventas del período</span>
+                        <span className="font-medium text-slate-700">0 · $0</span>
                       </div>
+                    </div>
+                    <div className="flex items-center gap-3 justify-end w-48 flex-shrink-0">
+                      <Switch checked={transferOpen} onCheckedChange={setTransferOpen} />
+                    </div>
                   </div>
-                  <Switch
-                    checked={transferOpen}
-                    onCheckedChange={setTransferOpen}
-                  />
-                </div>
               </CardHeader>
               {transferOpen && (
                 <CardContent>
@@ -1103,7 +1092,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
             {/* MercadoPago */}
             <Card className="border-[#00b1ea]/30 hover:border-[#00b1ea] transition-colors">
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
+                <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-[#00b1ea] rounded-lg flex items-center justify-center">
                       <span className="text-white font-bold text-lg">MP</span>
@@ -1130,7 +1119,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
             {/* PayPal */}
             <Card className="border-[#003087]/30 hover:border-[#003087] transition-colors">
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
+                <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-[#003087] rounded-lg flex items-center justify-center">
                       <span className="text-white font-bold text-lg">PP</span>
@@ -1157,7 +1146,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
             {/* Transferencia Bancaria */}
             <Card className="border-emerald-200 hover:border-emerald-400 transition-colors">
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
+                <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
                       <Building2 className="w-6 h-6 text-emerald-600" />
@@ -1169,12 +1158,14 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                       </CardTitle>
                       <CardDescription>Transferencia directa sin comisión</CardDescription>
                     </div>
-                      <div className="flex items-center gap-4 text-xs border-l pl-4 ml-2">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-muted-foreground">Ventas del período</span>
-                          <span className="font-medium text-slate-700">0 · $0</span>
-                        </div>
+                    </div>
+                    <div className="flex items-center justify-center border-l border-r px-4 mx-2 w-40 flex-shrink-0">
+                      <div className="flex flex-col gap-0.5 text-xs text-center">
+                        <span className="text-muted-foreground">Ventas del período</span>
+                        <span className="font-medium text-slate-700">0 · $0</span>
                       </div>
+                    </div>
+                    <div className="flex items-center gap-3 pl-2">
                   </div>
                   <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-300">Sin comisión</Badge>
                 </div>
@@ -1190,7 +1181,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
             {/* Cripto */}
             <Card className="border-orange-200 hover:border-orange-400 transition-colors">
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
+                <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                       <span className="text-orange-600 font-bold text-lg">₿</span>
