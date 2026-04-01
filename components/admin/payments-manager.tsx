@@ -950,6 +950,12 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                         <VideoTutorial videoId="dQw4w9WgXcQ" title="Cómo configurar Rapipago" />
                       </div>
                     </div>
+                    <div className="flex justify-between items-center mt-4 pt-4 border-t">
+                      <p className="text-xs text-muted-foreground">{payments.rapipago_enabled ? "Activo — visible en el checkout" : "Inactivo — no se muestra en el checkout"}</p>
+                      <button type="button" onClick={() => setPayments({...payments, rapipago_enabled: !payments.rapipago_enabled})} className={payments.rapipago_enabled ? "px-4 py-2 rounded-lg text-sm font-medium bg-red-50 text-red-700 border border-red-200 hover:bg-red-100" : "px-4 py-2 rounded-lg text-sm font-medium bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"}>
+                        {payments.rapipago_enabled ? "● Activado" : "○ Desactivado"}
+                      </button>
+                    </div>
                   </CardContent>
                 )}
               </Card>
