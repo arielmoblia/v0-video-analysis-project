@@ -616,9 +616,11 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                           <span className="font-medium text-slate-700">0 · $0</span>
                         </div>
                       </div>
+                      <span className="ml-4 px-2 py-0.5 text-xs font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-full tracking-wide">Próximamente</span>
                     </div>
                     <Switch
-                      checked={mobbexOpen}
+                      checked={false}
+                      disabled
                       onCheckedChange={setMobbexOpen}
                     />
                   </div>
@@ -697,9 +699,11 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                           <span className="font-medium text-slate-700">0 · $0</span>
                         </div>
                       </div>
+                      <span className="ml-4 px-2 py-0.5 text-xs font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-full tracking-wide">Próximamente</span>
                     </div>
                     <Switch
-                      checked={modoOpen}
+                      checked={false}
+                      disabled
                       onCheckedChange={setModoOpen}
                     />
                   </div>
@@ -760,9 +764,11 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                           <span className="font-medium text-slate-700">0 · $0</span>
                         </div>
                       </div>
+                      <span className="ml-4 px-2 py-0.5 text-xs font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-full tracking-wide">Próximamente</span>
                     </div>
                     <Switch
-                      checked={ualaOpen}
+                      checked={false}
+                      disabled
                       onCheckedChange={setUalaOpen}
                     />
                   </div>
@@ -932,9 +938,11 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                           <span className="font-medium text-slate-700">0 · $0</span>
                         </div>
                       </div>
+                      <span className="ml-4 px-2 py-0.5 text-xs font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-full tracking-wide">Próximamente</span>
                     </div>
                     <Switch
-                      checked={rapipagoOpen}
+                      checked={false}
+                      disabled
                       onCheckedChange={setRapipagoOpen}
                     />
                   </div>
