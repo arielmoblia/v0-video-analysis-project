@@ -53,8 +53,8 @@ export function middleware(request: NextRequest) {
   }
 
   // Rewrite: /admin → /tienda/[subdomain]/admin
-  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
-    const newPath = pathname.replace(/^\/admin/, `/tienda/${subdomain}/admin`)
+  if (pathname === '/admin' || pathname.startsWith('/admin/') || pathname === '/admin2' || pathname.startsWith('/admin2/')) {
+    const newPath = pathname.replace(/^\/admin2/, `/tienda/${subdomain}/admin2`).replace(/^\/admin/, `/tienda/${subdomain}/admin`)
     const url = request.nextUrl.clone()
     url.pathname = newPath
     return NextResponse.rewrite(url)
