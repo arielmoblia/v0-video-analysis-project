@@ -98,6 +98,12 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [cashOpen, setCashOpen] = useState(false)
+  const [cardOpen, setCardOpen] = useState(false)
+  const [rapipagoOpen, setRapipagoOpen] = useState(false)
+  const [mobbexOpen, setMobbexOpen] = useState(false)
+  const [modoOpen, setModoOpen] = useState(false)
+  const [ualaOpen, setUalaOpen] = useState(false)
+  const [transferOpen, setTransferOpen] = useState(false)
   const [showAccessToken, setShowAccessToken] = useState(false)
   const [payments, setPayments] = useState<PaymentMethods>({
     cash_enabled: false,
@@ -605,12 +611,12 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                       </div>
                     </div>
                     <Switch
-                      checked={payments.mobbex_enabled}
-                      onCheckedChange={(checked) => setPayments({ ...payments, mobbex_enabled: checked })}
+                      checked={mobbexOpen}
+                      onCheckedChange={setMobbexOpen}
                     />
                   </div>
                 </CardHeader>
-                {payments.mobbex_enabled && (
+                {mobbexOpen && (
                   <CardContent>
                     <div className="space-y-4">
                       <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -680,12 +686,12 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                       </div>
                     </div>
                     <Switch
-                      checked={payments.modo_enabled}
-                      onCheckedChange={(checked) => setPayments({ ...payments, modo_enabled: checked })}
+                      checked={modoOpen}
+                      onCheckedChange={setModoOpen}
                     />
                   </div>
                 </CardHeader>
-                {payments.modo_enabled && (
+                {modoOpen && (
                   <CardContent>
                     <div className="grid md:grid-cols-2 gap-6">
                       <div className="space-y-4">
@@ -737,12 +743,12 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                       </div>
                     </div>
                     <Switch
-                      checked={payments.uala_enabled}
-                      onCheckedChange={(checked) => setPayments({ ...payments, uala_enabled: checked })}
+                      checked={ualaOpen}
+                      onCheckedChange={setUalaOpen}
                     />
                   </div>
                 </CardHeader>
-                {payments.uala_enabled && (
+                {ualaOpen && (
                   <CardContent>
                     <div className="grid md:grid-cols-2 gap-6">
                       <div className="space-y-4">
@@ -852,12 +858,12 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                       </div>
                     </div>
                     <Switch
-                      checked={payments.card_enabled}
-                      onCheckedChange={(checked) => setPayments({ ...payments, card_enabled: checked })}
+                      checked={cardOpen}
+                      onCheckedChange={setCardOpen}
                     />
                   </div>
                 </CardHeader>
-                {payments.card_enabled && (
+                {cardOpen && (
                   <CardContent>
                     <div className="grid md:grid-cols-2 gap-6">
                       <div className="space-y-2">
@@ -898,12 +904,12 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                       </div>
                     </div>
                     <Switch
-                      checked={payments.rapipago_enabled}
-                      onCheckedChange={(checked) => setPayments({ ...payments, rapipago_enabled: checked })}
+                      checked={rapipagoOpen}
+                      onCheckedChange={setRapipagoOpen}
                     />
                   </div>
                 </CardHeader>
-                {payments.rapipago_enabled && (
+                {rapipagoOpen && (
                   <CardContent>
                     <div className="grid md:grid-cols-2 gap-6">
                       <div className="space-y-2">
@@ -949,12 +955,12 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                       </div>
                   </div>
                   <Switch
-                    checked={payments.transfer_enabled}
-                    onCheckedChange={(checked) => setPayments({ ...payments, transfer_enabled: checked })}
+                    checked={transferOpen}
+                    onCheckedChange={setTransferOpen}
                   />
                 </div>
               </CardHeader>
-              {payments.transfer_enabled && (
+              {transferOpen && (
                 <CardContent>
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-4">
@@ -1028,6 +1034,12 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                     <div>
               <VideoTutorial videoUrl="http://arielmobilia.com/wp-content/uploads/2026/02/TRANFERENCAIA.mp4" title="Cómo recibir transferencias" />
                     </div>
+                  </div>
+                  <div className="flex justify-between items-center mt-4 pt-4 border-t">
+                    <p className="text-xs text-muted-foreground">{payments.transfer_enabled ? "Activo — visible en el checkout" : "Inactivo — no se muestra en el checkout"}</p>
+                    <button type="button" onClick={() => setPayments({...payments, transfer_enabled: !payments.transfer_enabled})} className={payments.transfer_enabled ? "px-4 py-2 rounded-lg text-sm font-medium bg-red-50 text-red-700 border border-red-200 hover:bg-red-100" : "px-4 py-2 rounded-lg text-sm font-medium bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"}>
+                      {payments.transfer_enabled ? "● Activado" : "○ Desactivado"}
+                    </button>
                   </div>
                 </CardContent>
               )}
