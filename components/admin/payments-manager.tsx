@@ -743,7 +743,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
               </Card>
 
               {/* Ualá Bis */}
-              <Card className={payments.uala_enabled ? "border-red-200" : "border-slate-200 opacity-60"}>
+              <Card className={"border-slate-200 opacity-60"}>
                 <CardHeader>
                   <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
                     <div className="flex items-center gap-3">
@@ -913,7 +913,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
               </Card>
 
               {/* Rapipago / Pago Fácil */}
-              <Card className={payments.rapipago_enabled ? "" : "border-slate-200 opacity-60"}>
+              <Card className="border-slate-200 opacity-60">
                 <CardHeader>
                   <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
                     <div className="flex items-center gap-3">
