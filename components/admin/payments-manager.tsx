@@ -291,7 +291,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
 
             <div className="grid gap-6">
               {/* Mercado Pago */}
-              <Card className="border-sky-200">
+              <Card className={payments.mercadopago_enabled ? "border-sky-200" : "border-slate-200 opacity-50 grayscale"}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -596,7 +596,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
               </Card>
 
               {/* Mobbex - Alternativa a MercadoPago */}
-              <Card className="border-green-200">
+              <Card className={payments.mobbex_enabled ? "border-green-200" : "border-slate-200 opacity-50 grayscale"}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -680,7 +680,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
               </Card>
 
               {/* MODO */}
-              <Card className="border-violet-200">
+              <Card className={payments.modo_enabled ? "border-violet-200" : "border-slate-200 opacity-50 grayscale"}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -743,7 +743,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
               </Card>
 
               {/* Ualá Bis */}
-              <Card className="border-red-200">
+              <Card className={payments.uala_enabled ? "border-red-200" : "border-slate-200 opacity-50 grayscale"}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -813,7 +813,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
 
             <div className="grid gap-6">
               {/* Efectivo */}
-              <Card>
+              <Card className={payments.cash_enabled ? "" : "border-slate-200 opacity-50 grayscale"}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -864,7 +864,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
               </Card>
 
               {/* Posnet / Tarjeta presencial */}
-              <Card>
+              <Card className={payments.card_enabled ? "" : "border-slate-200 opacity-50 grayscale"}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -915,7 +915,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
               </Card>
 
               {/* Rapipago / Pago Fácil */}
-              <Card>
+              <Card className={payments.rapipago_enabled ? "" : "border-slate-200 opacity-50 grayscale"}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -972,7 +972,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold border-b pb-2">🏦 Transferencia Bancaria</h3>
 
-            <Card>
+            <Card className={payments.transfer_enabled ? "" : "border-slate-200 opacity-50 grayscale"}>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
