@@ -746,7 +746,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
               <Card className={"border-slate-200 opacity-60"}>
                 <CardHeader>
                   <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 opacity-40">
                       <div className="p-2 bg-red-100 rounded-lg">
                         <CreditCard className="w-5 h-5 text-red-600" />
                       </div>
@@ -916,7 +916,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
               <Card className="border-slate-200 opacity-60">
                 <CardHeader>
                   <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 opacity-40">
                       <div className="p-2 bg-orange-100 rounded-lg">
                         <Store className="w-5 h-5 text-orange-600" />
                       </div>
