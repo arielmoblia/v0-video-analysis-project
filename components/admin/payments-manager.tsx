@@ -549,28 +549,28 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                             </button>
                           </div>
                         </div>
-
-                        {/* Estado */}
-                        <div
-                          className={`p-3 rounded-lg ${payments.mercadopago_access_token?.startsWith("APP_USR-") || payments.mercadopago_test_token?.startsWith("TEST-") ? "bg-green-50 border border-green-200" : "bg-gray-50 border border-gray-200"}`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <div
-                              className={`w-2 h-2 rounded-full ${payments.mercadopago_access_token?.startsWith("APP_USR-") || payments.mercadopago_test_token?.startsWith("TEST-") ? "bg-green-500" : "bg-gray-400"}`}
-                            />
-                            <p className="text-sm font-medium">
-                              {payments.mercadopago_test_mode 
-                                ? (payments.mercadopago_test_token?.startsWith("TEST-") ? "Modo prueba activo" : "Configurá el Access Token de TEST")
-                                : (payments.mercadopago_access_token?.startsWith("APP_USR-") ? "Integración activa" : "Configurá el Access Token")}
-                            </p>
+                        <div className="space-y-3 text-sm mt-2 p-3 bg-gray-50 rounded-lg">
+                          <div>
+                            <p className="font-semibold text-orange-600 mb-1">1) Crear tu cuenta de Mercado Pago</p>
+                            <ul className="text-xs text-gray-600 space-y-1 ml-3">
+                              <li>1.1) Installá la aplicación en el celular</li>
+                              <li>1.2) Validá tu identidad</li>
+                              <li>1.3) Configurá tu huella dactilar</li>
+                              <li>1.4) En unos segundos podés ingresar solo con la cuenta</li>
+                            </ul>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-orange-600 mb-1">2) Conectar tu cuenta a tu tienda</p>
+                            <ul className="text-xs text-gray-600 space-y-1 ml-3">
+                              <li>2.1) Entrá a: <a href="https://www.mercadopago.com.ar/developers/es" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">https://www.mercadopago.com.ar/developers/es</a></li>
+                              <li>2.2) Entrá a: <a href="https://www.mercadopago.com.ar/developers/panel/app" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">https://www.mercadopago.com.ar/developers/panel/app</a></li>
+                              <li>2.3) El sistema te pedirá que te autentiques (seguí los pasos)</li>
+                              <li>2.4) En el lateral izquierdo apretá credenciales de prueba o producción</li>
+                              <li>2.5) Elegí una de ambas y pegála en tu administrador (acá arriba)</li>
+                            </ul>
                           </div>
                         </div>
 
-                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                          <p className="text-xs text-amber-800">
-                            <strong>Comision:</strong> ~4-5% por venta. El dinero llega a tu cuenta de MP.
-                          </p>
-                        </div>
                       </div>
 
                       {/* Columna derecha: Videos tutoriales */}
@@ -583,6 +583,9 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                 videoUrl="http://arielmobilia.com/wp-content/uploads/2026/02/cuenta-en-Mercado-Pago-400.mp4"
                 title="Cómo crear tu cuenta en Mercado Pago"
               />
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-xs text-amber-800"><strong>Comisión:</strong> ~4-5% por venta. El dinero llega a tu cuenta de MP.</p>
+              </div>
                       </div>
                     </div>
                     <div className="flex justify-between items-center mt-4 pt-4 border-t">
@@ -862,7 +865,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                 )}
               </Card>
 
-              {/* Posnet / Tarjeta presencial */}
+              {/* Contraentrega con tarjeta */}
               <Card className={payments.card_enabled ? "" : "border-slate-200 opacity-60"}>
                 <CardHeader>
                   <div className="grid items-center w-full" style={{gridTemplateColumns:"1fr 160px 200px"}}>
@@ -871,7 +874,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                         <CreditCard className="w-5 h-5 text-blue-600" />
                       </div>
                       <div>
-                        <CardTitle className="text-lg">Posnet / Tarjeta presencial</CardTitle>
+                        <CardTitle className="text-lg">Contraentrega con tarjeta</CardTitle>
                         <CardDescription>Pago con tarjeta al momento de la entrega</CardDescription>
                       </div>
                     </div>
@@ -892,14 +895,14 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                       <div className="space-y-2">
                         <Label>Instrucciones para el cliente</Label>
                         <Textarea
-                          placeholder="Ej: Aceptamos todas las tarjetas de crédito y débito. Disponible pago en cuotas."
+                          placeholder="Pagás con tu tarjeta cuando recibís el producto. El vendedor te cobra con su posnet en el momento de la entrega."
                           value={payments.card_instructions}
                           onChange={(e) => setPayments({ ...payments, card_instructions: e.target.value })}
                           rows={3}
                         />
                       </div>
                       <div>
-                        <VideoTutorial videoId="dQw4w9WgXcQ" title="Cómo usar el Posnet" />
+                        <VideoTutorial videoUrl="/videos/tarjeta-presencial.mp4" title="Cómo funciona la contraentrega con tarjeta" />
                       </div>
                     </div>
                     <div className="flex justify-between items-center mt-4 pt-4 border-t">
