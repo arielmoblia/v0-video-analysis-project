@@ -77,6 +77,7 @@ export function PromoMail({ stores, adminKey }: PromoMailProps) {
   const [scraping, setScraping] = useState(false)
   const [scrapeError, setScrapeError] = useState("")
   const [scrapeSearchFilter, setScrapeSearchFilter] = useState("")
+  const [scrapeDepth, setScrapeDepth] = useState(3)
 
   // Filtrar tiendas con email valido
   const storesWithEmail = stores.filter((s) => s.email && s.email.includes("@"))
@@ -145,7 +146,7 @@ export function PromoMail({ stores, adminKey }: PromoMailProps) {
         body: JSON.stringify({
           action: "scrape",
           domain: scrapeQuery.trim(),
-          maxPages: 5,
+          maxPages: scrapeDepth,
         }),
       })
 
@@ -468,19 +469,34 @@ export function PromoMail({ stores, adminKey }: PromoMailProps) {
                     className="pl-9 border-blue-200 focus-visible:ring-blue-500"
                   />
                 </div>
-                <Button
-                  onClick={handleScrape}
-                  disabled={scraping}
-                  size="sm"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  {scraping ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Search className="w-4 h-4 mr-2" />
-                  )}
-                  {scraping ? "Buscando..." : "Buscar emails"}
-                </Button>
+  <div className="flex gap-2">
+  <select
+  value={scrapeDepth}
+  onChange={(e) => setScrapeDepth(Number(e.target.value))}
+  className="h-8 rounded-md border border-blue-200 bg-background px-2 text-xs focus:ring-blue-500"
+  aria-label="Profundidad de busqueda"
+  >
+  <option value={3}>Rapido (3 Pags)</option>
+  <option value={10}>Medio (10 Pags)</option>
+  <option value={20}>Profundo (20 Pags)</option>
+  </select>
+  <Button
+  onClick={handleScrape}
+  disabled={scraping}
+  size="sm"
+  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+  >
+  {scraping ? (
+  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+  ) : (
+  <Search className="w-4 h-4 mr-2" />
+  )}
+  {scraping ? "Buscando..." : "Buscar emails"}
+  </Button>
+  </div>
+  {scraping && scrapeDepth > 3 && (
+  <p className="text-xs text-amber-600 font-medium text-center">Buscando a fondo... esto tomara unos minutos. No cierres la pestana.</p>
+  )}
 
                 {scrapeResults.length > 0 && (
                   <div className="flex gap-2">
@@ -585,8 +601,8 @@ export function PromoMail({ stores, adminKey }: PromoMailProps) {
               {scraping && (
                 <div className="flex flex-col items-center justify-center py-8 gap-3">
                   <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-                  <p className="text-sm text-muted-foreground">Buscando emails en {scrapeQuery}...</p>
-                  <p className="text-xs text-slate-400">Esto puede tardar unos segundos</p>
+  <p className="text-sm text-muted-foreground">Buscando emails en {scrapeQuery} ({scrapeDepth} paginas)...</p>
+  <p className="text-xs text-slate-400">{scrapeDepth > 3 ? "Busqueda profunda, esto puede tardar unos minutos" : "Esto puede tardar unos segundos"}</p>
                 </div>
               )}
 
