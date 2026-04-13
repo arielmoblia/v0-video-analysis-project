@@ -73,6 +73,12 @@ export function StoreFooter({ store }: StoreFooterProps) {
             <p className="text-neutral-400 text-sm leading-relaxed">
               {store.footer_subtitle || "Tu destino para encontrar los mejores productos con estilo y calidad."}
             </p>
+            {store.address && (
+              <p className="text-white text-xs mt-2">{store.address}</p>
+            )}
+            {store.phone && (
+              <p className="text-white text-xs mt-1">{store.phone}</p>
+            )}
           </div>
 
           {/* Links */}
@@ -176,16 +182,16 @@ export function StoreFooter({ store }: StoreFooterProps) {
         </div>
 
         {/* Bottom */}
-        <div className="border-t border-neutral-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="border-t border-neutral-800 pt-8 flex flex-col md:flex-row justify-center items-center gap-4 flex-col md:flex-row">
           <p className="text-xs text-neutral-500">
-            © {new Date().getFullYear()} {store.site_title}. Todos los derechos reservados.
+            © <span suppressHydrationWarning>{new Date().getFullYear()}</span> {store.site_title}. Todos los derechos reservados.
           </p>
           <Link
             href="https://tol.ar"
             target="_blank"
-            className="text-xs text-neutral-600 hover:text-neutral-400 transition-colors"
+            className="text-xs text-white hover:text-neutral-300 transition-colors font-medium"
           >
-            Creado con <span className="text-neutral-400">tol.ar</span>
+            Creado gratis con <span className="text-white font-bold">tol.ar</span>
           </Link>
         </div>
       </div>

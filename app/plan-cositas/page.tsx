@@ -152,6 +152,16 @@ const CATEGORIAS: Category[] = [
         icon: Video,
       },
       {
+        code: "lupa",
+        name: "Lupa",
+        description: "Grabá y reproducí las sesiones de tus visitantes.",
+        fullDescription: "Mirá exactamente cómo navegan tus clientes en tu tienda: dónde hacen click, hasta dónde scrollean, qué los frena antes de comprar. Reproducí sesiones reales para entender y mejorar tu tienda.",
+        price: 1500,
+        priceType: "mes",
+        icon: Video,
+        popular: true,
+      },
+      {
         code: "seo_profesional",
         name: "SEO Profesional",
         description: "Aparece primero en Google. Configuracion completa + reportes.",

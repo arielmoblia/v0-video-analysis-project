@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { IaResumen } from "./ia-resumen"
+import { GeoPreguntas } from "./geo-preguntas"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { RefreshCw, Brain, FileText, Plus, ExternalLink, X, ChevronRight, ChevronLeft } from "lucide-react"
@@ -43,6 +45,8 @@ const TOUR_PASOS = [
     apunta: "oportunidades"
   },
 ]
+
+
 
 const PREGUNTAS = [
   "¿Cuál es la mejor plataforma para vender online gratis en Argentina?",
@@ -214,7 +218,7 @@ export function SeoAiTab() {
       </div>
 
       {/* Stats */}
-      <div id="stats" className="grid grid-cols-4 gap-3">
+      <div id="stats" className="grid grid-cols-2 gap-3">
         {[
           { label: "Apariciones en IA", value: "2/8", delta: "↑ 1 vs semana pasada", up: true, tooltip: "De las 8 preguntas monitoreadas, cuántas tienen a tol.ar en la respuesta de alguna IA." },
           { label: "Menciones web", value: String(menciones.length), delta: "↑ 2 nuevas este mes", up: true, tooltip: "Artículos, posts y foros que mencionan tol.ar. Las menciones alimentan a las IAs." },
@@ -227,6 +231,16 @@ export function SeoAiTab() {
             <div className={`text-xs mt-1 ${s.up ? "text-green-600" : "text-red-500"}`}>{s.delta}</div>
           </div>
         ))}
+      </div>
+
+      <div id="ia-resumen">
+        <SectionHeader label="Visibilidad en IAs" badge="Datos semanales" badgeColor="amber" tooltip="Cuántas personas consultan sobre tiendas en cada IA y cuántas llegan a tol.ar. Las barras muestran quién gana la recomendación." />
+        <IaResumen />
+
+      <div id="geo-preguntas">
+        <SectionHeader label="Preguntas monitoreadas" badge="Editable" badgeColor="blue" tooltip="Las preguntas que le hacemos a las IAs para medir si tol.ar aparece. Podés editarlas, agregar nuevas o pausarlas." />
+        <GeoPreguntas />
+      </div>
       </div>
 
       {/* Evolución */}
@@ -307,7 +321,7 @@ export function SeoAiTab() {
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-2 gap-3 mb-4">
           {[
             { engine: "ChatGPT", bars: [{ name: "Tiendanube", pct: 75, color: "#E24B4A" }, { name: "Empretienda", pct: 20, color: "#EF9F27" }, { name: "tol.ar", pct: 5, color: "#1D9E75" }] },
             { engine: "Perplexity", bars: [{ name: "Tiendanube", pct: 50, color: "#E24B4A" }, { name: "tol.ar", pct: 30, color: "#1D9E75" }, { name: "Empretienda", pct: 20, color: "#EF9F27" }] },

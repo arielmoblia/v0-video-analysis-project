@@ -1,10 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+    optimizePackageImports: [],
+  },
   typescript: {
     ignoreBuildErrors: true,
-  },
-  experimental: {
-    optimizePackageImports: [],
   },
   // Optimizacion de imagenes (CRITICO para PageSpeed)
   images: {

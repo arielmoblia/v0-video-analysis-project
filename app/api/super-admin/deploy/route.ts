@@ -19,7 +19,7 @@ export async function POST() {
   writeFileSync(STATUS_FILE, "building")
 
   const child = spawn("bash", ["-c",
-    "cd /var/www/tol.ar-dev && /usr/bin/npm run build >> /tmp/deploy.log 2>&1 && rsync -a --exclude='.git' --exclude='node_modules' --exclude='.env' --exclude='.env.local' --exclude='.env.production' /var/www/tol.ar-dev/ /var/www/tol.ar/ >> /tmp/deploy.log 2>&1 && /usr/bin/npm install --legacy-peer-deps --prefix /var/www/tol.ar >> /tmp/deploy.log 2>&1 && /usr/bin/npm install --legacy-peer-deps --prefix /var/www/tol.ar >> /tmp/deploy.log 2>&1 && /usr/bin/pm2 restart tol.ar >> /tmp/deploy.log 2>&1 && echo done > /tmp/tolar-deploy-status.txt || echo error > /tmp/tolar-deploy-status.txt"
+    "cd /var/www/tol.ar-dev && /usr/bin/npm run build >> /tmp/deploy.log 2>&1 && rsync -a --exclude='.git' --exclude='node_modules' --exclude='.env' --exclude='.env.local' --exclude='.env.production' /var/www/tol.ar-dev/ /var/www/tol.ar/ >> /tmp/deploy.log 2>&1 && /usr/bin/npm install --legacy-peer-deps --prefix /var/www/tol.ar >> /tmp/deploy.log 2>&1 && /usr/bin/pm2 restart tol.ar >> /tmp/deploy.log 2>&1 && echo done > /tmp/tolar-deploy-status.txt || echo error > /tmp/tolar-deploy-status.txt"
   ], { 
     detached: true, 
     stdio: "ignore",

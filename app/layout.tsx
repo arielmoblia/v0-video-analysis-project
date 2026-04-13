@@ -1,7 +1,6 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
-import { Analytics } from "@vercel/analytics/next"
 import Script from "next/script"
 import { ChatFlotante } from "@/components/chat-flotante"
 import { PageTracker } from "@/components/store/page-tracker"
@@ -64,8 +63,8 @@ export const metadata: Metadata = {
     locale: "es_AR",
     url: "https://tol.ar",
     siteName: "tol.ar",
-    title: "tol.ar - Crea tu tienda online gratis en minutos",
-    description: "Tol.ar es la plataforma de e-commerce lider en Argentina. Crea tu tienda online gratis en 2 minutos con SEO automatizado, pagos con MercadoPago y envios con Andreani.",
+    title: "tol.ar - Crea tu Tienda Online Gratis y Sin Comisiones en Argentina",
+    description: "Crea tu tienda online gratis y sin comisiones en Argentina. Sin conocimientos técnicos. Con MercadoPago integrado. Empezá a vender en 2 minutos.",
     images: [
       {
         url: "/og-image.jpg",
@@ -142,7 +141,6 @@ export default function RootLayout({
         {/* Preconectar a dominios criticos primero */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://vercel.live" />
         {/* DNS prefetch para recursos secundarios */}
         <link rel="dns-prefetch" href="https://www.mercadopago.com.ar" />
         <link rel="dns-prefetch" href="https://api.mercadopago.com" />
@@ -207,8 +205,7 @@ export default function RootLayout({
       <PageTracker storeId="a921029f-9dc7-40ed-ae14-732491c37eee" />
         {children}
         <ChatFlotante />
-        <Analytics />
-        {/* Google Analytics 4 - ID: G-BRLNYVV46F */}
+                {/* Google Analytics 4 - ID: G-BRLNYVV46F */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-BRLNYVV46F"
           strategy="afterInteractive"

@@ -1,7 +1,7 @@
 "use client"
-import React from "react"
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback, useRef } from "react"
 import { RefreshCw } from "lucide-react"
+import { DragDropBoard, SectionConfig } from "@/components/ui/sortable-list"
 
 interface AnalyticsData {
   totalViews: number
@@ -31,118 +31,155 @@ interface PlatformData {
   planCounts?: Record<string, number>
 }
 
+const DEFAULT_SECTIONS: SectionConfig[] = [
+  { id:"estado",     cardIds:["tiendas-totales","nuevas-mes","sin-visitas","tasa-conv","visitas-tolar","total-planes","smartlook"] },
+  { id:"visitas",    cardIds:["vis-totales","vis-unicos","vis-prom","vis-activas","chart-bar","top-tiendas","top-paginas","geo","dispositivos","horarios","rubros"] },
+  { id:"conocieron", cardIds:["referral"] },
+  { id:"salud",      cardIds:["ventas-reales","riesgo-abandono","incompletas","cositas-top","fuente-trafico","upgrade","errores-404","keywords"] },
+]
+
+const SECTION_LABELS: Record<string, string> = {
+  estado:     "Estado de la Plataforma (tol.ar)",
+  visitas:    "Visitas a Tiendas (subdominios.tol.ar)",
+  conocieron: "¿Cómo nos conocieron?",
+  salud:      "Salud de los Clientes",
+}
+
+const WIDE_CARDS = new Set(["chart-bar","referral","smartlook"])
+const MED_CARDS  = new Set(["top-tiendas","top-paginas"])
+
 export function AnalyticsDashboard() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
-  const [platform, setPlatform] = useState<PlatformData | null>(null)
-  const [days, setDays] = useState(30)
-  const [loading, setLoading] = useState(true)
-  const [tooltip, setTooltip] = useState<string | null>(null)
-  const [modal, setModal] = useState<string | null>(null)
-  const [smartlook, setSmartlook] = useState<{sessions:number,url:string}|null>(null)
+  const [platform,  setPlatform]  = useState<PlatformData | null>(null)
+  const [days,      setDays]      = useState(30)
+  const [loading,   setLoading]   = useState(true)
+  const [tooltip,   setTooltip]   = useState<string | null>(null)
+  const [modal,     setModal]     = useState<string | null>(null)
+  const [referral,  setReferral]  = useState<{total:number;items:{id:string;count:number;pct:number}[]}|null>(null)
+  const [smartlook, setSmartlook] = useState<{landing:{hoy:number;semana:number;mes:number;anio:number};tiendas:{hoy:number;semana:number;mes:number;anio:number};compradores:{hoy:number;semana:number;mes:number;anio:number};url:string}|null>(null)
+  const [sections,  setSections]  = useState<SectionConfig[]>(DEFAULT_SECTIONS)
+  const saveTimer = useRef<any>(null)
 
   const fetchData = () => {
     setLoading(true)
     Promise.all([
+      fetch("/api/super-admin/referral-stats?days=" + days).then(r => r.json()),
       fetch("/api/super-admin/analytics?days=" + days).then(r => r.json()),
       fetch("/api/super-admin/platform-stats").then(r => r.json()),
       fetch("/api/super-admin/smartlook-stats").then(r => r.json()),
-    ]).then(([a, p, sl]) => { setAnalytics(a); setPlatform(p); setSmartlook(sl); setLoading(false) })
+    ]).then(([ref, a, p, sl]) => {
+      setReferral(ref); setAnalytics(a); setPlatform(p); setSmartlook(sl); setLoading(false)
+    })
   }
 
   useEffect(() => { fetchData() }, [days])
 
-  const maxViews = Math.max(...(analytics?.dailyViews.map(d => d.views) || [1]))
+  useEffect(() => {
+    fetch("/api/super-admin/ui-order?key=analytics_sections_order")
+      .then(r => r.json())
+      .then(({ value }) => { if (value) setSections(value) })
+      .catch(() => {})
+  }, [])
+
+  const handleSectionsChange = useCallback((newSections: SectionConfig[]) => {
+    setSections(newSections)
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => {
+      fetch("/api/super-admin/ui-order", {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify({ key:"analytics_sections_order", value:newSections }),
+      }).catch(() => {})
+    }, 800)
+  }, [])
+
+  const maxViews    = Math.max(...(analytics?.dailyViews.map(d => d.views) || [1]))
   const maxPlatform = Math.max(...(analytics?.dailyPlatformViews?.map(d => d.views) || [1]))
 
   const tip = (id: string, text: string) => (
     <>
-      <span onClick={() => setTooltip(tooltip === id ? null : id)} style={{ cursor:"pointer", color:"#93c5fd", fontSize:"14px", fontWeight:700 }}>ⓘ</span>
+      <span onClick={() => setTooltip(tooltip === id ? null : id)}
+        style={{ cursor:"pointer", color:"#93c5fd", fontSize:"14px", fontWeight:700 }}>ⓘ</span>
       {tooltip === id && (
-        <div style={{ position:"absolute", top:"40px", right:"8px", zIndex:100, background:"#1e293b", color:"#fff", borderRadius:"8px", padding:"10px 14px", fontSize:"12px", maxWidth:"220px", lineHeight:"1.5", boxShadow:"0 4px 12px rgba(0,0,0,0.2)" }}>{text}</div>
+        <div style={{ position:"absolute", top:"40px", right:"8px", zIndex:100,
+          background:"#1e293b", color:"#fff", borderRadius:"8px", padding:"10px 14px",
+          fontSize:"12px", maxWidth:"220px", lineHeight:"1.5", boxShadow:"0 4px 12px rgba(0,0,0,0.2)" }}>
+          {text}
+        </div>
       )}
     </>
   )
 
-  const card = (label: string, value: any, sub: string, color: string, info?: string) => (
-    <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
+  const statCard = (label: string, value: any, sub: string, color: string, info?: string) => (
+    <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px",
+      padding:"20px", position:"relative", height:"100%" }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
         <p style={{ margin:"0 0 8px", color:"#666", fontSize:"13px" }}>{label}</p>
         {info && tip(label, info)}
       </div>
-      <p style={{ margin:"0 0 4px", fontSize:"32px", fontWeight:700, color: loading ? "#ccc" : color }}>{loading ? "..." : value}</p>
+      <p style={{ margin:"0 0 4px", fontSize:"32px", fontWeight:700, color: loading ? "#ccc" : color }}>
+        {loading ? "..." : value}
+      </p>
       <p style={{ margin:0, fontSize:"12px", color:"#999" }}>{sub}</p>
     </div>
   )
 
-  return (
-    <div style={{ padding:"24px", color:"#1a1a1a" }}>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"28px" }}>
-        <div>
-          <h1 style={{ margin:0, fontSize:"22px", fontWeight:700 }}>Estadísticas de la Plataforma</h1>
-        </div>
-        <div style={{ display:"flex", gap:"8px", alignItems:"center" }}>
-          {[7,30,90].map(d => (
-            <button key={d} onClick={() => setDays(d)} style={{ padding:"6px 14px", borderRadius:"8px", border:"1px solid #e5e7eb", background: days===d ? "#1a1a1a" : "#fff", color: days===d ? "#fff" : "#666", cursor:"pointer", fontSize:"13px" }}>{d} dias</button>
-          ))}
-          <button onClick={fetchData} style={{ padding:"6px 10px", borderRadius:"8px", border:"1px solid #e5e7eb", background:"#fff", cursor:"pointer" }}>
-            <RefreshCw style={{ width:"14px", height:"14px" }} />
-          </button>
-        </div>
-      </div>
+  const renderCard = (id: string): React.ReactNode => {
+    switch (id) {
 
-      <div style={{ background:"#f8fafc", borderRadius:"16px", padding:"24px" }}>
-        <h2 style={{ fontSize:"13px", fontWeight:600, color:"#888", marginBottom:"16px", textTransform:"uppercase", letterSpacing:"0.05em" }}>Estado de la Plataforma (tol.ar)</h2>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:"16px", marginBottom:"16px" }}>
-          {card("Tiendas Totales", platform?.totalStores ?? "—", "Sin contar templates", "#1a1a1a", "Cuántas tiendas hay abiertas en tol.ar ahora mismo")}
-          {card("Nuevas este mes", platform?.newStoresThisMonth ?? "—", "Registros nuevos", "#10b981", "Cuántas tiendas nuevas abrieron este mes")}
-          {card("Sin visitas (30d)", platform?.storesWithNoVisits ?? "—", "Posibles abandonadas", "#ef4444", "Tiendas que nadie visitó en 30 días. Están dormidas")}
-          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
+      case "tiendas-totales":
+        return statCard("Tiendas Totales", platform?.totalStores ?? "—", "Sin contar templates", "#1a1a1a", "Cuántas tiendas hay abiertas en tol.ar ahora mismo")
+
+      case "nuevas-mes":
+        return statCard("Nuevas este mes", platform?.newStoresThisMonth ?? "—", "Registros nuevos", "#10b981", "Cuántas tiendas nuevas abrieron este mes")
+
+      case "sin-visitas":
+        return statCard("Sin visitas (30d)", platform?.storesWithNoVisits ?? "—", "Posibles abandonadas", "#ef4444", "Tiendas que nadie visitó en 30 días. Están dormidas")
+
+      case "tasa-conv":
+        return (
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative", height:"100%" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
-              <p style={{ margin:"0 0 10px", color:"#666", fontSize:"13px" }}>Distribucion de Planes</p>
-              {tip("dist-planes", "Cuántas tiendas usan cada plan en este momento")}
+              <p style={{ margin:"0 0 8px", color:"#666", fontSize:"13px" }}>Tasa de conversion</p>
+              {tip("tasa-conv", "De cada 100 personas que entraron a tol.ar, cuantas abrieron una tienda")}
             </div>
-            {loading ? <p style={{ color:"#ccc" }}>...</p> :
-              platform?.planDistribution && Object.entries(platform.planDistribution).map(([plan, count]) => (
-                <div key={plan} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"6px" }}>
-                  <span style={{ fontSize:"13px", color:"#555", textTransform:"capitalize" }}>{plan}</span>
-                  <span style={{ fontSize:"15px", fontWeight:700, color: (count as number) > 0 ? "#8b5cf6" : "#ccc" }}>{count as number}</span>
-                </div>
-              ))
-            }
+            <p style={{ margin:"0 0 4px", fontSize:"32px", fontWeight:700, color: loading ? "#ccc" : "#10b981" }}>
+              {loading ? "..." : (analytics?.conversionRate ?? 0) + "%"}
+            </p>
+            <p style={{ margin:"0 0 4px", fontSize:"12px", color:"#999" }}>De cada 100 visitas a tol.ar, cuantas crean una tienda</p>
+            <p style={{ margin:0, fontSize:"11px", color:"#bbb" }}>{analytics?.newStoresInPeriod ?? 0} registros en {days} dias</p>
           </div>
-        </div>
+        )
 
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:"16px", marginBottom:"16px" }}>
-          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
+      case "visitas-tolar":
+        return (
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative", height:"100%" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
               <p style={{ margin:"0 0 8px", color:"#666", fontSize:"13px" }}>Visitas a tol.ar</p>
               {tip("visitas-tolar", "Cuánta gente entró a la página principal de tol.ar")}
             </div>
-            <p style={{ margin:"0 0 4px", fontSize:"32px", fontWeight:700, color: loading ? "#ccc" : "#3b82f6" }}>{loading ? "..." : platform?.totalStores ? analytics?.platformViews ?? 0 : "—"}</p>
+            <p style={{ margin:"0 0 4px", fontSize:"32px", fontWeight:700, color: loading ? "#ccc" : "#3b82f6" }}>
+              {loading ? "..." : analytics?.topPlatformPages?.find(p => p.path === "/")?.views ?? 0}
+            </p>
             <p style={{ margin:"0 0 8px", fontSize:"12px", color:"#999" }}>Landing principal</p>
-            {!loading && analytics?.topPlatformPages?.slice(0,3).map((p,i) => (
+            {!loading && analytics?.topPlatformPages?.slice(0,10).map((p, i) => (
               <div key={i} style={{ display:"flex", justifyContent:"space-between" }}>
                 <span style={{ fontSize:"12px", color:"#999" }}>{p.path}</span>
                 <span style={{ fontSize:"12px", fontWeight:700, color:"#3b82f6" }}>{p.views}</span>
               </div>
             ))}
           </div>
-          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
-              <p style={{ margin:"0 0 8px", color:"#666", fontSize:"13px" }}>Tasa de conversion</p>
-              {tip("tasa-conv", "De cada 100 personas que entraron a tol.ar, cuántas abrieron una tienda")}
-            </div>
-            <p style={{ margin:"0 0 4px", fontSize:"32px", fontWeight:700, color: loading ? "#ccc" : "#10b981" }}>{loading ? "..." : (analytics?.conversionRate ?? 0) + "%"}</p>
-            <p style={{ margin:"0 0 4px", fontSize:"12px", color:"#999" }}>De cada 100 visitas a tol.ar, cuantas crean una tienda</p>
-            <p style={{ margin:0, fontSize:"11px", color:"#bbb" }}>{analytics?.newStoresInPeriod ?? 0} registros en {days} dias</p>
-          </div>
-          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
+        )
+
+      case "total-planes":
+        return (
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative", height:"100%" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
               <p style={{ margin:"0 0 8px", color:"#666", fontSize:"13px", fontWeight:600 }}>Total de Planes</p>
               {tip("total-planes", "Cuánta plata juntamos. Cuando alguien pague, aparece acá")}
             </div>
             <p style={{ margin:"0 0 12px", fontSize:"28px", fontWeight:700, color: loading ? "#ccc" : "#10b981" }}>
-              {loading ? "..." : "$" + Object.values(analytics?.planIncome ?? {}).reduce((a,b) => a+b, 0).toLocaleString("es-AR")}
+              {loading ? "..." : "$" + Object.values(analytics?.planIncome ?? {}).reduce((a, b) => a + b, 0).toLocaleString("es-AR")}
             </p>
             {loading ? <p style={{ color:"#ccc" }}>...</p> : (
               <table style={{ width:"100%", fontSize:"12px", borderCollapse:"collapse" }}>
@@ -150,91 +187,146 @@ export function AnalyticsDashboard() {
                   {[["Gratis","gratis"],["Cositas","cositas"],["Socios","socios"],["Mayoristas","mayorista"]].map(([label, key]) => (
                     <tr key={key} style={{ borderTop:"1px solid #f0f0f0" }}>
                       <td style={{ padding:"4px 0", color:"#555" }}>{label}</td>
-                      <td style={{ padding:"4px 0", color:"#888", textAlign:"center" }}>{(platform?.planCounts as any)?.[key] ?? 0}</td>
-                      <td style={{ padding:"4px 0", color:"#10b981", textAlign:"right", fontWeight:600 }}>${((platform?.planIncome as any)?.[key] ?? 0).toLocaleString("es-AR")}</td>
+                      <td style={{ padding:"4px 0", color:"#8b5cf6", textAlign:"center", fontWeight:600 }}>
+                        {(platform?.planDistribution as any)?.[key] ?? (platform?.planCounts as any)?.[key] ?? 0}
+                      </td>
+                      <td style={{ padding:"4px 0", color:"#10b981", textAlign:"right", fontWeight:600 }}>
+                        ${((platform?.planIncome as any)?.[key] ?? 0).toLocaleString("es-AR")}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             )}
           </div>
-          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
+        )
+
+      case "smartlook":
+        return (
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative", height:"100%" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
-              <p style={{ margin:"0 0 8px", color:"#666", fontSize:"13px" }}>Smartlook</p>
-              {tip("smartlook-info", "Cuántas personas grabamos navegando en tol.ar este mes")}
+              <p style={{ margin:"0 0 12px", color:"#666", fontSize:"13px" }}>Visitas</p>
+              {tip("smartlook-info", "Landing = tol.ar principal. Tiendas = merchants en su admin. Compradores = visitas a las tiendas")}
             </div>
-            <p style={{ margin:"0 0 4px", fontSize:"32px", fontWeight:700, color: loading ? "#ccc" : "#3b82f6" }}>{loading ? "..." : smartlook?.sessions ?? 0}</p>
-            <p style={{ margin:"0 0 12px", fontSize:"12px", color:"#999" }}>Sesiones grabadas este mes</p>
-            <a href={smartlook?.url || "https://app.smartlook.com"} target="_blank" rel="noopener noreferrer" style={{ display:"block", textAlign:"center", padding:"8px 16px", background:"#1a1a1a", color:"#fff", borderRadius:"8px", fontSize:"12px", textDecoration:"none" }}>Ver grabaciones</a>
-          </div>
-        </div>
-
-        <h2 style={{ fontSize:"13px", fontWeight:600, color:"#888", marginBottom:"16px", marginTop:"24px", textTransform:"uppercase", letterSpacing:"0.05em" }}>Visitas a Tiendas (subdominios.tol.ar)</h2>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:"16px", marginBottom:"16px" }}>
-          {card("Visitas Totales", analytics?.totalViews ?? "—", "Ultimos 30 dias", "#3b82f6", "Cuántas veces entraron a las tiendas de los merchants en los últimos 30 días")}
-          {card("Visitantes Unicos", analytics?.uniqueVisitors ?? "—", "Ultimos 30 dias", "#10b981", "Personas distintas que visitaron alguna tienda. Un mismo cliente cuenta una sola vez")}
-          {card("Promedio Diario", analytics ? Math.round((analytics.totalViews||0)/days) : "—", "Visitas por dia", "#8b5cf6", "Cuántas visitas reciben las tiendas por día en promedio")}
-          {card("Tiendas Activas", analytics?.topStores.length ?? "—", "Con visitas", "#f59e0b", "Tiendas que recibieron al menos una visita en el período seleccionado")}
-        </div>
-
-        <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", marginBottom:"16px" }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"16px" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
-              <p style={{ margin:0, fontWeight:600, fontSize:"14px" }}>Visitas por</p>
-              <select onChange={e => setDays(Number(e.target.value))} value={days} style={{ padding:"4px 10px", borderRadius:"6px", border:"1px solid #e5e7eb", fontSize:"13px", color:"#333", fontWeight:600, cursor:"pointer" }}>
-                <option value={1}>Día</option>
-                <option value={7}>Semana</option>
-                <option value={30}>Mes</option>
-                <option value={365}>Año</option>
-              </select>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:"4px", marginBottom:"8px", textAlign:"center" }}>
+              <div>
+                <p style={{ margin:"0 0 2px", fontSize:"22px", fontWeight:700, color: loading ? "#ccc" : "#3b82f6" }}>{loading ? "..." : (smartlook?.landing?.semana ?? 0).toLocaleString()}</p>
+                <p style={{ margin:0, fontSize:"10px", color:"#999", textTransform:"uppercase", letterSpacing:"0.05em" }}>Tol.ar</p>
+              </div>
+              <div>
+                <p style={{ margin:"0 0 2px", fontSize:"22px", fontWeight:700, color: loading ? "#ccc" : "#10b981" }}>{loading ? "..." : (smartlook?.tiendas?.semana ?? 0).toLocaleString()}</p>
+                <p style={{ margin:0, fontSize:"10px", color:"#999", textTransform:"uppercase", letterSpacing:"0.05em" }}>Tiendas activas</p>
+              </div>
+              <div>
+                <p style={{ margin:"0 0 2px", fontSize:"22px", fontWeight:700, color: loading ? "#ccc" : "#f59e0b" }}>{loading ? "..." : (smartlook?.compradores?.semana ?? 0).toLocaleString()}</p>
+                <p style={{ margin:0, fontSize:"10px", color:"#999", textTransform:"uppercase", letterSpacing:"0.05em" }}>Compradores</p>
+              </div>
             </div>
-            <div style={{ display:"flex", gap:"16px", fontSize:"12px", color:"#666" }}>
-              <span><span style={{ display:"inline-block", width:"12px", height:"12px", borderRadius:"2px", background:"#3b82f6", marginRight:"5px", verticalAlign:"middle" }}></span>tol.ar</span>
-              <span><span style={{ display:"inline-block", width:"12px", height:"12px", borderRadius:"2px", background:"#f97316", marginRight:"5px", verticalAlign:"middle" }}></span>Tiendas</span>
+            <div style={{ borderTop:"1px solid #f3f4f6", paddingTop:"8px", marginBottom:"12px" }}>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:"2px", marginBottom:"6px" }}>
+                <span></span>
+                <span style={{ fontSize:"10px", color:"#3b82f6", textAlign:"center", fontWeight:600, textTransform:"uppercase" }}>Tol.ar</span>
+                <span style={{ fontSize:"10px", color:"#10b981", textAlign:"center", fontWeight:600, textTransform:"uppercase" }}>Tiendas activas</span>
+                <span style={{ fontSize:"10px", color:"#f59e0b", textAlign:"center", fontWeight:600, textTransform:"uppercase" }}>Compradores</span>
+              </div>
+              {[
+                {label:"Hoy",    l:smartlook?.landing?.hoy,    t:smartlook?.tiendas?.hoy,    c:smartlook?.compradores?.hoy},
+                {label:"Semana", l:smartlook?.landing?.semana, t:smartlook?.tiendas?.semana, c:smartlook?.compradores?.semana},
+                {label:"Mes",    l:smartlook?.landing?.mes,    t:smartlook?.tiendas?.mes,    c:smartlook?.compradores?.mes},
+                {label:"Año",    l:smartlook?.landing?.anio,   t:smartlook?.tiendas?.anio,   c:smartlook?.compradores?.anio},
+              ].map(({label, l, t, c}) => (
+                <div key={label} style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:"2px", padding:"5px 0", borderTop:"1px solid #f9fafb", fontSize:"12px", alignItems:"center" }}>
+                  <span style={{ color:"#666" }}>{label}</span>
+                  <span style={{ fontWeight:500, color:"#3b82f6", textAlign:"center" }}>{loading ? "..." : (l ?? 0).toLocaleString()}</span>
+                  <span style={{ fontWeight:500, color:"#10b981", textAlign:"center" }}>{loading ? "..." : (t ?? 0).toLocaleString()}</span>
+                  <span style={{ fontWeight:500, color:"#f59e0b", textAlign:"center" }}>{loading ? "..." : (c ?? 0).toLocaleString()}</span>
+                </div>
+              ))}
             </div>
+            <a href={smartlook?.url || "https://app.smartlook.com"} target="_blank" rel="noopener noreferrer"
+              style={{ display:"block", textAlign:"center", padding:"8px 16px", background:"#1a1a1a",
+                color:"#fff", borderRadius:"8px", fontSize:"12px", textDecoration:"none" }}>
+              Ver grabaciones
+            </a>
           </div>
-          <div style={{ display:"flex", alignItems:"flex-end", gap:"6px", height:"180px", paddingBottom:"28px", position:"relative" }}>
-            {loading ? <p style={{ color:"#ccc" }}>Cargando...</p> :
-             !analytics?.dailyViews.length ? <p style={{ color:"#999" }}>Sin datos aun</p> :
-              analytics.dailyViews.map((d, i) => {
-                const platformDay = analytics?.dailyPlatformViews?.find(p => p.date === d.date)
-                const pViews = platformDay?.views || 0
-                const totalMax = Math.max(maxViews, maxPlatform, 1)
-                const tolH = Math.max(pViews>0?12:0, (pViews/totalMax)*150)
-                const tiendasH = Math.max(d.views>0?12:0, (d.views/totalMax)*150)
-                const fecha = d.date ? d.date.slice(5) : ""
-                return (
-                  <div key={i} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"flex-end", height:"100%", position:"relative" }}>
-                    <div style={{ display:"flex", alignItems:"flex-end", gap:"2px", width:"100%" }}>
-                      <div style={{ flex:1, position:"relative" }}>
-                        {pViews > 0 && <span style={{ position:"absolute", top:"-18px", left:"50%", transform:"translateX(-50%)", fontSize:"11px", color:"#3b82f6", fontWeight:800, whiteSpace:"nowrap" }}>{pViews}</span>}
-                        <div style={{ background:"#3b82f6", borderRadius:"4px 4px 0 0", height: tolH + "px", width:"100%" }}/>
-                      </div>
-                      <div style={{ flex:1, position:"relative" }}>
-                        {d.views > 0 && <span style={{ position:"absolute", top:"-18px", left:"50%", transform:"translateX(-50%)", fontSize:"11px", color:"#f97316", fontWeight:800, whiteSpace:"nowrap" }}>{d.views}</span>}
-                        <div style={{ background:"#f97316", borderRadius:"4px 4px 0 0", height: tiendasH + "px", width:"100%" }}/>
-                      </div>
-                    </div>
-                    <span style={{ fontSize:"9px", color:"#999", marginTop:"4px", position:"absolute", bottom:"-18px" }}>{fecha}</span>
-                  </div>
-                )
-              })
-            }
-          </div>
-        </div>
+        )
 
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px", marginBottom:"16px" }}>
+      case "vis-totales":
+        return statCard("Visitas Totales", analytics?.totalViews ?? "—", "Ultimos 30 dias", "#3b82f6", "Cuántas veces entraron a las tiendas de los merchants en los últimos 30 días")
+
+      case "vis-unicos":
+        return statCard("Visitantes Unicos", analytics?.uniqueVisitors ?? "—", "Ultimos 30 dias", "#10b981", "Personas distintas que visitaron alguna tienda. Un mismo cliente cuenta una sola vez")
+
+      case "vis-prom":
+        return statCard("Promedio Diario", analytics ? Math.round((analytics.totalViews || 0) / days) : "—", "Visitas por dia", "#8b5cf6", "Cuántas visitas reciben las tiendas por día en promedio")
+
+      case "vis-activas":
+        return statCard("Tiendas Activas", analytics?.topStores.length ?? "—", "Con visitas", "#f59e0b", "Tiendas que recibieron al menos una visita en el período seleccionado")
+
+      case "chart-bar":
+        return (
           <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"16px" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
+                <p style={{ margin:0, fontWeight:600, fontSize:"14px" }}>Visitas por</p>
+                <select onChange={e => setDays(Number(e.target.value))} value={days}
+                  style={{ padding:"4px 10px", borderRadius:"6px", border:"1px solid #e5e7eb", fontSize:"13px", color:"#333", fontWeight:600, cursor:"pointer" }}>
+                  <option value={1}>Día</option>
+                  <option value={7}>Semana</option>
+                  <option value={30}>Mes</option>
+                  <option value={365}>Año</option>
+                </select>
+              </div>
+              <div style={{ display:"flex", gap:"16px", fontSize:"12px", color:"#666" }}>
+                <span><span style={{ display:"inline-block", width:"12px", height:"12px", borderRadius:"2px", background:"#3b82f6", marginRight:"5px", verticalAlign:"middle" }}></span>tol.ar</span>
+                <span><span style={{ display:"inline-block", width:"12px", height:"12px", borderRadius:"2px", background:"#f97316", marginRight:"5px", verticalAlign:"middle" }}></span>Tiendas</span>
+              </div>
+            </div>
+            <div style={{ display:"flex", alignItems:"flex-end", gap:"6px", height:"180px", paddingBottom:"28px", position:"relative" }}>
+              {loading ? <p style={{ color:"#ccc" }}>Cargando...</p> :
+               !analytics?.dailyViews.length ? <p style={{ color:"#999" }}>Sin datos aun</p> :
+                analytics.dailyViews.map((d, i) => {
+                  const platformDay = analytics?.dailyPlatformViews?.find(p => p.date === d.date)
+                  const pViews = platformDay?.views || 0
+                  const totalMax = Math.max(maxViews, maxPlatform, 1)
+                  const tolH    = Math.max(pViews > 0 ? 12 : 0, (pViews / totalMax) * 150)
+                  const tiendasH = Math.max(d.views > 0 ? 12 : 0, (d.views / totalMax) * 150)
+                  const fecha = d.date ? d.date.slice(5) : ""
+                  return (
+                    <div key={i} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"flex-end", height:"100%", position:"relative" }}>
+                      <div style={{ display:"flex", alignItems:"flex-end", gap:"2px", width:"100%" }}>
+                        <div style={{ flex:1, position:"relative" }}>
+                          {pViews > 0 && <span style={{ position:"absolute", top:"-18px", left:"50%", transform:"translateX(-50%)", fontSize:"11px", color:"#3b82f6", fontWeight:800, whiteSpace:"nowrap" }}>{pViews}</span>}
+                          <div style={{ background:"#3b82f6", borderRadius:"4px 4px 0 0", height: tolH + "px", width:"100%" }} />
+                        </div>
+                        <div style={{ flex:1, position:"relative" }}>
+                          {d.views > 0 && <span style={{ position:"absolute", top:"-18px", left:"50%", transform:"translateX(-50%)", fontSize:"11px", color:"#f97316", fontWeight:800, whiteSpace:"nowrap" }}>{d.views}</span>}
+                          <div style={{ background:"#f97316", borderRadius:"4px 4px 0 0", height: tiendasH + "px", width:"100%" }} />
+                        </div>
+                      </div>
+                      <span style={{ fontSize:"9px", color:"#999", marginTop:"4px", position:"absolute", bottom:"-18px" }}>{fecha}</span>
+                    </div>
+                  )
+                })
+              }
+            </div>
+          </div>
+        )
+
+      case "top-tiendas":
+        return (
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", height:"100%" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", position:"relative" }}>
               <p style={{ margin:"0 0 12px", fontWeight:600, fontSize:"14px" }}>Top Tiendas</p>
               {tip("top-tiendas", "Las 5 tiendas que más visitas recibieron. Hacé click en el nombre para abrirla")}
             </div>
             {loading ? <p style={{ color:"#ccc" }}>...</p> :
              !analytics?.topStores.length ? <p style={{ color:"#999", fontSize:"13px" }}>Sin datos aun</p> :
-              analytics.topStores.slice(0,5).map((s,i) => (
+              analytics.topStores.slice(0, 5).map((s, i) => (
                 <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:"1px solid #f0f0f0" }}>
                   <div>
-                    <a href={"https://" + s.subdomain + ".tol.ar"} target="_blank" rel="noopener noreferrer" style={{ margin:0, fontSize:"13px", fontWeight:500, color:"#1d4ed8", textDecoration:"none" }}>{s.title}</a>
+                    <a href={"https://" + s.subdomain + ".tol.ar"} target="_blank" rel="noopener noreferrer"
+                      style={{ margin:0, fontSize:"13px", fontWeight:500, color:"#1d4ed8", textDecoration:"none" }}>{s.title}</a>
                     <p style={{ margin:0, fontSize:"11px", color:"#999" }}>{s.subdomain}.tol.ar</p>
                   </div>
                   <span style={{ fontWeight:700, color:"#3b82f6" }}>{s.views}</span>
@@ -242,14 +334,18 @@ export function AnalyticsDashboard() {
               ))
             }
           </div>
-          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px" }}>
+        )
+
+      case "top-paginas":
+        return (
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", height:"100%" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", position:"relative" }}>
               <p style={{ margin:"0 0 12px", fontWeight:600, fontSize:"14px" }}>Paginas Mas Visitadas</p>
               {tip("top-paginas", "Las páginas más vistas dentro de las tiendas")}
             </div>
             {loading ? <p style={{ color:"#ccc" }}>...</p> :
              !analytics?.topPages.length ? <p style={{ color:"#999", fontSize:"13px" }}>Sin datos aun</p> :
-              analytics.topPages.slice(0,5).map((p,i) => (
+              analytics.topPages.slice(0, 5).map((p, i) => (
                 <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:"1px solid #f0f0f0" }}>
                   <span style={{ fontSize:"13px", color:"#555" }}>{p.path}</span>
                   <span style={{ fontWeight:700, color:"#3b82f6" }}>{p.views}</span>
@@ -257,17 +353,18 @@ export function AnalyticsDashboard() {
               ))
             }
           </div>
-        </div>
+        )
 
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:"16px", marginBottom:"16px" }}>
-          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
+      case "geo":
+        return (
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative", height:"100%" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
               <p style={{ margin:"0 0 10px", color:"#666", fontSize:"13px" }}>Pais / Ciudad</p>
               {tip("pais-ciudad", "De dónde vienen los visitantes de las tiendas")}
             </div>
             {loading ? <p style={{ color:"#ccc" }}>...</p> : !analytics?.topCountries?.length ? <p style={{ color:"#999", fontSize:"12px" }}>Sin datos aun</p> : (
               <div>
-                {analytics.topCountries.slice(0,3).map((c,i) => (
+                {analytics.topCountries.slice(0, 3).map((c, i) => (
                   <div key={i} style={{ display:"flex", justifyContent:"space-between", marginBottom:"4px" }}>
                     <span style={{ fontSize:"12px", color:"#555" }}>{c.name}</span>
                     <span style={{ fontWeight:700, color:"#10b981", fontSize:"13px" }}>{c.views}</span>
@@ -276,7 +373,11 @@ export function AnalyticsDashboard() {
               </div>
             )}
           </div>
-          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
+        )
+
+      case "dispositivos":
+        return (
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative", height:"100%" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
               <p style={{ margin:"0 0 10px", color:"#666", fontSize:"13px" }}>Celular vs PC</p>
               {tip("cel-pc", "Si la gente entra desde el celular o desde la computadora")}
@@ -294,15 +395,19 @@ export function AnalyticsDashboard() {
               </div>
             )}
           </div>
-          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px" }}>
+        )
+
+      case "horarios":
+        return (
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", height:"100%" }}>
             <p style={{ margin:"0 0 10px", color:"#666", fontSize:"13px" }}>Horarios pico</p>
             {loading ? <p style={{ color:"#ccc" }}>...</p> : !analytics?.hourlyViews ? <p style={{ color:"#ccc" }}>...</p> : (() => {
-              const topHours = [...analytics.hourlyViews].sort((a,b) => b.views-a.views).slice(0,3)
+              const topHours = [...analytics.hourlyViews].sort((a, b) => b.views - a.views).slice(0, 3)
               return (
                 <div>
-                  {topHours.map((h,i) => (
+                  {topHours.map((h, i) => (
                     <div key={i} style={{ display:"flex", justifyContent:"space-between", marginBottom:"4px" }}>
-                      <span style={{ fontSize:"12px", color:"#555" }}>{h.hour}:00 - {h.hour+1}:00</span>
+                      <span style={{ fontSize:"12px", color:"#555" }}>{h.hour}:00 - {h.hour + 1}:00</span>
                       <span style={{ fontWeight:700, color:"#f59e0b", fontSize:"13px" }}>{h.views}</span>
                     </div>
                   ))}
@@ -310,11 +415,15 @@ export function AnalyticsDashboard() {
               )
             })()}
           </div>
-          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px" }}>
+        )
+
+      case "rubros":
+        return (
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", height:"100%" }}>
             <p style={{ margin:"0 0 10px", color:"#666", fontSize:"13px" }}>Productos mas vistos</p>
             {loading ? <p style={{ color:"#ccc" }}>...</p> :
              !analytics?.topRubros?.length ? <p style={{ color:"#999", fontSize:"12px" }}>Sin datos aun</p> :
-              analytics.topRubros.map((r,i) => (
+              analytics.topRubros.map((r, i) => (
                 <div key={i} style={{ display:"flex", justifyContent:"space-between", marginBottom:"4px" }}>
                   <span style={{ fontSize:"12px", color:"#555" }}>{r.name}</span>
                   <span style={{ fontWeight:700, color:"#f59e0b", fontSize:"13px" }}>{r.views}</span>
@@ -322,78 +431,149 @@ export function AnalyticsDashboard() {
               ))
             }
           </div>
-        </div>
+        )
 
-        {/* SALUD DE LOS MERCHANTS */}
-        <h2 style={{ fontSize:"13px", fontWeight:600, color:"#888", marginBottom:"16px", marginTop:"24px", textTransform:"uppercase", letterSpacing:"0.05em" }}>Salud de los Clientes</h2>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:"16px", marginBottom:"16px" }}>
-          {[
-            { id:"ventas-reales", label:"Con ventas reales", sub:"Este mes", color:"#10b981", info:"Merchants que registraron al menos una venta este mes." },
-            { id:"riesgo-abandono", label:"En riesgo de abandono", sub:"Sin actividad 30d", color:"#ef4444", info:"Merchants que no entraron al admin en más de 30 días." },
-            { id:"incompletas", label:"Tiendas incompletas", sub:"Sin productos o logo", color:"#f59e0b", info:"Tiendas sin productos o sin logo. Difícilmente vendan algo así." },
-            { id:"cositas-top", label:"Cositas más compradas", sub:"Plan Cositas", color:"#8b5cf6", info:"Las funciones extra que más contratan los merchants del plan Cositas." },
-          ].map(({ id, label, sub, color, info }) => (
-            <div key={id} style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
-              <div style={{ display:"flex", justifyContent:"space-between" }}>
-                <p style={{ margin:"0 0 8px", color:"#666", fontSize:"13px" }}>{label}</p>
-                {tip(id, info)}
+      case "referral":
+        return (
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"16px" }}>
+              <div style={{ display:"flex", gap:"16px" }}>
+                <div style={{ textAlign:"center" }}>
+                  <p style={{ fontSize:"22px", fontWeight:600, margin:0 }}>{referral?.total ?? "—"}</p>
+                  <p style={{ fontSize:"11px", color:"#888", margin:0 }}>respuestas</p>
+                </div>
+                <div style={{ textAlign:"center" }}>
+                  <p style={{ fontSize:"16px", fontWeight:600, margin:0 }}>
+                    {referral?.items?.[0] ? ({"insta":"Instagram","recomend":"Me recomendaron","ia":"AI","face":"Facebook","whatsapp":"WhatsApp","google":"Google","youtube":"YouTube","otro":"Otro"}[referral.items[0].id] ?? referral.items[0].id) : "—"}
+                  </p>
+                  <p style={{ fontSize:"11px", color:"#888", margin:0 }}>fuente líder</p>
+                </div>
+                <div style={{ textAlign:"center" }}>
+                  <p style={{ fontSize:"16px", fontWeight:600, margin:0 }}>
+                    {referral?.items?.find(i => i.id === "ia") ? referral.items.find(i => i.id === "ia")!.pct + "%" : "0%"}
+                  </p>
+                  <p style={{ fontSize:"11px", color:"#888", margin:0 }}>AI 🤖 sorpresa</p>
+                </div>
               </div>
-              <p style={{ margin:"0 0 4px", fontSize:"32px", fontWeight:700, color }}>🔜</p>
-              <p style={{ margin:"0 0 10px", fontSize:"12px", color:"#999" }}>{sub}</p>
-              <button onClick={() => setModal(id)} style={{ width:"100%", padding:"6px", background:"#f8fafc", border:"1px solid #e2e8f0", borderRadius:"6px", fontSize:"11px", color:"#64748b", cursor:"pointer" }}>Ver detalle →</button>
             </div>
-          ))}
-        </div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:"16px" }}>
-          {[
-            { id:"fuente-trafico", label:"Fuente de tráfico", sub:"Google / Directo / Redes", color:"#3b82f6", info:"De dónde vienen los nuevos merchants: Google, directo, redes sociales." },
-            { id:"upgrade", label:"Cerca de upgrade", sub:"Listos para Cositas", color:"#10b981", info:"Merchants del plan Gratis con mucha actividad, listos para pasarse a Cositas." },
-            { id:"errores-404", label:"Errores 404", sub:"Últimos 30 días", color:"#ef4444", info:"Páginas que no existen y dan error. Si hay muchas, algo está roto." },
-            { id:"keywords", label:"Keywords que traen gente", sub:"Search Console", color:"#f59e0b", info:"Las palabras que la gente escribe en Google antes de llegar a tol.ar." },
-          ].map(({ id, label, sub, color, info }) => (
-            <div key={id} style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative" }}>
-              <div style={{ display:"flex", justifyContent:"space-between" }}>
-                <p style={{ margin:"0 0 8px", color:"#666", fontSize:"13px" }}>{label}</p>
-                {tip(id, info)}
-              </div>
-              <p style={{ margin:"0 0 4px", fontSize:"32px", fontWeight:700, color }}>🔜</p>
-              <p style={{ margin:"0 0 10px", fontSize:"12px", color:"#999" }}>{sub}</p>
-              <button onClick={() => setModal(id)} style={{ width:"100%", padding:"6px", background:"#f8fafc", border:"1px solid #e2e8f0", borderRadius:"6px", fontSize:"11px", color:"#64748b", cursor:"pointer" }}>Ver detalle →</button>
+            <div style={{ display:"flex", flexDirection:"column", gap:"8px" }}>
+              {[
+                {id:"insta",label:"Instagram"},
+                {id:"recomend",label:"Me recomendaron"},
+                {id:"ia",label:"AI"},
+                {id:"face",label:"Facebook"},
+                {id:"whatsapp",label:"WhatsApp"},
+                {id:"google",label:"Google"},
+                {id:"youtube",label:"YouTube"},
+                {id:"otro",label:"Otro"},
+              ].map(op => {
+                const item = referral?.items?.find(i => i.id === op.id)
+                const pct = item?.pct ?? 0
+                const max = referral?.items?.[0]?.count ?? 1
+                const barW = item ? Math.round(item.count / max * 100) : 0
+                return (
+                  <div key={op.id} style={{ display:"grid", gridTemplateColumns:"130px 1fr 40px", alignItems:"center", gap:"10px" }}>
+                    <span style={{ fontSize:"13px", color:"#1a1a1a", textAlign:"right" }}>{op.label}</span>
+                    <div style={{ background:"#f3f4f6", borderRadius:"99px", height:"8px", overflow:"hidden" }}>
+                      <div style={{ height:"100%", width: barW + "%", background:"#1a1a1a", borderRadius:"99px" }} />
+                    </div>
+                    <span style={{ fontSize:"12px", color:"#888" }}>{pct}%</span>
+                  </div>
+                )
+              })}
             </div>
-          ))}
-        </div>
+          </div>
+        )
 
+      default: {
+        const saludMap: Record<string, {label:string;sub:string;color:string;info:string}> = {
+          "ventas-reales":  { label:"Con ventas reales",       sub:"Este mes",              color:"#10b981", info:"Merchants que registraron al menos una venta este mes." },
+          "riesgo-abandono":{ label:"En riesgo de abandono",   sub:"Sin actividad 30d",     color:"#ef4444", info:"Merchants que no entraron al admin en más de 30 días." },
+          "incompletas":    { label:"Tiendas incompletas",     sub:"Sin productos o logo",  color:"#f59e0b", info:"Tiendas sin productos o sin logo. Difícilmente vendan algo así." },
+          "cositas-top":    { label:"Cositas más compradas",   sub:"Plan Cositas",          color:"#8b5cf6", info:"Las funciones extra que más contratan los merchants del plan Cositas." },
+          "fuente-trafico": { label:"Fuente de tráfico",       sub:"Google / Directo / Redes", color:"#3b82f6", info:"De dónde vienen los nuevos merchants: Google, directo, redes sociales." },
+          "upgrade":        { label:"Cerca de upgrade",        sub:"Listos para Cositas",   color:"#10b981", info:"Merchants del plan Gratis con mucha actividad, listos para pasarse a Cositas." },
+          "errores-404":    { label:"Errores 404",             sub:"Últimos 30 días",       color:"#ef4444", info:"Páginas que no existen y dan error. Si hay muchas, algo está roto." },
+          "keywords":       { label:"Keywords que traen gente",sub:"Search Console",        color:"#f59e0b", info:"Las palabras que la gente escribe en Google antes de llegar a tol.ar." },
+        }
+        const s = saludMap[id]
+        if (!s) return null
+        return (
+          <div style={{ background:"#fff", border:"1px solid #e5e7eb", borderRadius:"12px", padding:"20px", position:"relative", height:"100%" }}>
+            <div style={{ display:"flex", justifyContent:"space-between" }}>
+              <p style={{ margin:"0 0 8px", color:"#666", fontSize:"13px" }}>{s.label}</p>
+              {tip(id, s.info)}
+            </div>
+            <p style={{ margin:"0 0 4px", fontSize:"32px", fontWeight:700, color:s.color }}>🔜</p>
+            <p style={{ margin:"0 0 10px", fontSize:"12px", color:"#999" }}>{s.sub}</p>
+            <button onClick={() => setModal(id)}
+              style={{ width:"100%", padding:"6px", background:"#f8fafc", border:"1px solid #e2e8f0",
+                borderRadius:"6px", fontSize:"11px", color:"#64748b", cursor:"pointer" }}>
+              Ver detalle →
+            </button>
+          </div>
+        )
+      }
+    }
+  }
+
+  const getCardStyle = (cardId: string): React.CSSProperties => {
+    if (WIDE_CARDS.has(cardId)) return { gridColumn:"1 / -1" }
+    if (MED_CARDS.has(cardId))  return { gridColumn:"span 2" }
+    return {}
+  }
+
+  const renderSectionHeader = (sectionId: string): React.ReactNode => (
+    <h2 style={{ fontSize:"13px", fontWeight:600, color:"#888", margin:0,
+      textTransform:"uppercase", letterSpacing:"0.05em" }}>
+      {SECTION_LABELS[sectionId] ?? sectionId}
+    </h2>
+  )
+
+  return (
+    <div style={{ padding:"24px", color:"#1a1a1a" }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"28px" }}>
+        <h1 style={{ margin:0, fontSize:"22px", fontWeight:700 }}>Estadísticas de la Plataforma</h1>
+        <div style={{ display:"flex", gap:"8px", alignItems:"center" }}>
+          {[7, 30, 90].map(d => (
+            <button key={d} onClick={() => setDays(d)}
+              style={{ padding:"6px 14px", borderRadius:"8px", border:"1px solid #e5e7eb",
+                background: days === d ? "#1a1a1a" : "#fff", color: days === d ? "#fff" : "#666",
+                cursor:"pointer", fontSize:"13px" }}>
+              {d} dias
+            </button>
+          ))}
+          <button onClick={fetchData}
+            style={{ padding:"6px 10px", borderRadius:"8px", border:"1px solid #e5e7eb", background:"#fff", cursor:"pointer" }}>
+            <RefreshCw style={{ width:"14px", height:"14px" }} />
+          </button>
+        </div>
       </div>
 
+      <DragDropBoard
+        sections={sections}
+        onSectionsChange={handleSectionsChange}
+        renderSectionHeader={renderSectionHeader}
+        renderCard={(cardId) => renderCard(cardId)}
+        getCardStyle={getCardStyle}
+      />
+
       {modal && (
-        <div onClick={() => setModal(null)} style={{ position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(0,0,0,0.5)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center" }}>
-          <div onClick={e => e.stopPropagation()} style={{ background:"#fff", borderRadius:"16px", padding:"32px", maxWidth:"480px", width:"90%", boxShadow:"0 20px 60px rgba(0,0,0,0.2)" }}>
+        <div onClick={() => setModal(null)}
+          style={{ position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(0,0,0,0.5)",
+            zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <div onClick={e => e.stopPropagation()}
+            style={{ background:"#fff", borderRadius:"16px", padding:"32px", maxWidth:"480px",
+              width:"90%", boxShadow:"0 20px 60px rgba(0,0,0,0.2)" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"16px" }}>
               <h3 style={{ margin:0, fontSize:"16px", fontWeight:700 }}>
-                {{
-                  "ventas-reales":"Merchants con ventas reales",
-                  "riesgo-abandono":"En riesgo de abandono",
-                  "incompletas":"Tiendas incompletas",
-                  "cositas-top":"Cositas más compradas",
-                  "fuente-trafico":"Fuente de tráfico",
-                  "upgrade":"Cerca de upgrade",
-                  "errores-404":"Errores 404",
-                  "keywords":"Keywords que traen gente"
-                }[modal] || modal}
+                {({"ventas-reales":"Merchants con ventas reales","riesgo-abandono":"En riesgo de abandono","incompletas":"Tiendas incompletas","cositas-top":"Cositas más compradas","fuente-trafico":"Fuente de tráfico","upgrade":"Cerca de upgrade","errores-404":"Errores 404","keywords":"Keywords que traen gente"} as Record<string,string>)[modal] || modal}
               </h3>
-              <button onClick={() => setModal(null)} style={{ background:"none", border:"none", fontSize:"20px", cursor:"pointer", color:"#999" }}>✕</button>
+              <button onClick={() => setModal(null)}
+                style={{ background:"none", border:"none", fontSize:"20px", cursor:"pointer", color:"#999" }}>✕</button>
             </div>
             <p style={{ color:"#64748b", fontSize:"14px", lineHeight:"1.6" }}>
-              {{
-                "ventas-reales":"Próximamente — se conectará con el sistema de pagos para mostrar qué tiendas vendieron este mes.",
-                "riesgo-abandono":"Próximamente — mostrará los merchants que no entraron al admin en más de 30 días.",
-                "incompletas":"Próximamente — listará las tiendas sin productos cargados o sin logo.",
-                "cositas-top":"Próximamente — mostrará qué funciones extra del plan Cositas se contratan más.",
-                "fuente-trafico":"Próximamente — se conectará con Google Analytics para mostrar de dónde viene la gente.",
-                "upgrade":"Próximamente — identificará merchants del plan Gratis con alta actividad listos para Cositas.",
-                "errores-404":"Próximamente — detectará páginas rotas en las tiendas.",
-                "keywords":"Próximamente — se conectará con Search Console para ver qué búsquedas traen visitantes."
-              }[modal] || "Próximamente."}
+              {({"ventas-reales":"Próximamente — se conectará con el sistema de pagos para mostrar qué tiendas vendieron este mes.","riesgo-abandono":"Próximamente — mostrará los merchants que no entraron al admin en más de 30 días.","incompletas":"Próximamente — listará las tiendas sin productos cargados o sin logo.","cositas-top":"Próximamente — mostrará qué funciones extra del plan Cositas se contratan más.","fuente-trafico":"Próximamente — se conectará con Google Analytics para mostrar de dónde viene la gente.","upgrade":"Próximamente — identificará merchants del plan Gratis con alta actividad listos para Cositas.","errores-404":"Próximamente — detectará páginas rotas en las tiendas.","keywords":"Próximamente — se conectará con Search Console para ver qué búsquedas traen visitantes."} as Record<string,string>)[modal] || "Próximamente."}
             </p>
           </div>
         </div>

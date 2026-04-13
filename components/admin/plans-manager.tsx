@@ -730,7 +730,7 @@ export function PlansManager({ storeId, storeName, subdomain }: PlansManagerProp
                     <>
                       {/* Features ACTIVAS - las que funcionan */}
                       {availableFeatures
-                        .filter((f) => ["multi_images", "whatsapp_chat", "custom_variants", "csv_import"].includes(f.code))
+                        .filter((f) => ["multi_images", "whatsapp_chat", "custom_variants", "csv_import", "store_stats", "lupa"].includes(f.code))
                         .map((feature) => {
                           const IconComponent = ICON_MAP[feature.icon] || Package
                           const isPurchased = purchasedFeatures.includes(feature.code)
@@ -793,7 +793,7 @@ export function PlansManager({ storeId, storeName, subdomain }: PlansManagerProp
                         })}
                       
                       {/* Separador */}
-                      {availableFeatures.filter((f) => !["multi_images", "whatsapp_chat", "custom_variants", "csv_import"].includes(f.code)).length > 0 && (
+                      {availableFeatures.filter((f) => !["multi_images", "whatsapp_chat", "custom_variants", "csv_import", "store_stats", "lupa"].includes(f.code)).length > 0 && (
                         <div className="pt-4 mt-4 border-t">
                           <p className="text-sm font-medium text-slate-500 mb-3">Proximamente</p>
                         </div>
@@ -801,7 +801,7 @@ export function PlansManager({ storeId, storeName, subdomain }: PlansManagerProp
                       
                       {/* Features PROXIMAMENTE - las que aun no funcionan */}
                       {availableFeatures
-                        .filter((f) => !["multi_images", "whatsapp_chat", "custom_variants", "csv_import"].includes(f.code))
+                        .filter((f) => !["multi_images", "whatsapp_chat", "custom_variants", "csv_import", "store_stats", "lupa"].includes(f.code))
                         .map((feature) => {
                           const IconComponent = ICON_MAP[feature.icon] || Package
 

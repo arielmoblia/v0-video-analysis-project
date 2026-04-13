@@ -27,7 +27,40 @@ export function MultiImageUpload({ value = [], onChange, maxImages = 5 }: MultiI
     setIsDragging(false)
   }, [])
 
+
+  const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')!
+      const img = new window.Image()
+      const url = URL.createObjectURL(file)
+      img.onload = () => {
+        const maxW = 1920
+        const maxH = 1920
+        let { width, height } = img
+        if (width > maxW || height > maxH) {
+          const ratio = Math.min(maxW / width, maxH / height)
+          width = Math.round(width * ratio)
+          height = Math.round(height * ratio)
+        }
+        canvas.width = width
+        canvas.height = height
+        ctx.drawImage(img, 0, 0, width, height)
+        URL.revokeObjectURL(url)
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.webp'), { type: 'image/webp' }))
+          } else {
+            resolve(file)
+          }
+        }, 'image/webp', 0.85)
+      }
+      img.src = url
+    })
+  }
+
   const uploadFile = async (file: File) => {
+    file = await compressImage(file)
     setError(null)
     setIsUploading(true)
 

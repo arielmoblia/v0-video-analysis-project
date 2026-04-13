@@ -4,6 +4,7 @@ import { PageTracker } from "@/components/store/page-tracker"
 import { TrackingPixels } from "@/components/store/tracking-pixels"
 import { WhatsAppButton } from "@/components/store/whatsapp-button"
 import { getStoreBySubdomain, getStorePurchasedFeatures } from "@/lib/store-context"
+import { LupaTracker } from "@/components/store/lupa-tracker"
 
 export default async function StoreLayout({
   children,
@@ -22,6 +23,7 @@ export default async function StoreLayout({
   // Verificar si tiene la feature de WhatsApp
   const purchasedFeatures = store ? await getStorePurchasedFeatures(store.id) : []
   const hasWhatsAppFeature = purchasedFeatures.includes("whatsapp_chat")
+    const hasLupaFeature = purchasedFeatures.includes("lupa")
   const whatsappNumber = store?.social_whatsapp || store?.whatsapp_number
 
   return (
@@ -35,6 +37,7 @@ export default async function StoreLayout({
         domainVerificationGoogle={verification.google_site}
       />
       {children}
+      <LupaTracker subdomain={subdomain} hasLupa={hasLupaFeature} />
       {hasWhatsAppFeature && whatsappNumber && (
         <WhatsAppButton phoneNumber={whatsappNumber} storeName={store?.site_title} />
       )}

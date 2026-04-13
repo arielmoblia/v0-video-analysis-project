@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { SEOAlerts } from "./seo-alerts"
 import { SeoAiTab } from "./seo-ai-tab"
+import { SeoContenidoTab } from "./seo-contenido-tab"
 import { 
   Brain,
   Search, 
@@ -621,7 +622,7 @@ export function SeoModule() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-6 w-full max-w-3xl">
+        <TabsList className="grid grid-cols-7 w-full max-w-4xl">
           <TabsTrigger value="dashboard" className="flex items-center gap-1">
             <BarChart3 className="w-4 h-4" />
             Dashboard
@@ -638,13 +639,17 @@ export function SeoModule() {
             <Link2 className="w-4 h-4" />
             Sitemap
           </TabsTrigger>
+          <TabsTrigger value="speed" className="flex items-center gap-1">
+            <Zap className="w-4 h-4" />
+            Velocidad
+          </TabsTrigger>
           <TabsTrigger value="seoai" className="flex items-center gap-1">
             <Brain className="w-4 h-4" />
             SEO AI
           </TabsTrigger>
-          <TabsTrigger value="speed" className="flex items-center gap-1">
-            <Zap className="w-4 h-4" />
-            Velocidad
+          <TabsTrigger value="seocontenido" className="flex items-center gap-1">
+            <FileText className="w-4 h-4" />
+            SEO Contenido
           </TabsTrigger>
         </TabsList>
 
@@ -1214,6 +1219,11 @@ export function SeoModule() {
         {/* SEO AI */}
         <TabsContent value="seoai">
           <SeoAiTab />
+        </TabsContent>
+
+        {/* SEO Contenido */}
+        <TabsContent value="seocontenido">
+          <SeoContenidoTab />
         </TabsContent>
 
         {/* Velocidad */}

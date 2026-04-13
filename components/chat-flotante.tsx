@@ -36,30 +36,86 @@ function isStoreSubdomain(): boolean {
 
 export function ChatFlotante() {
   const pathname = usePathname()
+  const [mounted, setMounted] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
   const [input, setInput] = useState("")
   const [isStore, setIsStore] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const agenteNombreRef = useRef<string>("Tomi")
+  const [displayedTexts, setDisplayedTexts] = useState<Record<string, string>>({})
+  const typewriterRefs = useRef<Record<string, NodeJS.Timeout>>({})
   
   // Detectar subdominio en el cliente
   useEffect(() => {
+    setMounted(true)
     setIsStore(isStoreSubdomain())
+    const a = ASISTENTES[Math.floor(Math.random() * ASISTENTES.length)]
+    setAsistente(a)
+    agenteNombreRef.current = a.nombre
   }, [])
   
   // Seleccionar asistente aleatorio solo en el cliente (evita hydration mismatch)
-  const [asistente, setAsistente] = useState(ASISTENTES[0])
-  useEffect(() => {
-    const index = Math.floor(Math.random() * ASISTENTES.length)
-    setAsistente(ASISTENTES[index])
-  }, [])
+  const [asistente, setAsistente] = useState<typeof ASISTENTES[0] | null>(null)
 
   const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({ api: "/api/chat-soporte" }),
+    transport: new DefaultChatTransport({
+      api: "/api/chat-soporte",
+      fetch: (url, init) => fetch(`${url}?agent=${encodeURIComponent(agenteNombreRef.current)}`, init!)
+    }),
   })
 
   const isLoading = status === "streaming" || status === "submitted"
   
+  // Efecto typewriter — solo cuando el mensaje terminó de streamear
+  useEffect(() => {
+    if (isLoading) return // No arrancar mientras está streaming
+    messages.forEach((message) => {
+      if (message.role === "assistant") {
+        const fullText = message.parts?.filter((p: any) => p.type === "text").map((p: any) => p.text).join("") || ""
+        if (displayedTexts[message.id] === fullText) return // Ya está completo
+        if (typewriterRefs.current[message.id]) return // Ya está corriendo
+        let i = 0
+        setDisplayedTexts(prev => ({ ...prev, [message.id]: "" }))
+        const type = () => {
+          i++
+          setDisplayedTexts(prev => ({ ...prev, [message.id]: fullText.slice(0, i) }))
+          if (i < fullText.length) {
+            const char = fullText[i - 1]
+        const isPunct = ['.', ',', '!', '?', ')', '(', ';'].includes(char)
+        const isWordBreak = i % 4 === 0
+
+        // Ocasionalmente borra y reescribe (5% de chances, solo en medio de palabras)
+        const shouldMistake = !isPunct && Math.random() < 0.01 && i > 4 && i < fullText.length - 8 && !typewriterRefs.current[message.id + '_mistook']
+        if (shouldMistake) {
+          const backtrack = Math.floor(2 + Math.random() * 3)
+          typewriterRefs.current[message.id + '_mistook'] = true as any
+          const deleteBack = () => {
+            if (i > Math.max(1, i - backtrack)) {
+              i--
+              setDisplayedTexts(prev => ({ ...prev, [message.id]: fullText.slice(0, i) }))
+              typewriterRefs.current[message.id] = setTimeout(deleteBack, 60 + Math.random() * 40)
+            } else {
+              typewriterRefs.current[message.id] = setTimeout(type, 120)
+            }
+          }
+          typewriterRefs.current[message.id] = setTimeout(deleteBack, 80)
+          return
+        }
+
+        const delay = isPunct ? 180 + Math.random() * 120 
+                    : isWordBreak ? 80 + Math.random() * 60
+                    : 30 + Math.random() * 25
+        typewriterRefs.current[message.id] = setTimeout(type, delay)
+          } else {
+            delete typewriterRefs.current[message.id]
+          }
+        }
+        typewriterRefs.current[message.id] = setTimeout(type, 30)
+      }
+    })
+  }, [isLoading, messages])
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
@@ -77,7 +133,7 @@ export function ChatFlotante() {
     pathname?.startsWith("/categoria/") ||
     pathname === "/checkout"
   
-  if (isStorePage) {
+  if (!mounted || isStorePage) {
     return null
   }
 
@@ -108,7 +164,7 @@ export function ChatFlotante() {
           1
         </span>
         <div className="absolute bottom-full right-0 mb-2 bg-white text-gray-800 px-3 py-2 rounded-lg shadow-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-          Hola! Soy {asistente.nombre}, en que te puedo ayudar?
+          Hola! Soy {asistente?.nombre || 'Tomi'}, en que te puedo ayudar?
         </div>
       </button>
     )
@@ -129,8 +185,8 @@ export function ChatFlotante() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/30">
             <Image
-              src={asistente.foto || "/images/placeholders/placeholder.svg"}
-              alt={asistente.nombre}
+              src={asistente?.foto || "/images/placeholders/placeholder.svg"}
+              alt={asistente?.nombre || 'Tomi'}
               width={40}
               height={40}
               className="w-full h-full object-cover"
@@ -139,7 +195,7 @@ export function ChatFlotante() {
             />
           </div>
           <div>
-            <h3 className="font-semibold">{asistente.nombre}</h3>
+            <h3 className="font-semibold">{asistente?.nombre || 'Tomi'}</h3>
             <p className="text-xs text-white/80">Soporte tol.ar - Online</p>
           </div>
         </div>
@@ -173,8 +229,8 @@ export function ChatFlotante() {
               <div className="text-center py-8">
                 <div className="w-16 h-16 rounded-full overflow-hidden mx-auto mb-4 border-2 border-green-200">
                   <Image
-                    src={asistente.foto || "/images/placeholders/placeholder.svg"}
-                    alt={asistente.nombre}
+                    src={asistente?.foto || "/images/placeholders/placeholder.svg"}
+                    alt={asistente?.nombre || 'Tomi'}
                     width={64}
                     height={64}
                     className="w-full h-full object-cover"
@@ -184,7 +240,7 @@ export function ChatFlotante() {
                 </div>
                 <h4 className="font-semibold mb-2">Hola, como estas?</h4>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Soy {asistente.nombre} de tol.ar. En que te puedo ayudar? Preguntame lo que necesites.
+                  Soy {asistente?.nombre || 'Tomi'} de tol.ar. En que te puedo ayudar? Preguntame lo que necesites.
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   {[
@@ -228,7 +284,9 @@ export function ChatFlotante() {
                       : "bg-white border rounded-bl-sm"
                   )}
                 >
-                  {getMessageText(message.parts)}
+                  {message.role === "assistant" 
+                    ? (displayedTexts[message.id] || "")
+                    : getMessageText(message.parts)}
                 </div>
                 {message.role === "user" && (
                   <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center shrink-0">

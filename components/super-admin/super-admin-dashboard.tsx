@@ -13,6 +13,7 @@ import {
   BarChart3,
   AlertTriangle,
   ExternalLink,
+  Eye,
   LogOut,
   RefreshCw,
   Calendar,
@@ -34,7 +35,8 @@ import {
   MessageCircle,
   Palette,
   FileSpreadsheet,
-  Mail // Declared Mail variable
+  Mail, // Declared Mail variable
+  Search
 } from "lucide-react"
 import { createClient } from "@supabase/supabase-js"
 import { AnalyticsDashboard } from "./analytics-dashboard"
@@ -86,11 +88,13 @@ const AVAILABLE_FEATURES = [
   { code: "whatsapp_chat", name: "Chat WhatsApp", description: "Boton flotante de WhatsApp", icon: MessageCircle },
   { code: "custom_variants", name: "Variantes Personalizables", description: "Aromas, colores, sabores", icon: Palette },
   { code: "csv_import", name: "Importar Productos CSV/Excel", description: "Carga masiva de productos", icon: FileSpreadsheet },
+  { code: "lupa", name: "Lupa", description: "Session recording de visitantes", icon: Search },
 ]
 
 export function SuperAdminDashboard() {
   const [stores, setStores] = useState<StoreData[]>([])
   const [deletedStores, setDeletedStores] = useState<DeletedStoreData[]>([])
+  const [scStore, setScStore] = useState<StoreData | null>(null)
   const [loading, setLoading] = useState(true)
   const [deployStatus, setDeployStatus] = useState<'idle'|'building'|'done'|'error'>('idle')
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -328,7 +332,7 @@ export function SuperAdminDashboard() {
     .filter((s) => {
       if (planFilter === "all") return true
       if (planFilter === "templates") return s.plan === "templates"
-      if (planFilter === "free") return !s.plan || s.plan === "free"
+      if (planFilter === "free") return !s.plan || s.plan === "free" || s.plan === "gratis"
       if (planFilter === "cositas") return s.plan === "cositas"
       if (planFilter === "socios") return s.plan === "socios"
       if (planFilter === "custom") return s.plan === "custom"
@@ -465,7 +469,10 @@ export function SuperAdminDashboard() {
               <Layers className="w-4 h-4 mr-1" />
               Templates
             </TabsTrigger>
-
+            <a href="https://smartcheck.tol.ar" target="_blank" rel="noopener noreferrer"
+              style={{marginLeft:"4px",background:"#e65100",color:"white",borderRadius:"6px",padding:"4px 10px",fontWeight:600,fontSize:"12px",textDecoration:"none",display:"inline-flex",alignItems:"center",gap:"4px",whiteSpace:"nowrap"}}>
+              👁 Smartcheck
+            </a>
           </TabsList>
 
           <TabsContent value="stores" className="space-y-6">
@@ -687,7 +694,7 @@ export function SuperAdminDashboard() {
                                 className="flex items-center gap-1 hover:text-green-600 transition-colors"
                               >
                                 <Globe className="w-3 h-3 text-slate-400 flex-shrink-0" />
-                                <span className="text-slate-700 hover:text-green-600 hover:underline">{store.subdomain}.tol.ar</span>
+                                <span className="text-slate-700 hover:text-green-600 hover:underline truncate block max-w-[180px]" title={store.subdomain + ".tol.ar"}>{store.subdomain}.tol.ar</span>
                               </a>
                             </td>
                             <td className="py-2 px-2 text-slate-700">{store.username || "—"}</td>
@@ -731,20 +738,7 @@ export function SuperAdminDashboard() {
                             </td>
                             <td className="py-2 px-2">
                               <div className="flex gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  asChild
-                                  className="text-slate-500 hover:text-slate-900 hover:bg-slate-100 h-6 w-6 p-0"
-                                >
-                                  <a
-                                    href={`https://${store.subdomain}.tol.ar`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <ExternalLink className="w-3.5 h-3.5" />
-                                  </a>
-                                </Button>
+                                <button onClick={() => window.open(`https://smartcheck.tol.ar?store=${store.subdomain}`, "_blank")} title="SmartCheck" style={{background:"none",border:"none",cursor:"pointer",color:"#3b82f6",padding:2,display:"flex"}}><Eye style={{width:14,height:14}} /></button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -918,6 +912,22 @@ export function SuperAdminDashboard() {
               </div>
             </CardContent>
           </Card>
+        </div>
+      )}
+      {scStore && (
+        <div onClick={() => setScStore(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div onClick={e => e.stopPropagation()} style={{background:'#fff',borderRadius:12,padding:32,minWidth:400,position:'relative',boxShadow:'0 20px 60px rgba(0,0,0,0.3)'}}>
+            <button onClick={() => setScStore(null)} style={{position:'absolute',top:12,right:16,background:'none',border:'none',fontSize:20,cursor:'pointer',color:'#888'}}>✕</button>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:20}}>
+              <Eye style={{color:'#3b82f6',width:20,height:20}} />
+              <strong style={{fontSize:16}}>SmartCheck</strong>
+              <span style={{background:'#f1f5f9',padding:'2px 8px',borderRadius:6,fontSize:12,color:'#64748b'}}>{scStore.subdomain}.tol.ar</span>
+            </div>
+            <div style={{background:'#f8fafc',borderRadius:8,padding:20,textAlign:'center',color:'#94a3b8',fontSize:13,marginBottom:16}}>
+              🚧 Grabaciones de sesiones — próximamente
+            </div>
+            <a href="https://app.smartlook.com/recordings" target="_blank" rel="noopener noreferrer" style={{display:'block',textAlign:'center',padding:'10px',background:'#3b82f6',color:'#fff',borderRadius:8,fontSize:13,textDecoration:'none'}}>Ver en Smartlook →</a>
+          </div>
         </div>
       )}
     </div>

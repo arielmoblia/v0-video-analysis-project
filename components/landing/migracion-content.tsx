@@ -1,562 +1,213 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import {
-  Check,
-  X,
-  ArrowRight,
-  Shield,
-  Globe,
-  Upload,
-  Search,
-  Rocket,
-  LifeBuoy,
-  AlertTriangle,
-  Sparkles,
-  CreditCard,
-  Truck,
-} from "lucide-react"
-
-type Tab = "mercado-shops" | "tiendanube"
+import { ArrowRight, RefreshCw, Sparkles, CreditCard, Globe, LifeBuoy, Truck, CheckCircle2, XCircle } from "lucide-react"
 
 export function MigracionContent() {
-  const [activeTab, setActiveTab] = useState<Tab>("mercado-shops")
-
   return (
     <>
-      {/* Banner urgencia */}
-      <div className="bg-red-600 text-white text-center py-3 px-4">
-        <p className="text-sm md:text-base font-medium flex items-center justify-center gap-2">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>
-            Miles de vendedores se quedaron sin plataforma. No pierdas mas
-            ventas.
-          </span>
-        </p>
-      </div>
-
-      {/* Tabs */}
-      <div className="sticky top-0 z-30 bg-background border-b">
-        <div className="container mx-auto px-4">
-          <div className="flex">
-            <button
-              type="button"
-              onClick={() => setActiveTab("mercado-shops")}
-              className={`flex-1 py-4 text-center font-semibold text-sm md:text-base transition-colors relative ${
-                activeTab === "mercado-shops"
-                  ? "text-red-600"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Alternativa a Mercado Shops
-              {activeTab === "mercado-shops" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("tiendanube")}
-              className={`flex-1 py-4 text-center font-semibold text-sm md:text-base transition-colors relative ${
-                activeTab === "tiendanube"
-                  ? "text-blue-600"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Alternativa a Tiendanube
-              {activeTab === "tiendanube" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
-              )}
-            </button>
+      {/* HERO */}
+      <section className="py-16 md:py-24 text-center">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-medium mb-8">
+            <RefreshCw className="w-4 h-4" />
+            Miles de vendedores quedaron sin plataforma
           </div>
-        </div>
-      </div>
-
-      {activeTab === "mercado-shops" ? (
-        <MercadoShopsContent />
-      ) : (
-        <TiendanubeContent />
-      )}
-    </>
-  )
-}
-
-/* ========================================
-   TAB: MERCADO SHOPS
-   ======================================== */
-function MercadoShopsContent() {
-  return (
-    <>
-      {/* Hero */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-red-50 to-background">
-        <div className="container mx-auto px-4 text-center max-w-4xl">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-full text-sm font-medium mb-8">
-            <AlertTriangle className="w-4 h-4" />
-            Mercado Shops cerro en Argentina
-          </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-foreground text-balance leading-tight">
-            {"Tu tienda de Mercado Shops cerro? Recupera tu negocio hoy en Tol.ar"}
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+            Traé tu tienda a tol.ar<br />en 10 minutos
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-10 leading-relaxed">
-            El cierre de Mercado Shops en Argentina dejo a miles de vendedores
-            sin plataforma, sin fotos y sin su vidriera digital. En Tol.ar,
-            entendemos la urgencia de tu negocio. No pierdas mas ventas: te
-            ofrecemos la plataforma mas estable y rapida para volver a vender
-            online hoy mismo.
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+            Importá todos tus productos automáticamente. La IA detecta el tipo de producto y configura las variantes sola. Sin perder nada, sin empezar de cero.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              asChild
-              size="lg"
-              className="bg-red-600 hover:bg-red-700 text-white text-lg px-8 py-6 rounded-xl shadow-lg shadow-red-200"
+            <Link
+              href="/migrar/sistema"
+              className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-lg px-8 py-4 rounded-xl font-semibold transition-colors"
             >
-              <Link href="/plan-gratis">
-                <Rocket className="w-5 h-5 mr-2" />
-                RESCATAR MI NEGOCIO AHORA
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="text-lg px-8 py-6 rounded-xl bg-transparent"
+              <ArrowRight className="w-5 h-5" />
+              Empezar a migrar gratis
+            </Link>
+            <Link
+              href="#como-funciona"
+              className="inline-flex items-center gap-2 border border-border text-foreground text-lg px-8 py-4 rounded-xl font-medium transition-colors hover:bg-muted"
             >
-              <Link href="/plan-migrar">
-                Ver plan de migracion
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Link>
-            </Button>
+              Ver cómo funciona →
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Por que elegir Tol.ar */}
-      <section className="py-16 md:py-20">
-        <div className="container mx-auto px-4 max-w-6xl">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-foreground">
-            {"Por que elegir Tol.ar como tu nueva plataforma eCommerce?"}
-          </h2>
-          <p className="text-center text-muted-foreground max-w-2xl mx-auto mb-12 text-lg">
-            Sabemos que empezar de cero es dificil, por eso disenamos un sistema
-            donde el protagonista es tu marca, no el marketplace.
-          </p>
+      {/* 3 DATOS RÁPIDOS */}
+      <section className="bg-muted py-8">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-3xl font-bold text-orange-500">10 min</p>
+              <p className="text-sm text-muted-foreground mt-1">tiempo promedio de migración</p>
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-orange-500">0%</p>
+              <p className="text-sm text-muted-foreground mt-1">comisión por venta, para siempre</p>
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-orange-500">✦ IA</p>
+              <p className="text-sm text-muted-foreground mt-1">detecta y configura tus productos sola</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
+      {/* CÓMO FUNCIONA */}
+      <section id="como-funciona" className="py-16 md:py-20">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">Cómo funciona la migración</h2>
+          <p className="text-center text-muted-foreground mb-12 text-lg">7 pasos simples, guiados, con video en cada uno.</p>
+          <div className="grid md:grid-cols-2 gap-x-12 gap-y-6">
+            {[
+              ["1", "Elegís de dónde venís", "Mercado Libre, Tiendanube, Empretienda, WordPress o tu propio CSV."],
+              ["2", "Subís tu archivo", "CSV o Excel — el mismo que exportás desde tu plataforma actual."],
+              ["3", "La IA detecta el tipo de producto", "Indumentaria, calzado, perfumería, tecnología — y configura las variantes automáticamente."],
+              ["4", "Revisás las columnas", "Confirmás que cada campo esté mapeado correctamente."],
+              ["5", "Preview antes de importar", "Ves exactamente cómo van a quedar tus productos antes de confirmar."],
+              ["✓", "Productos importados y tienda lista", "En menos de 10 minutos tenés tu tienda funcionando en tol.ar."],
+            ].map(([num, title, desc]) => (
+              <div key={title} className="flex gap-4">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 mt-0.5 ${num === "✓" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-600"}`}>
+                  {num}
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground mb-1">{title}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-12">
+            <Link
+              href="/migrar/sistema"
+              className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-lg px-8 py-4 rounded-xl font-semibold transition-colors"
+            >
+              Empezar ahora →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* DE DÓNDE VENÍS */}
+      <section className="py-16 md:py-20 bg-muted">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">¿De dónde venís?</h2>
+          <p className="text-center text-muted-foreground mb-10 text-lg">Tenemos guía y video específico para cada plataforma.</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              ["ML", "Mercado Libre", "Mi página / Mercado Shops", "bg-orange-50 text-orange-700"],
+              ["TN", "Tiendanube", "Planes pagos con comisión", "bg-blue-50 text-blue-700"],
+              ["WP", "WordPress", "WooCommerce CSV nativo", "bg-green-50 text-green-700"],
+              ["CSV", "Ya tengo mi CSV", "Cualquier plataforma", "bg-purple-50 text-purple-700"],
+            ].map(([code, name, sub, colors]) => (
+              <Link
+                key={name}
+                href="/migrar/sistema"
+                className="bg-background border border-border rounded-xl p-4 text-center hover:border-orange-300 transition-colors"
+              >
+                <div className={`w-10 h-10 rounded-full ${colors} flex items-center justify-center text-xs font-bold mx-auto mb-3`}>
+                  {code}
+                </div>
+                <p className="font-semibold text-sm text-foreground mb-1">{name}</p>
+                <p className="text-xs text-muted-foreground">{sub}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* POR QUÉ TOL.AR */}
+      <section className="py-16 md:py-20">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">Por qué migrar a tol.ar</h2>
+          <p className="text-center text-muted-foreground mb-12 text-lg">No es solo cambiar de plataforma — es recuperar el control de tu negocio.</p>
           <div className="grid md:grid-cols-2 gap-6">
             {[
-              {
-                icon: CreditCard,
-                title: "Sin Comisiones por Venta",
-                desc: "A diferencia de otras plataformas, en Tol.ar tus ganancias son 100% tuyas.",
-                color: "text-green-600",
-                bg: "bg-green-50",
-              },
-              {
-                icon: Globe,
-                title: "Dominio Propio y Profesional",
-                desc: "Olvidate de los subdominios largos. Tene tu propia identidad (tuempresa.com.ar).",
-                color: "text-blue-600",
-                bg: "bg-blue-50",
-              },
-              {
-                icon: Upload,
-                title: "Carga Masiva de Productos",
-                desc: "No pierdas meses cargando uno por uno. Subi tu inventario desde Excel o CSV en segundos.",
-                color: "text-orange-600",
-                bg: "bg-orange-50",
-              },
-              {
-                icon: Search,
-                title: "Optimizacion SEO Automatica",
-                desc: "Tu tienda nace preparada para aparecer en los primeros resultados de Google.",
-                color: "text-purple-600",
-                bg: "bg-purple-50",
-              },
-            ].map((item) => (
-              <Card
-                key={item.title}
-                className="border-0 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <CardContent className="p-6 flex gap-4">
-                  <div
-                    className={`w-12 h-12 ${item.bg} rounded-xl flex items-center justify-center shrink-0`}
-                  >
-                    <item.icon className={`w-6 h-6 ${item.color}`} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg mb-1 text-foreground">
-                      {item.title}
-                    </h3>
-                    <p className="text-muted-foreground leading-relaxed">
-                      {item.desc}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              [CreditCard, "bg-orange-50 text-orange-600", "0% comisión por venta", "Tus ganancias son 100% tuyas. Sin porcentajes, sin sorpresas al cobrar."],
+              [Globe, "bg-purple-50 text-purple-600", "Dominio .tol.ar gratis", "tutienda.tol.ar desde el primer día, o conectá tu propio .com.ar sin costo extra."],
+              [LifeBuoy, "bg-green-50 text-green-600", "Soporte humano por WhatsApp", "Nada de bots ni tickets eternos. Te respondemos nosotros directamente."],
+              [Truck, "bg-blue-50 text-blue-600", "Envíos con OCA y Andreani", "Cotización automática integrada. El comprador ve el precio del envío al instante."],
+            ].map(([Icon, colors, title, desc]) => (
+              <div key={title} className="flex gap-4 p-5 border border-border rounded-xl">
+                <div className={`w-10 h-10 rounded-lg ${colors} flex items-center justify-center shrink-0`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground mb-1">{title}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Comparativa */}
-      <section className="py-16 md:py-20 bg-slate-50">
+      {/* COMPARATIVA */}
+      <section className="py-16 md:py-20 bg-muted">
         <div className="container mx-auto px-4 max-w-4xl">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-foreground">
-            Comparativa: Por que los vendedores eligen Tol.ar
-          </h2>
-          <p className="text-center text-muted-foreground mb-10 text-lg">
-            Tras el cierre de Mercado Shops
-          </p>
-
-          <div className="bg-background rounded-2xl shadow-sm overflow-hidden border">
-            <div className="grid grid-cols-3 bg-slate-100 font-semibold text-sm">
-              <div className="p-4 text-muted-foreground">Caracteristica</div>
-              <div className="p-4 text-center text-red-500">Mercado Shops</div>
-              <div className="p-4 text-center text-green-600">Tol.ar</div>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">Comparativa de precios real</h2>
+          <p className="text-center text-muted-foreground mb-10 text-lg">Precios verificados — los actualizamos cuando cambian.</p>
+          <div className="bg-background border border-border rounded-2xl overflow-hidden">
+            <div className="grid grid-cols-5 bg-muted text-sm font-semibold">
+              <div className="p-3 col-span-1 text-muted-foreground">Concepto</div>
+              <div className="p-3 text-center text-orange-600">ML Mi Página</div>
+              <div className="p-3 text-center text-blue-600">Tiendanube</div>
+              <div className="p-3 text-center text-green-700">Empretienda</div>
+              <div className="p-3 text-center text-orange-500 font-bold">tol.ar</div>
             </div>
             {[
-              {
-                feat: "Estado del servicio",
-                shops: "CERRADO / Inestable",
-                tolar: "Activo y en Crecimiento",
-              },
-              {
-                feat: "Comision por venta",
-                shops: "Alta (Costos ML)",
-                tolar: "0% Comision",
-              },
-              {
-                feat: "Control de marca",
-                shops: "Limitado",
-                tolar: "Total y Personalizable",
-              },
-              {
-                feat: "Soporte tecnico",
-                shops: "Automatizado",
-                tolar: "Humano y Directo",
-              },
-            ].map((row, i) => (
-              <div
-                key={row.feat}
-                className={`grid grid-cols-3 text-sm ${
-                  i % 2 === 0 ? "" : "bg-slate-50"
-                }`}
-              >
-                <div className="p-4 font-medium text-foreground">
-                  {row.feat}
-                </div>
-                <div className="p-4 text-center text-red-500 flex items-center justify-center gap-1">
-                  <X className="w-4 h-4 shrink-0" />
-                  <span className="hidden sm:inline">{row.shops}</span>
-                </div>
-                <div className="p-4 text-center text-green-600 flex items-center justify-center gap-1">
-                  <Check className="w-4 h-4 shrink-0" />
-                  <span className="hidden sm:inline">{row.tolar}</span>
-                </div>
+              ["Costo mensual", "$15.999/mes", "$24.999/mes", "$8.490/mes", "Gratis", false],
+              ["Comisión por venta", "11% – 17%", "0.5% – 2%*", "0%", "0%", false],
+              ["Dominio propio", "No aplica", "Costo extra", "Incluido", "Incluido", false],
+              ["Importar productos", "Manual", "Manual", "CSV básico", "IA automático", false],
+              ["Soporte", "Sin soporte", "Chat/email", "WhatsApp", "WhatsApp directo", false],
+              ["Tu tienda es tuya", "No — es de ML", "Sí", "Sí", "Sí — 100%", false],
+            ].map(([concept, ml, tn, et, tolar], i) => (
+              <div key={concept} className={`grid grid-cols-5 text-sm ${i % 2 === 0 ? "" : "bg-muted/50"}`}>
+                <div className="p-3 font-medium text-foreground">{concept}</div>
+                <div className="p-3 text-center text-red-500">{ml}</div>
+                <div className="p-3 text-center text-muted-foreground">{tn}</div>
+                <div className="p-3 text-center text-muted-foreground">{et}</div>
+                <div className="p-3 text-center text-green-600 font-medium">{tolar}</div>
               </div>
             ))}
+          </div>
+          <p className="text-xs text-muted-foreground text-center mt-4">* Tiendanube no cobra comisión con su propia pasarela Pago Nube. Con MercadoPago u otras sí aplica. Precios orientativos — verificá los precios actuales en cada plataforma:</p>
+          <div className="flex flex-wrap justify-center gap-2 mt-3">
+            <a href="https://www.mercadolibre.com.ar/ayuda/Costos-de-vender-un-producto_870" target="_blank" rel="noopener noreferrer" className="text-xs border border-border rounded-lg px-3 py-1.5 text-muted-foreground hover:bg-muted transition-colors">Ver costos de vender en ML →</a>
+            <a href="https://www.tiendanube.com/planes-y-precios" target="_blank" rel="noopener noreferrer" className="text-xs border border-border rounded-lg px-3 py-1.5 text-muted-foreground hover:bg-muted transition-colors">Ver precios Tiendanube →</a>
+            <a href="https://www.empretienda.com/#precios" target="_blank" rel="noopener noreferrer" className="text-xs border border-border rounded-lg px-3 py-1.5 text-muted-foreground hover:bg-muted transition-colors">Ver precios Empretienda →</a>
           </div>
         </div>
       </section>
 
-      {/* 3 Pasos */}
-      <section className="py-16 md:py-20">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-foreground">
-            Migracion Rapida: De la nada a tu Tienda Online en 3 pasos
-          </h2>
-          <p className="text-center text-muted-foreground mb-12 text-lg max-w-2xl mx-auto">
-            Si te quedaste sin fotos ni precios, nuestro sistema te ayuda a
-            reconstruir tu catalogo con herramientas de Inteligencia Artificial.
-          </p>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                step: "1",
-                title: "Registrate en Tol.ar",
-                desc: "Crea tu cuenta en menos de un minuto.",
-                icon: Sparkles,
-              },
-              {
-                step: "2",
-                title: "Carga tu Stock",
-                desc: "Usa nuestro importador inteligente para subir tus productos.",
-                icon: Upload,
-              },
-              {
-                step: "3",
-                title: "Activa y Vende",
-                desc: "Conecta tus metodos de pago (Mercado Pago, transferencia) y envios.",
-                icon: Rocket,
-              },
-            ].map((item) => (
-              <div key={item.step} className="text-center">
-                <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl font-bold text-red-600">
-                    {item.step}
-                  </span>
-                </div>
-                <h3 className="font-bold text-lg mb-2 text-foreground">
-                  {item.title}
-                </h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  {item.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Construi tu comunidad */}
+      {/* CTA FINAL */}
       <section className="py-16 md:py-20 bg-foreground text-background">
-        <div className="container mx-auto px-4 max-w-4xl text-center">
-          <Shield className="w-12 h-12 mx-auto mb-6 text-green-400" />
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            No regales tus clientes, construi tu propia comunidad
+        <div className="container mx-auto px-4 max-w-2xl text-center">
+          <p className="text-xs font-semibold tracking-widest uppercase opacity-40 mb-4">Sin riesgos. Sin compromisos.</p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            No te vayas de tu plataforma.<br />Probanos y después decidís.
           </h2>
-          <p className="text-lg md:text-xl opacity-80 max-w-2xl mx-auto mb-10 leading-relaxed">
-            El error de las plataformas cerradas es que los clientes no son
-            tuyos, son de ellos. En Tol.ar, vos sos el dueno de la base de
-            datos de tus clientes, de tu diseno y de tu futuro comercial.
+          <p className="text-lg opacity-60 mb-10 leading-relaxed">
+            Creá tu tienda en tol.ar mientras seguís vendiendo donde estás. Sin tarjeta, sin apuro. Si no te convence, no perdiste nada.
           </p>
-          <Button
-            asChild
-            size="lg"
-            className="bg-green-500 hover:bg-green-600 text-white text-lg px-10 py-6 rounded-xl shadow-lg"
+          <Link
+            href="/migrar/sistema"
+            className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-lg px-10 py-4 rounded-xl font-semibold transition-colors"
           >
-            <Link href="/plan-gratis">
-              <Rocket className="w-5 h-5 mr-2" />
-              EMPEZAR MI TIENDA GRATIS
-            </Link>
-          </Button>
-        </div>
-      </section>
-
-      {/* CTA Final */}
-      <section className="py-16 md:py-20 bg-gradient-to-b from-red-50 to-background">
-        <div className="container mx-auto px-4 max-w-3xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
-            No esperes a perder mas clientes
-          </h2>
-          <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-            Cada dia sin tienda es un dia de ventas perdidas. Crea tu tienda en
-            Tol.ar en menos de 2 minutos y empeza a recuperar tu negocio hoy.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              asChild
-              size="lg"
-              className="bg-red-600 hover:bg-red-700 text-white text-lg px-8 py-6 rounded-xl shadow-lg shadow-red-200"
-            >
-              <Link href="/plan-gratis">
-                RESCATAR MI NEGOCIO AHORA
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Link>
-            </Button>
+            Empezar a migrar gratis →
+          </Link>
+          <div className="mt-6">
+            <span className="inline-flex items-center gap-2 bg-purple-900 text-purple-200 text-xs px-4 py-2 rounded-full">
+              <Sparkles className="w-3 h-3" />
+              Importación con IA incluida
+            </span>
           </div>
-          <p className="text-sm text-muted-foreground mt-4">
-            Sin tarjeta de credito. Sin compromisos. 100% gratis para empezar.
-          </p>
-        </div>
-      </section>
-    </>
-  )
-}
-
-/* ========================================
-   TAB: TIENDANUBE
-   ======================================== */
-function TiendanubeContent() {
-  return (
-    <>
-      {/* Hero */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-blue-50 to-background">
-        <div className="container mx-auto px-4 text-center max-w-4xl">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-8">
-            <Sparkles className="w-4 h-4" />
-            Alternativa mas economica y simple
-          </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-foreground text-balance leading-tight">
-            {"Cansado de las comisiones de Tiendanube? Proba Tol.ar"}
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-10 leading-relaxed">
-            Tol.ar es la alternativa argentina a Tiendanube pensada para
-            emprendedores que quieren vender online sin pagar comisiones por
-            venta ni mensualidades caras. Tu tienda profesional, lista en 2
-            minutos.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              asChild
-              size="lg"
-              className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-6 rounded-xl shadow-lg shadow-blue-200"
-            >
-              <Link href="/plan-gratis">
-                <Rocket className="w-5 h-5 mr-2" />
-                CREAR MI TIENDA GRATIS
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="text-lg px-8 py-6 rounded-xl bg-transparent"
-            >
-              <Link href="/comparar/tiendanube">
-                Ver comparativa completa
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Beneficios */}
-      <section className="py-16 md:py-20">
-        <div className="container mx-auto px-4 max-w-6xl">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-foreground">
-            {"Por que emprendedores migran de Tiendanube a Tol.ar?"}
-          </h2>
-          <p className="text-center text-muted-foreground max-w-2xl mx-auto mb-12 text-lg">
-            Menos costos, mas control, la misma (o mejor) funcionalidad.
-          </p>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            {[
-              {
-                icon: CreditCard,
-                title: "0% Comision por Venta",
-                desc: "Tiendanube cobra comisiones en todos sus planes. En Tol.ar, tus ganancias son 100% tuyas.",
-                color: "text-green-600",
-                bg: "bg-green-50",
-              },
-              {
-                icon: Globe,
-                title: "Dominio Gratis Incluido",
-                desc: "Tu dominio .tol.ar gratis, o conecta tu .com.ar sin costo adicional.",
-                color: "text-blue-600",
-                bg: "bg-blue-50",
-              },
-              {
-                icon: LifeBuoy,
-                title: "Soporte Humano y Directo",
-                desc: "Nada de bots ni tickets eternos. Te respondemos personalmente por WhatsApp.",
-                color: "text-orange-600",
-                bg: "bg-orange-50",
-              },
-              {
-                icon: Truck,
-                title: "Envios con Andreani",
-                desc: "Cotizacion automatica integrada, igual que en Tiendanube pero sin costos extras.",
-                color: "text-purple-600",
-                bg: "bg-purple-50",
-              },
-            ].map((item) => (
-              <Card
-                key={item.title}
-                className="border-0 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <CardContent className="p-6 flex gap-4">
-                  <div
-                    className={`w-12 h-12 ${item.bg} rounded-xl flex items-center justify-center shrink-0`}
-                  >
-                    <item.icon className={`w-6 h-6 ${item.color}`} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg mb-1 text-foreground">
-                      {item.title}
-                    </h3>
-                    <p className="text-muted-foreground leading-relaxed">
-                      {item.desc}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Comparativa precios */}
-      <section className="py-16 md:py-20 bg-slate-50">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-10 text-foreground">
-            Comparativa de precios
-          </h2>
-
-          <div className="bg-background rounded-2xl shadow-sm overflow-hidden border">
-            <div className="grid grid-cols-3 bg-slate-100 font-semibold text-sm">
-              <div className="p-4 text-muted-foreground">Plan</div>
-              <div className="p-4 text-center text-blue-500">Tiendanube</div>
-              <div className="p-4 text-center text-green-600">Tol.ar</div>
-            </div>
-            {[
-              {
-                plan: "Plan basico",
-                tn: "~$15.000/mes",
-                tolar: "Gratis (20 productos)",
-              },
-              {
-                plan: "Plan intermedio",
-                tn: "~$30.000/mes",
-                tolar: "Cositas (pagas lo que usas)",
-              },
-              {
-                plan: "Plan avanzado",
-                tn: "~$60.000/mes + comision",
-                tolar: "Socio (10% por venta, sin mensualidad)",
-              },
-              {
-                plan: "Plan premium",
-                tn: "Consultar",
-                tolar: "A medida",
-              },
-            ].map((row, i) => (
-              <div
-                key={row.plan}
-                className={`grid grid-cols-3 text-sm ${
-                  i % 2 === 0 ? "" : "bg-slate-50"
-                }`}
-              >
-                <div className="p-4 font-medium text-foreground">
-                  {row.plan}
-                </div>
-                <div className="p-4 text-center text-muted-foreground">
-                  {row.tn}
-                </div>
-                <div className="p-4 text-center text-green-600 font-medium">
-                  {row.tolar}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-16 md:py-20 bg-foreground text-background">
-        <div className="container mx-auto px-4 max-w-3xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Hace el cambio hoy. Sin riesgos.
-          </h2>
-          <p className="text-lg opacity-80 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Crea tu tienda gratis en Tol.ar, proba todo lo que necesitas, y
-            cuando estes listo migra tu catalogo completo. Sin tarjeta, sin
-            compromisos.
-          </p>
-          <Button
-            asChild
-            size="lg"
-            className="bg-green-500 hover:bg-green-600 text-white text-lg px-10 py-6 rounded-xl shadow-lg"
-          >
-            <Link href="/plan-gratis">
-              <Rocket className="w-5 h-5 mr-2" />
-              CREAR MI TIENDA GRATIS
-            </Link>
-          </Button>
         </div>
       </section>
     </>

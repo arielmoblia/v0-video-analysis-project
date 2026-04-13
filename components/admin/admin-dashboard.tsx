@@ -119,14 +119,14 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="mb-8">
-            <TabsList className="flex flex-wrap gap-1">
+          <div>
+            <TabsList className="flex flex-wrap gap-0 text-xs">
               {/* Grupo 1: Configuracion - Slate */}
-              <TabsTrigger value="settings" className="flex items-center gap-2 data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-700">
+              <TabsTrigger value="settings" className="flex items-center gap-1 data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-700">
                 <Settings className="w-4 h-4" />
                 <span className="hidden sm:inline">Ajustes</span>
               </TabsTrigger>
-              <TabsTrigger value="categories" className="flex items-center gap-2 data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-700">
+              <TabsTrigger value="categories" className="flex items-center gap-1 data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-700">
                 <FolderOpen className="w-4 h-4" />
                 <span className="hidden sm:inline">Categorias</span>
               </TabsTrigger>
@@ -134,7 +134,7 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
               {/* Productos con dropdown de Variantes */}
               {(store.template === "variants" || purchasedFeatures.includes("custom_variants")) ? (
                 <div className="relative group">
-                  <TabsTrigger value="products" className="flex items-center gap-2 data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-700">
+                  <TabsTrigger value="products" className="flex items-center gap-1 data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-700">
                     <Package className="w-4 h-4" />
                     <span className="hidden sm:inline">Productos</span>
                     <ChevronDown className="w-3 h-3 opacity-50" />
@@ -159,7 +159,7 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
                   </div>
                 </div>
               ) : (
-                <TabsTrigger value="products" className="flex items-center gap-2 data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-700">
+                <TabsTrigger value="products" className="flex items-center gap-1 data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-700">
                   <Package className="w-4 h-4" />
                   <span className="hidden sm:inline">Productos</span>
                 </TabsTrigger>
@@ -169,15 +169,15 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
               <span className="w-px h-6 bg-slate-200 mx-1 self-center" />
 
               {/* Grupo 2: Ventas - Emerald */}
-              <TabsTrigger value="payments" className="flex items-center gap-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-emerald-700">
+              <TabsTrigger value="payments" className="flex items-center gap-1 data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-emerald-700">
                 <CreditCard className="w-4 h-4" />
                 <span className="hidden sm:inline">Pagos</span>
               </TabsTrigger>
-              <TabsTrigger value="shipping" className="flex items-center gap-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-emerald-700">
+              <TabsTrigger value="shipping" className="flex items-center gap-1 data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-emerald-700">
                 <Truck className="w-4 h-4" />
                 <span className="hidden sm:inline">Envios</span>
               </TabsTrigger>
-              <TabsTrigger value="orders" className="flex items-center gap-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-emerald-700">
+              <TabsTrigger value="orders" className="flex items-center gap-1 data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-emerald-700">
                 <ShoppingCart className="w-4 h-4" />
                 <span className="hidden sm:inline">Pedidos</span>
               </TabsTrigger>
@@ -186,15 +186,15 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
               <span className="w-px h-6 bg-slate-200 mx-1 self-center" />
 
               {/* Grupo 3: Crecimiento - Blue */}
-              <TabsTrigger value="stats" className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-600">
+              <TabsTrigger value="stats" className="flex items-center gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-600">
                 <BarChart3 className="w-4 h-4" />
                 <span className="hidden sm:inline">Estadisticas</span>
               </TabsTrigger>
-              <TabsTrigger value="marketing" className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-600">
+              <TabsTrigger value="marketing" className="flex items-center gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-600">
                 <Megaphone className="w-4 h-4" />
                 <span className="hidden sm:inline">Marketing</span>
               </TabsTrigger>
-              <TabsTrigger value="seo" className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-600">
+              <TabsTrigger value="seo" className="flex items-center gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-600">
                 <Search className="w-4 h-4" />
                 <span className="hidden sm:inline">SEO</span>
               </TabsTrigger>
@@ -205,7 +205,7 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
               {/* Contacto con dropdown de WhatsApp */}
               {purchasedFeatures.includes("whatsapp_chat") ? (
                 <div className="relative group">
-                  <TabsTrigger value="contacto" className="flex items-center gap-2 data-[state=active]:bg-rose-600 data-[state=active]:text-white text-rose-600">
+                  <TabsTrigger value="contacto" className="flex items-center gap-1 data-[state=active]:bg-rose-600 data-[state=active]:text-white text-rose-600">
                     <MessageSquare className="w-4 h-4" />
                     <span className="hidden sm:inline">Contacto</span>
                     <ChevronDown className="w-3 h-3 opacity-50" />
@@ -230,17 +230,24 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
                   </div>
                 </div>
               ) : (
-                <TabsTrigger value="contacto" className="flex items-center gap-2 data-[state=active]:bg-rose-600 data-[state=active]:text-white text-rose-600">
+                <TabsTrigger value="contacto" className="flex items-center gap-1 data-[state=active]:bg-rose-600 data-[state=active]:text-white text-rose-600">
                   <MessageSquare className="w-4 h-4" />
                   <span className="hidden sm:inline">Contacto</span>
                 </TabsTrigger>
               )}
 
+              {/* Lupa - session recording */}
+              {purchasedFeatures.includes("lupa") && (
+                <TabsTrigger value="lupa" className="flex items-center gap-1 data-[state=active]:bg-orange-600 data-[state=active]:text-white text-orange-600">
+                  <Search className="w-4 h-4" />
+                  <span className="hidden sm:inline">Lupa</span>
+                </TabsTrigger>
+              )}
               {/* Separador visual */}
               <span className="w-px h-6 bg-slate-200 mx-1 self-center" />
 
               {/* Grupo 5: Premium - Orange */}
-              <TabsTrigger value="plans" className="flex items-center gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white text-orange-500">
+              <TabsTrigger value="plans" className="flex items-center gap-1 data-[state=active]:bg-orange-500 data-[state=active]:text-white text-orange-500">
                 <Crown className="w-4 h-4" />
                 <span className="hidden sm:inline">Cositas</span>
               </TabsTrigger>
@@ -280,7 +287,7 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
           </TabsContent>
 
           <TabsContent value="stats">
-            <StatsManager storeId={store.id} />
+            <StatsManager storeId={store.id} onActivate={() => setActiveTab("plans")} isUnlocked={purchasedFeatures.includes("store_stats")} />
           </TabsContent>
 
           <TabsContent value="marketing">
@@ -320,6 +327,14 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
               </div>
             )}
           </TabsContent>
+          {purchasedFeatures.includes("lupa") && (
+            <TabsContent value="lupa">
+              <iframe
+                src={`https://lupa.tol.ar?store=${subdomain}`}
+                style={{ width: "100%", height: "80vh", border: "none", borderRadius: "8px" }}
+              />
+            </TabsContent>
+          )}
         </Tabs>
       </main>
     </div>

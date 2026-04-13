@@ -16,7 +16,8 @@ const TEMPLATE_SUBDOMAIN = TEMPLATE_MAPPING["default"] // Declare TEMPLATE_SUBDO
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { username, email, subdomain, siteTitle, allowIndexing, template } = body
+    const { username, email, subdomain, siteTitle, allowIndexing, template, referral_source } = body
+    const creator_ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || null
 
     // Validate required fields
     if (!username || !email || !subdomain || !siteTitle || !template) {
@@ -80,6 +81,8 @@ const { data: templateStore } = await supabase
       site_title: siteTitle,
       allow_indexing: allowIndexing === "yes",
       template,
+      referral_source: referral_source || null,
+      creator_ip,
       admin_password: adminPassword,
       store_url: storeUrl,
       admin_url: adminUrl,

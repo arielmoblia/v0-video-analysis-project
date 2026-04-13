@@ -45,6 +45,9 @@ export function Header({ fullMenu = false, basePath = "" }: HeaderProps) {
           </Link>
           {fullMenu && (
             <>
+              <Link href="/cobros" className="text-muted-foreground hover:text-foreground transition-colors">
+                cobros
+              </Link>
               <Link href={`${basePath}/plan-cositas`} className="text-muted-foreground hover:text-foreground transition-colors">
                 plan cositas
               </Link>
@@ -60,10 +63,13 @@ export function Header({ fullMenu = false, basePath = "" }: HeaderProps) {
               </Link>
               <Link
                 href={`${basePath}/migrar`}
-                className="flex items-center gap-1 text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
+                className="flex items-center gap-1 text-orange-500 hover:text-orange-600 font-medium transition-colors"
               >
                 <RefreshCw className="h-4 w-4" />
-                migrar
+                migrá gratis
+              </Link>
+              <Link href={`${basePath}/lupa`} className="text-muted-foreground hover:text-foreground transition-colors">
+                lupa
               </Link>
             </>
           )}

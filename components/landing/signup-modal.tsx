@@ -130,6 +130,8 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
   const [siteTitle, setSiteTitle] = useState("")
   const [allowIndexing, setAllowIndexing] = useState("yes")
   const [selectedTemplate, setSelectedTemplate] = useState("clothing")
+  const [referralSource, setReferralSource] = useState("")
+  const [storeReady, setStoreReady] = useState(false)
   
   // Validacion subdominio en tiempo real
   const [subdomainAvailable, setSubdomainAvailable] = useState<boolean | null>(null)
@@ -148,6 +150,8 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
       setAllowIndexing("yes")
       setSelectedTemplate(preselectedTemplate || "clothing")
       setSubdomainAvailable(null)
+      setReferralSource("")
+      setStoreReady(false)
     }
   }, [isOpen, preselectedTemplate])
 
@@ -229,6 +233,7 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
             siteTitle: subdomain, // Usa el subdominio como título
             allowIndexing,
             template: selectedTemplate,
+            referral_source: referralSource,
           }),
         })
 
@@ -252,9 +257,7 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
           subdomain: data.store.subdomain,
         })
 
-        setTimeout(() => {
-          setStep("success")
-        }, 500)
+        setStoreReady(true)
       } catch (err) {
         clearInterval(progressInterval)
         setError("Error de conexión. Por favor intente nuevamente.")
@@ -556,21 +559,57 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
 
         {/* Step 4: Creating Store */}
         {step === "creating-store" && (
-          <div className="space-y-6 py-8">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-primary mb-6">
-                Estamos Creando su pagina espere un momento...
-              </h2>
-              <div className="relative">
-                <Progress value={progress} className="h-3 bg-muted" />
-                {progress >= 100 && (
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2">
-                    <Check className="h-5 w-5 text-accent" />
-                  </div>
-                )}
-              </div>
-              <p className="text-sm text-muted-foreground mt-4">Esto puede demorar unos segundos...</p>
+          <div className="space-y-5 py-4">
+            <p className="text-center text-base font-medium text-gray-900">¿Cómo nos conociste?</p>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { id: "insta",    label: "Instagram" },
+                { id: "recomend", label: "Me recomendaron" },
+                { id: "ia",       label: "AI" },
+                { id: "face",     label: "Facebook" },
+                { id: "whatsapp", label: "WhatsApp" },
+                { id: "google",   label: "Google" },
+                { id: "youtube",  label: "YouTube" },
+                { id: "otro",     label: "Otro" },
+              ].map((op) => (
+                <button
+                  key={op.id}
+                  type="button"
+                  onClick={() => setReferralSource(op.id)}
+                  className={`py-2 px-3 text-sm rounded-lg border transition-all ${
+                    referralSource === op.id
+                      ? "bg-gray-900 text-white border-gray-900 font-medium"
+                      : "bg-white text-gray-700 border-gray-200 hover:border-gray-400"
+                  }`}
+                >
+                  {op.label}
+                </button>
+              ))}
             </div>
+            {!referralSource && (
+              <p className="text-center text-sm text-red-500">Seleccioná la opción para ver tu tienda</p>
+            )}
+            <div className="border-t pt-4 space-y-2">
+              <p className="text-center text-sm font-medium text-gray-700">Estamos creando tu tienda...</p>
+              <Progress value={storeReady ? 100 : progress} className="h-2 bg-muted" />
+            </div>
+            <Button
+              onClick={async () => {
+                if (!referralSource || !storeReady || !storeData) return
+                try {
+                  await fetch("/api/stores/" + storeData.subdomain, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ referral_source: referralSource })
+                  })
+                } catch {}
+                setStep("success")
+              }}
+              disabled={!referralSource || !storeReady}
+              className="w-full bg-gray-900 hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {storeReady ? "Ver tu tienda" : "Creando tu tienda..."}
+            </Button>
           </div>
         )}
 

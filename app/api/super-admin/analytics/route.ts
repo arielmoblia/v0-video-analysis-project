@@ -109,14 +109,18 @@ export async function GET(request: NextRequest) {
     const { count: platformViews } = await supabase
       .from("page_views").select("*", { count: "exact", head: true })
       .eq("store_id", PLATFORM_STORE_ID)
+      .in("page_path", ["/","/plan-gratis","/plan-cositas","/plan-socios","/plan-mayorista","/templates","/personalizado","/migrar","/tutoriales","/tol-vs","/empleos","/pagos"])
+      .neq("ip", "104.50.231.150").neq("ip", "::ffff:104.50.231.150")
       .gte("created_at", startDate.toISOString())
     const { data: platformPagesData } = await supabase
       .from("page_views").select("page_path")
       .eq("store_id", PLATFORM_STORE_ID)
+      .in("page_path", ["/","/plan-gratis","/plan-cositas","/plan-socios","/plan-mayorista","/templates","/personalizado","/migrar","/tutoriales","/tol-vs","/empleos","/pagos"])
+      .neq("ip", "104.50.231.150").neq("ip", "::ffff:104.50.231.150")
       .gte("created_at", startDate.toISOString())
     const platformPageMap: Record<string, number> = {}
     platformPagesData?.forEach(v => { platformPageMap[v.page_path] = (platformPageMap[v.page_path] || 0) + 1 })
-    const topPlatformPages = Object.entries(platformPageMap).sort((a,b) => b[1]-a[1]).slice(0,5).map(([path,views]) => ({ path, views }))
+    const topPlatformPages = Object.entries(platformPageMap).sort((a,b) => b[1]-a[1]).slice(0,10).map(([path,views]) => ({ path, views }))
 
     const { count: newStores } = await supabase
       .from("stores").select("*", { count: "exact", head: true })

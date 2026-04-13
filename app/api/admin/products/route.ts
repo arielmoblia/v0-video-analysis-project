@@ -1,6 +1,26 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase/server"
 
+
+async function pingGoogle(url: string) {
+  try {
+    const { GoogleAuth } = await import('google-auth-library');
+    const auth = new GoogleAuth({
+      keyFile: '/root/tolar-seo-credentials.json',
+      scopes: ['https://www.googleapis.com/auth/indexing'],
+    });
+    const client = await auth.getClient();
+    await client.request({
+      url: 'https://indexing.googleapis.com/v3/urlNotifications:publish',
+      method: 'POST',
+      data: { url, type: 'URL_UPDATED' },
+    });
+    console.log('[SEO] Google ping OK:', url);
+  } catch (e) {
+    console.error('[SEO] Google ping error:', e);
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -82,6 +102,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
+    // Ping a Google con la URL del producto nuevo
+    try {
+      const { data: store } = await supabase.from('stores').select('subdomain').eq('id', storeId).single()
+      if (store?.subdomain && data?.slug) {
+        pingGoogle(`https://${store.subdomain}.tol.ar/producto/${data.slug}`)
+      }
+    } catch {}
     return NextResponse.json({ product: data })
   } catch (error) {
     console.error("Error creating product:", error)
@@ -145,6 +172,13 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
+    // Ping a Google con la URL del producto actualizado
+    try {
+      const { data: store } = await supabase.from('stores').select('subdomain').eq('id', storeId).single()
+      if (store?.subdomain && data?.slug) {
+        pingGoogle(`https://${store.subdomain}.tol.ar/producto/${data.slug}`)
+      }
+    } catch {}
     return NextResponse.json({ product: data })
   } catch (error) {
     console.error("Error updating product:", error)

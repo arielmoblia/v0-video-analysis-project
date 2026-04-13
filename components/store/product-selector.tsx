@@ -7,6 +7,7 @@ import { AddToCartButton } from "./add-to-cart-button"
 interface SizeWithStock {
   size: string
   stock: number
+  price?: number
 }
 
 interface Product {
@@ -48,6 +49,8 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false }: 
   const [selectedImage, setSelectedImage] = useState(0)
 
   const sizes: SizeWithStock[] = product.sizes || []
+  const selectedSizeData = sizes.find(s => s.size === selectedSize)
+  const displayPrice = selectedSizeData?.price || product.price
   const totalStock = sizes.reduce((acc, s) => acc + (s.stock || 0), 0)
   const hasSizes = sizes.length > 0
 
@@ -109,7 +112,7 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false }: 
         {/* Precio */}
         <div className="flex items-center gap-3 mb-6">
           <span className="text-2xl md:text-3xl font-medium">
-            {formatPrice(product.price)}
+            {formatPrice(displayPrice)}
           </span>
           {product.compare_price && product.compare_price > product.price && (
             <span className="text-lg text-neutral-400 line-through">
@@ -128,37 +131,43 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false }: 
         {/* Selector de tallas */}
         {hasSizes && (
           <div className="mb-8">
-            <h3 className="text-sm font-medium mb-3">Tallas disponibles</h3>
+            <h3 className="text-sm font-medium mb-3">Disponibles</h3>
             <div className="flex flex-wrap gap-2">
               {sizes.map((sizeData) => (
-                <button
-                  key={sizeData.size}
-                  onClick={() => sizeData.stock > 0 && setSelectedSize(sizeData.size)}
-                  className={`relative px-4 py-2 border rounded text-sm transition-all ${
-                    sizeData.stock > 0
-                      ? selectedSize === sizeData.size
-                        ? "border-black bg-black text-white"
-                        : "border-neutral-300 hover:border-neutral-600 cursor-pointer"
-                      : "border-neutral-200 bg-neutral-100 text-neutral-400 cursor-not-allowed"
-                  }`}
-                  disabled={sizeData.stock === 0}
-                >
-                  {sizeData.size}
-                  {sizeData.stock > 0 && (
-                    <span
-                      className={`absolute -top-2 -right-2 text-[10px] px-1.5 rounded-full ${
-                        selectedSize === sizeData.size ? "bg-white text-black" : "bg-green-500 text-white"
-                      }`}
-                    >
-                      {sizeData.stock}
+                <div key={sizeData.size} className="flex flex-col items-center gap-1">
+                  <button
+                    onClick={() => sizeData.stock > 0 && setSelectedSize(sizeData.size)}
+                    className={`relative px-4 py-2 border rounded text-sm transition-all ${
+                      sizeData.stock > 0
+                        ? selectedSize === sizeData.size
+                          ? "border-black bg-black text-white"
+                          : "border-neutral-300 hover:border-neutral-600 cursor-pointer"
+                        : "border-neutral-200 bg-neutral-100 text-neutral-400 cursor-not-allowed"
+                    }`}
+                    disabled={sizeData.stock === 0}
+                  >
+                    {sizeData.size}
+                    {sizeData.stock > 0 && (
+                      <span
+                        className={`absolute -top-2 -right-2 text-[10px] px-1.5 rounded-full ${
+                          selectedSize === sizeData.size ? "bg-white text-black" : "bg-green-500 text-white"
+                        }`}
+                      >
+                        {sizeData.stock}
+                      </span>
+                    )}
+                    {sizeData.stock === 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1.5 rounded-full">
+                        0
+                      </span>
+                    )}
+                  </button>
+                  {sizeData.price && sizeData.price !== product.price && (
+                    <span className={`text-xs font-medium ${sizeData.price > product.price ? "text-red-500" : "text-green-600"}`}>
+                      {formatPrice(sizeData.price)}
                     </span>
                   )}
-                  {sizeData.stock === 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1.5 rounded-full">
-                      0
-                    </span>
-                  )}
-                </button>
+                </div>
               ))}
             </div>
             {hasSizes && !selectedSize && (

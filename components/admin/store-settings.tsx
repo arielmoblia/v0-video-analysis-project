@@ -181,7 +181,7 @@ export function StoreSettings({ store }: StoreSettingsProps) {
         <CardContent className="space-y-6">
           <div>
             <Label className="mb-2 block">Imagen del Banner</Label>
-            <ImageUpload value={bannerImage} onChange={setBannerImage} />
+            <ImageUpload value={bannerImage} onChange={setBannerImage} type="banner" />
             <p className="text-xs text-neutral-500 mt-2">
               Recomendado: 1920x1080px. Si no subes una imagen, se usará la predeterminada.
             </p>
