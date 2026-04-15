@@ -18,16 +18,14 @@ import {
   Mail,
   MessageSquare,
   CreditCard,
-  DollarSign,
-  Sparkles
+  DollarSign
 } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { PromoMail } from "@/components/super-admin/promo-mail"
-import { MarketingAgent } from "@/components/super-admin/marketing-agent"
 
 interface PlatformMarketingProps {
-  defaultTab?: "pixels" | "seo" | "integrations" | "promomail" | "agente"
+  defaultTab?: "pixels" | "seo" | "integrations" | "promomail"
 }
 
 export function PlatformMarketing({ defaultTab = "pixels" }: PlatformMarketingProps) {
@@ -146,10 +144,6 @@ export function PlatformMarketing({ defaultTab = "pixels" }: PlatformMarketingPr
             <TabsTrigger value="promomail" className="flex items-center gap-2">
               <Mail className="w-4 h-4" />
               Promo Mail
-            </TabsTrigger>
-            <TabsTrigger value="agente" className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4" />
-              Agente IA
             </TabsTrigger>
           </TabsList>
         )}
@@ -714,9 +708,6 @@ export function PlatformMarketing({ defaultTab = "pixels" }: PlatformMarketingPr
         </TabsContent>
         <TabsContent value="promomail">
           <PromoMail stores={stores} />
-        </TabsContent>
-        <TabsContent value="agente">
-          <MarketingAgent />
         </TabsContent>
       </Tabs>
     </div>

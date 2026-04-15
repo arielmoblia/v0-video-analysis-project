@@ -2,7 +2,7 @@
 const nextConfig = {
   experimental: {
     serverActions: {
-      bodySizeLimit: '10mb',
+      bodySizeLimit: '50mb',
     },
     optimizePackageImports: [],
   },
@@ -95,6 +95,7 @@ const nextConfig = {
   },
   // Comprimir respuestas
   compress: true,
+  middlewareClientMaxBodySize: 52428800,
 }
 
 export default nextConfig

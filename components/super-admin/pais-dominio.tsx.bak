@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Globe, Plus, Save, Trash2 } from "lucide-react"
-import { StoresMap } from "./stores-map"
 import { useToast } from "@/hooks/use-toast"
 
 interface Dominio {
@@ -18,7 +17,7 @@ interface Dominio {
   activo: boolean
 }
 
-export function PaisDominio({ stores = [] }: { stores?: any[] }) {
+export function PaisDominio() {
   const { toast } = useToast()
   const [dominios, setDominios] = useState<Dominio[]>([
     {
@@ -129,9 +128,6 @@ export function PaisDominio({ stores = [] }: { stores?: any[] }) {
                 </div>
               </CardContent>
             )}
-          <CardContent>
-            <StoresMap stores={stores} />
-          </CardContent>
           </Card>
         ))}
       </div>

@@ -320,6 +320,7 @@ export function SuperAdminDashboard() {
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
   const inactiveStores = stores.filter((s) => s.plan !== "templates" && s.trial_expires_at && new Date(s.trial_expires_at) < new Date())
+  const activeStores = stores.filter((s) => s.plan !== "templates" && (!s.trial_expires_at || new Date(s.trial_expires_at) >= new Date()))
   const abandonedStores = stores.filter((s) => {
     if (s.plan === "templates") return false
     if (s.plan === "templates") return false
@@ -536,7 +537,7 @@ export function SuperAdminDashboard() {
             </div>
 
             {/* Filtros por Plan */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2">
+            <div className="flex items-center gap-1 flex-wrap pb-1">
               <Button
                 variant={planFilter === "all" ? "default" : "outline"}
                 size="sm"
@@ -594,10 +595,18 @@ export function SuperAdminDashboard() {
                 MAYORISTAS ({mayoristas})
               </Button>
               <Button
+                variant={planFilter === "active" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setPlanFilter("active")}
+                className={planFilter === "active" ? "bg-green-600 text-white text-xs px-2 h-7" : "bg-transparent border-green-300 text-green-600 hover:bg-green-50 text-xs px-2 h-7"}
+              >
+                ACTIVAS ({activeStores.length})
+              </Button>
+              <Button
                 variant={planFilter === "inactive" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setPlanFilter("inactive")}
-                className={planFilter === "inactive" ? "bg-red-600 text-white" : "bg-transparent border-red-300 text-red-600 hover:bg-red-50"}
+                className={planFilter === "inactive" ? "bg-red-600 text-white text-xs px-2 h-7" : "bg-transparent border-red-300 text-red-600 hover:bg-red-50 text-xs px-2 h-7"}
               >
                 INACTIVAS ({inactiveStores.length})
               </Button>
@@ -811,7 +820,7 @@ export function SuperAdminDashboard() {
 
 
           <TabsContent value="pais-dominio">
-            <PaisDominio />
+            <PaisDominio stores={stores} />
           </TabsContent>
         </Tabs>
       </main>

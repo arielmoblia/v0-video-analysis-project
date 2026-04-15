@@ -1,0 +1,140 @@
+"use client"
+import { useEffect, useState } from "react"
+import "leaflet/dist/leaflet.css"
+
+interface StoreData {
+  id: string
+  subdomain: string
+  site_title: string
+  status: string
+  plan: string
+  email: string
+  created_at: string
+}
+
+interface StoreWithCoords extends StoreData {
+  lat: number
+  lng: number
+  byIp: boolean
+}
+
+function defaultCoords(index: number): { lat: number; lng: number } {
+  const base = [
+    { lat: -34.6, lng: -58.4 },
+    { lat: -31.4, lng: -64.2 },
+    { lat: -32.9, lng: -60.7 },
+    { lat: -34.9, lng: -57.9 },
+    { lat: -26.8, lng: -65.2 },
+    { lat: -33.0, lng: -68.8 },
+    { lat: -24.8, lng: -65.4 },
+    { lat: -38.0, lng: -57.6 },
+    { lat: -43.3, lng: -65.1 },
+    { lat: -51.6, lng: -69.2 },
+  ]
+  const c = base[index % base.length]
+  return {
+    lat: c.lat + (Math.random() - 0.5) * 0.3,
+    lng: c.lng + (Math.random() - 0.5) * 0.3,
+  }
+}
+
+function LeafletMap({ stores }: { stores: StoreWithCoords[] }) {
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const L = require("leaflet")
+    const existing = document.getElementById("stores-map-container")
+    if (!existing) return
+
+    if ((existing as any)._leaflet_id) return
+
+    const map = L.map("stores-map-container").setView([-38.5, -65], 4)
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "OpenStreetMap",
+    }).addTo(map)
+
+    stores.forEach((store) => {
+      const color = store.status === "active" ? "#22c55e" : "#ef4444"
+      const border = store.status === "active" ? "#16a34a" : "#dc2626"
+
+      const marker = L.circleMarker([store.lat, store.lng], {
+        radius: 8,
+        fillColor: color,
+        fillOpacity: 0.9,
+        color: border,
+        weight: 2,
+      }).addTo(map)
+
+      const label = store.site_title || store.subdomain
+      const url = store.subdomain + ".tol.ar"
+      const statusText = store.status === "active" ? "Activa" : "Inactiva"
+      const ipText = store.byIp ? "<br/><small>ubicado por IP</small>" : ""
+
+      marker.bindPopup(
+        "<div style='min-width:160px'>" +
+        "<strong style='font-size:13px'>" + label + "</strong><br/>" +
+        "<a href='https://" + url + "' target='_blank' style='color:#185FA5;font-size:11px'>" + url + "</a><br/>" +
+        "<span style='font-size:11px;color:#64748b'>" + store.email + "</span><br/>" +
+        "<span style='font-size:10px;background:" + (store.status === "active" ? "#dcfce7" : "#fee2e2") + ";color:" + (store.status === "active" ? "#166534" : "#991b1b") + ";padding:1px 6px;border-radius:8px'>" + statusText + "</span>" +
+        ipText +
+        "</div>"
+      )
+    })
+  }, [stores])
+
+  return (
+    <div
+      id="stores-map-container"
+      style={{ height: 420, width: "100%", borderRadius: 8, zIndex: 0 }}
+    />
+  )
+}
+
+export function StoresMap({ stores }: { stores: StoreData[] }) {
+  const [ready, setReady] = useState(false)
+  const [storesWithCoords, setStoresWithCoords] = useState<StoreWithCoords[]>([])
+
+  useEffect(() => {
+    const result = stores.map((store, i) => ({
+      ...store,
+      ...defaultCoords(i),
+      byIp: true,
+    }))
+    setStoresWithCoords(result)
+    setReady(true)
+  }, [stores])
+
+  const activeCount = storesWithCoords.filter((s) => s.status === "active").length
+  const inactiveCount = storesWithCoords.filter((s) => s.status !== "active").length
+
+  if (!ready) {
+    return (
+      <div style={{ height: 420, display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontSize: 13 }}>
+        Cargando mapa...
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 16, marginBottom: 12, alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
+          <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#22c55e", border: "1.5px solid #16a34a", flexShrink: 0 }} />
+          Activas: <strong>{activeCount}</strong>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
+          <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444", border: "1.5px solid #dc2626", flexShrink: 0 }} />
+          Inactivas: <strong>{inactiveCount}</strong>
+        </div>
+        <div style={{ fontSize: 12, color: "#94a3b8", marginLeft: "auto" }}>
+          Total: <strong>{stores.length}</strong>
+        </div>
+      </div>
+      <LeafletMap stores={storesWithCoords} />
+      <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 6 }}>
+        Posicion aproximada hasta que la tienda cargue su direccion.
+      </p>
+    </div>
+  )
+}
