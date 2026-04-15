@@ -37,9 +37,6 @@ export async function POST(request: NextRequest) {
     // Login exitoso - resetear rate limit
     resetRateLimit(rateLimitKey)
 
-    // Registrar ultimo login al admin
-    await supabase.from("stores").update({ last_admin_login_at: new Date().toISOString() }).eq("id", store.id)
-
     const cookieStore = await cookies()
     cookieStore.set(`admin_${subdomainLower}`, "true", {
       httpOnly: true,

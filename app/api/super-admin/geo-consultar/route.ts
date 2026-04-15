@@ -18,6 +18,23 @@ async function consultarGemini(pregunta: string): Promise<string> {
   return data.candidates?.[0]?.content?.parts?.[0]?.text || ""
 }
 
+async function consultarChatGPT(pregunta: string): Promise<string> {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      max_tokens: 500,
+      messages: [{ role: "user", content: pregunta }]
+    })
+  })
+  const data = await res.json()
+  return data.choices?.[0]?.message?.content || ""
+}
+
 async function consultarClaude(pregunta: string): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -57,20 +74,22 @@ export async function POST(request: Request) {
     const resultados = []
 
     for (const p of preguntas) {
-      const [respGemini, respClaude] = await Promise.all([
+      const [respGemini, respClaude, respChatGPT] = await Promise.all([
         consultarGemini(p.pregunta).catch(() => ""),
         consultarClaude(p.pregunta).catch(() => ""),
+        consultarChatGPT(p.pregunta).catch(() => ""),
       ])
 
       const gemini = analizarRespuesta(respGemini)
       const claude = analizarRespuesta(respClaude)
+      const chatgpt = analizarRespuesta(respChatGPT)
 
       resultados.push({
         id: p.id,
         pregunta: p.pregunta,
         gemini,
         claude,
-        chatgpt: null,
+        chatgpt,
         perplexity: null,
       })
 
@@ -87,6 +106,14 @@ export async function POST(request: Request) {
         ia: "claude",
         respuesta: respClaude,
         menciona_tolar: claude["tol.ar"],
+        updated_at: new Date().toISOString()
+      }, { onConflict: "pregunta_id,ia" })
+
+      await supabase.from("geo_resultados").upsert({
+        pregunta_id: p.id,
+        ia: "chatgpt",
+        respuesta: respChatGPT,
+        menciona_tolar: chatgpt["tol.ar"],
         updated_at: new Date().toISOString()
       }, { onConflict: "pregunta_id,ia" })
     }

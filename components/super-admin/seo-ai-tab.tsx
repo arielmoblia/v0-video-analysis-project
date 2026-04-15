@@ -1,58 +1,21 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { IaResumen } from "./ia-resumen"
 import { GeoPreguntas } from "./geo-preguntas"
+import { GeoMatriz } from "./geo-matriz"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { RefreshCw, Brain, FileText, Plus, ExternalLink, X, ChevronRight, ChevronLeft } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 const TOUR_PASOS = [
-  {
-    titulo: "🎯 El tablero general",
-    texto: "¿Ves estos 4 numeritos de arriba? Te dicen de un vistazo cómo está tol.ar hoy. Es como el tablero de un auto — te muestra la velocidad, el combustible, si hay algo roto. El número más importante es 'Apariciones en IA'.",
-    apunta: "stats"
-  },
-  {
-    titulo: "📈 El gráfico de evolución",
-    texto: "Esta línea muestra si estás subiendo o bajando en Google cada mes. Como una fiebre — querés que el número BAJE (más abajo en el gráfico = más arriba en Google). Si la línea baja, estás mejorando.",
-    apunta: "evolucion"
-  },
-  {
-    titulo: "🤖 El GEO Tracker",
-    texto: "Acá le preguntamos a ChatGPT, Perplexity, Claude y Gemini: '¿conocen tol.ar?'. Si la bolita es VERDE, el robot nos conoce y nos recomienda. Si es ROJA, todavía no sabe que existimos. El objetivo es poner todo en verde.",
-    apunta: "geo"
-  },
-  {
-    titulo: "🕵️ Espiamos a la competencia",
-    texto: "Acá vemos cómo les va a Tiendanube y Empretienda. Cuánto aparecen ellos en las IAs, y qué cosas MALAS dicen de ellos los robots. Eso es oro — si una IA dice 'Tiendanube cobra comisión', nosotros usamos eso para destacar que tol.ar no cobra nada.",
-    apunta: "competencia"
-  },
-  {
-    titulo: "✍️ El redactor automático",
-    texto: "¿Necesitás escribir una página para Google? Escribís el tema — por ejemplo 'alternativas a Tiendanube' — y la IA escribe el texto completo listo para publicar. Como tener un redactor gratis trabajando las 24 horas.",
-    apunta: "generador"
-  },
-  {
-    titulo: "📡 El radar de menciones",
-    texto: "Cada vez que alguien nos menciona en internet — una nota, un foro, un tweet — aparece acá. Cuantas más menciones tengamos, más nos conocen los robots de IA. También podés agregar vos mismo las publicaciones propias, como el lanzamiento de tol.ar.",
-    apunta: "menciones"
-  },
-  {
-    titulo: "🚀 Las oportunidades de contenido",
-    texto: "Estas son las palabras que la gente busca en Google donde CASI nos encuentran — estamos en la página 2 o 3. Con una sola página bien escrita podemos pasar a la primera página. La barra roja = urgente, la verde = ya casi llegamos.",
-    apunta: "oportunidades"
-  },
-]
-
-
-
-const PREGUNTAS = [
-  "¿Cuál es la mejor plataforma para vender online gratis en Argentina?",
-  "Alternativas a Tiendanube en Argentina sin comisiones",
-  "Cómo crear una tienda online argentina sin pagar comisión",
-  "Plataformas e-commerce Argentina comparativa 2025",
+  { titulo: "📊 Cómo figuramos en cada IA", texto: "Las 4 tarjetas muestran qué porcentaje de las respuestas de cada IA menciona a tol.ar vs la competencia. La barra verde tiene que crecer. Abajo ves cuántas personas llegaron a tol.ar desde cada IA — ese es el número real." },
+  { titulo: "📋 La tabla de preguntas", texto: "Le hacemos 10 preguntas a cada IA y registramos si tol.ar aparece o no. Verde = nos conocen, Rojo = no saben que existimos. Apretá 'Correr análisis' para actualizar." },
+  { titulo: "✏️ Las preguntas que monitoreamos", texto: "Podés editar, agregar o pausar las preguntas que le hacemos a las IAs. Son conversaciones reales que la gente tendría — no keywords de Google." },
+  { titulo: "🔍 Puntos débiles de la competencia", texto: "Lo que las IAs dicen malo de Tiendanube y Empretienda es tu munición. Si una IA dice 'Tiendanube cobra comisión', creás contenido que destaque que tol.ar no cobra nada." },
+  { titulo: "✍️ El redactor automático", texto: "Escribís el tema y Claude escribe la página completa lista para publicar. Una buena página sube en Google Y hace que las IAs te citen." },
+  { titulo: "📡 Radar de menciones", texto: "Cuantas más veces nos mencionan en internet, más nos conocen las IAs. Podés agregar menciones propias como el lanzamiento de tol.ar." },
+  { titulo: "📈 Evolución y oportunidades", texto: "El gráfico muestra cómo evolucionan tus posiciones en Google. Las oportunidades son keywords donde estás cerca de la primera página — con una página bien escrita podés llegar." },
 ]
 
 const DEBILIDADES = [
@@ -75,6 +38,13 @@ const MENCIONES_INICIALES = [
   { source: "TechArgentina", url: "https://techargentina.com", text: "Startups argentinas de e-commerce: tol.ar y el nuevo ecosistema sin comisiones...", date: "hace 12 días", tipo: "auto" },
 ]
 
+const IA_STATIC = [
+  { engine: "ChatGPT", bars: [{ name: "Tiendanube", pct: 75, color: "#E24B4A" }, { name: "Empretienda", pct: 20, color: "#EF9F27" }, { name: "tol.ar", pct: 5, color: "#1D9E75" }] },
+  { engine: "Gemini",  bars: [{ name: "Tiendanube", pct: 80, color: "#E24B4A" }, { name: "Empretienda", pct: 18, color: "#EF9F27" }, { name: "tol.ar", pct: 2, color: "#1D9E75" }] },
+  { engine: "Claude",  bars: [{ name: "tol.ar", pct: 45, color: "#1D9E75" }, { name: "Tiendanube", pct: 40, color: "#E24B4A" }, { name: "Empretienda", pct: 15, color: "#EF9F27" }] },
+  { engine: "Perplexity", bars: [{ name: "Tiendanube", pct: 50, color: "#E24B4A" }, { name: "tol.ar", pct: 30, color: "#1D9E75" }, { name: "Empretienda", pct: 20, color: "#EF9F27" }] },
+]
+
 function InfoTooltip({ text }: { text: string }) {
   const [open, setOpen] = useState(false)
   return (
@@ -85,10 +55,10 @@ function InfoTooltip({ text }: { text: string }) {
   )
 }
 
-function SectionHeader({ label, badge, badgeColor, tooltip, right, id }: { label: string; badge?: string; badgeColor?: string; tooltip: string; right?: React.ReactNode; id?: string }) {
+function SectionHeader({ label, badge, badgeColor, tooltip, right }: { label: string; badge?: string; badgeColor?: string; tooltip: string; right?: React.ReactNode }) {
   const colors: Record<string, string> = { green: "bg-green-100 text-green-800", amber: "bg-amber-100 text-amber-800", red: "bg-red-100 text-red-800", blue: "bg-blue-100 text-blue-800", gray: "bg-slate-100 text-slate-600", purple: "bg-purple-100 text-purple-800" }
   return (
-    <div id={id} className="flex items-center justify-between mb-3">
+    <div className="flex items-center justify-between mb-3">
       <div className="flex items-center gap-2">
         <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{label}</span>
         <InfoTooltip text={tooltip} />
@@ -118,23 +88,56 @@ function TourOverlay({ paso, total, onNext, onPrev, onClose }: { paso: number; t
         <div className="flex items-center justify-between">
           <button onClick={onClose} className="text-xs text-slate-400 hover:text-slate-600">Saltar tutorial</button>
           <div className="flex gap-2">
-            {paso > 0 && (
-              <Button size="sm" variant="outline" onClick={onPrev}>
-                <ChevronLeft className="w-3 h-3 mr-1" />Anterior
-              </Button>
-            )}
-            {paso < total - 1 ? (
-              <Button size="sm" onClick={onNext} className="bg-purple-600 hover:bg-purple-700 text-white">
-                Siguiente<ChevronRight className="w-3 h-3 ml-1" />
-              </Button>
-            ) : (
-              <Button size="sm" onClick={onClose} className="bg-green-600 hover:bg-green-700 text-white">
-                ¡Entendido! ✓
-              </Button>
-            )}
+            {paso > 0 && <Button size="sm" variant="outline" onClick={onPrev}><ChevronLeft className="w-3 h-3 mr-1" />Anterior</Button>}
+            {paso < total - 1
+              ? <Button size="sm" onClick={onNext} className="bg-purple-600 hover:bg-purple-700 text-white">Siguiente<ChevronRight className="w-3 h-3 ml-1" /></Button>
+              : <Button size="sm" onClick={onClose} className="bg-green-600 hover:bg-green-700 text-white">¡Entendido! ✓</Button>
+            }
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function IaBarras() {
+  const [entraron, setEntraron] = useState<Record<string, number>>({})
+  useEffect(() => {
+    fetch("/api/super-admin/geo-tracker?periodo=anio")
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          const map: Record<string, number> = {}
+          d.data.forEach((item: { nombre: string; entraron: number }) => { map[item.nombre] = item.entraron })
+          setEntraron(map)
+        }
+      }).catch(() => {})
+  }, [])
+
+  return (
+    <div className="grid grid-cols-4 gap-3">
+      {IA_STATIC.map(e => (
+        <div key={e.engine} className="border border-slate-200 rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-3 py-2.5 bg-slate-50 border-b border-slate-100">
+            <span className="text-sm font-semibold">{e.engine}</span>
+            <div className="text-right">
+              <div className="text-base font-semibold text-green-600">{e.engine in entraron ? entraron[e.engine] : "..."}</div>
+              <div className="text-[10px] text-slate-400">llegaron a tol.ar</div>
+            </div>
+          </div>
+          <div className="px-3 py-2.5 space-y-2">
+            {e.bars.map(b => (
+              <div key={b.name} className="flex items-center gap-2">
+                <span className="text-[11px] text-slate-500 w-20 flex-shrink-0">{b.name}</span>
+                <div className="flex-1 h-1.5 bg-slate-100 rounded-full">
+                  <div className="h-1.5 rounded-full" style={{ width: `${b.pct}%`, background: b.color }} />
+                </div>
+                <span className="text-[11px] font-medium w-7 text-right" style={{ color: b.color }}>{b.pct}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -153,14 +156,9 @@ export function SeoAiTab() {
   const [tourActivo, setTourActivo] = useState(false)
   const [tourPaso, setTourPaso] = useState(0)
 
-  const iniciarTour = () => { setTourPaso(0); setTourActivo(true) }
-  const cerrarTour = () => setTourActivo(false)
-  const nextPaso = () => { if (tourPaso < TOUR_PASOS.length - 1) setTourPaso(p => p + 1) }
-  const prevPaso = () => { if (tourPaso > 0) setTourPaso(p => p - 1) }
-
   const handleCorrer = () => {
     setCorriendo(true)
-    setTimeout(() => { setCorriendo(false); setUltimoAnalisis("hace unos segundos"); toast({ title: "Análisis completado", description: "Los datos se actualizaron correctamente." }) }, 3000)
+    setTimeout(() => { setCorriendo(false); setUltimoAnalisis("hace unos segundos"); toast({ title: "Análisis completado" }) }, 3000)
   }
 
   const handleGenerar = async () => {
@@ -169,10 +167,10 @@ export function SeoAiTab() {
     await new Promise(r => setTimeout(r, 1200))
     setGenOutput({
       title: `${tipoContenido}: ${kwInput}`,
-      intro: `tol.ar es la plataforma de e-commerce argentina que no cobra comisión por venta. A diferencia de Tiendanube, que cobra entre 2% y 15% por transacción según el plan, tol.ar permite que el 100% de cada venta quede en manos del comerciante.`,
+      intro: `tol.ar es la plataforma de e-commerce argentina que no cobra comisión por venta. A diferencia de Tiendanube, que cobra entre 2% y 15% por transacción, tol.ar permite que el 100% de cada venta quede en manos del comerciante.`,
       items: ["Sin comisión por venta — en todos los planes", "Subdominio propio: tutienda.tol.ar", "MercadoPago, Mobbex y MODO integrados", "Plan gratis disponible desde el día uno"],
       faqQ: "¿Cuánto cobra tol.ar de comisión?",
-      faqA: "tol.ar no cobra comisión por venta. El modelo es un plan mensual fijo sin porcentaje sobre las ventas. El plan gratuito incluye tienda activa con todos los medios de pago.",
+      faqA: "tol.ar no cobra comisión por venta. El modelo es un plan mensual fijo sin porcentaje sobre las ventas.",
     })
     setGenerando(false)
   }
@@ -191,21 +189,18 @@ export function SeoAiTab() {
   return (
     <div className="space-y-6 pb-10 relative">
 
-      {tourActivo && <TourOverlay paso={tourPaso} total={TOUR_PASOS.length} onNext={nextPaso} onPrev={prevPaso} onClose={cerrarTour} />}
+      {tourActivo && <TourOverlay paso={tourPaso} total={TOUR_PASOS.length} onNext={() => setTourPaso(p => p + 1)} onPrev={() => setTourPaso(p => p - 1)} onClose={() => setTourActivo(false)} />}
 
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-100 pb-4">
         <div>
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-500" />
-            SEO AI
+            <Brain className="w-5 h-5 text-purple-500" />SEO AI
           </h3>
           <p className="text-sm text-slate-500">Visibilidad en motores de IA y búsqueda</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={iniciarTour} className="flex items-center gap-2 border-purple-200 text-purple-700 hover:bg-purple-50">
-            ▶ Tutorial
-          </Button>
+          <Button size="sm" variant="outline" onClick={() => { setTourPaso(0); setTourActivo(true) }} className="border-purple-200 text-purple-700 hover:bg-purple-50">▶ Tutorial</Button>
           <div className="text-right">
             <Button size="sm" variant="outline" onClick={handleCorrer} disabled={corriendo} className="flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full ${corriendo ? "bg-amber-400" : "bg-green-500"}`} />
@@ -217,134 +212,24 @@ export function SeoAiTab() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div id="stats" className="grid grid-cols-2 gap-3">
-        {[
-          { label: "Apariciones en IA", value: "2/8", delta: "↑ 1 vs semana pasada", up: true, tooltip: "De las 8 preguntas monitoreadas, cuántas tienen a tol.ar en la respuesta de alguna IA." },
-          { label: "Menciones web", value: String(menciones.length), delta: "↑ 2 nuevas este mes", up: true, tooltip: "Artículos, posts y foros que mencionan tol.ar. Las menciones alimentan a las IAs." },
-          { label: "Keywords oportunidad", value: "12", delta: "Oportunidades abiertas", up: true, tooltip: "Keywords en posición 8–30 en Google. Las más fáciles de subir a primera página." },
-          { label: "Keyword principal", value: "#47", delta: "↓ 6 vs mes pasado", up: false, tooltip: 'Posición en Google para "plataformas de venta online argentina gratis".' },
-        ].map(s => (
-          <div key={s.label} className="bg-slate-50 rounded-lg p-4">
-            <div className="flex items-center gap-1 mb-1"><span className="text-xs text-slate-500">{s.label}</span><InfoTooltip text={s.tooltip} /></div>
-            <div className="text-2xl font-semibold text-slate-800">{s.value}</div>
-            <div className={`text-xs mt-1 ${s.up ? "text-green-600" : "text-red-500"}`}>{s.delta}</div>
-          </div>
-        ))}
+      {/* 1. Barras por IA — lo más importante */}
+      <div>
+        <SectionHeader label="¿Cómo figuramos vs la competencia?" badge="Datos reales" badgeColor="green" tooltip="Porcentaje de respuestas de cada IA que menciona a tol.ar vs competidores. El número verde es cuántas personas llegaron a tol.ar desde esa IA." />
+        <IaBarras />
       </div>
 
-      <div id="ia-resumen">
-        <SectionHeader label="Visibilidad en IAs" badge="Datos semanales" badgeColor="amber" tooltip="Cuántas personas consultan sobre tiendas en cada IA y cuántas llegan a tol.ar. Las barras muestran quién gana la recomendación." />
-        <IaResumen />
-
-      <div id="geo-preguntas">
-        <SectionHeader label="Preguntas monitoreadas" badge="Editable" badgeColor="blue" tooltip="Las preguntas que le hacemos a las IAs para medir si tol.ar aparece. Podés editarlas, agregar nuevas o pausarlas." />
-        <GeoPreguntas />
-      </div>
+      {/* 2. Tabla de preguntas */}
+      <div>
+        <SectionHeader label="Apariciones por pregunta" badge="Actualizable" badgeColor="amber" tooltip="Le hacemos estas preguntas a cada IA y registramos si tol.ar aparece en la respuesta. Apretá 'Correr análisis' para actualizar." />
+        <GeoMatriz />
       </div>
 
-      {/* Evolución */}
-      <div id="evolucion">
-        <SectionHeader label="Evolución de posiciones" badge="Últimos 6 meses" badgeColor="gray" tooltip="Historial mensual de posición en Google. Cada acción que tomás debería mover estas líneas hacia abajo (más abajo = mejor posición)." />
-        <div className="border border-slate-200 rounded-xl p-4">
-          <div className="flex gap-4 mb-3 flex-wrap">
-            {[{ color: "#378ADD", label: "venta online argentina gratis" }, { color: "#1D9E75", label: "alternativas tiendanube" }, { color: "#EF9F27", label: "tienda sin comisiones" }].map(l => (
-              <div key={l.label} className="flex items-center gap-1.5 text-xs text-slate-500"><span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: l.color }} />{l.label}</div>
-            ))}
-          </div>
-          <svg viewBox="0 0 600 160" className="w-full" style={{ height: 160 }}>
-            {[0,20,40,60,80,100].map(v => <line key={v} x1="40" y1={140 - v * 1.2} x2="580" y2={140 - v * 1.2} stroke="#f1f5f9" strokeWidth="1" />)}
-            {["Oct","Nov","Dic","Ene","Feb","Mar"].map((m, i) => <text key={m} x={80 + i * 90} y={158} fontSize="10" fill="#94a3b8" textAnchor="middle">{m}</text>)}
-            {[10,30,60,90].map(v => <text key={v} x="32" y={144 - v * 1.2} fontSize="10" fill="#94a3b8" textAnchor="end">#{v}</text>)}
-            <polyline points="80,44 170,54 260,62 350,68 440,76 530,84" fill="none" stroke="#378ADD" strokeWidth="2" strokeLinejoin="round" />
-            <polyline points="80,92 170,98 260,104 350,106 440,110 530,112" fill="none" stroke="#1D9E75" strokeWidth="2" strokeLinejoin="round" />
-            <polyline points="80,104 170,106 260,110 350,113 440,116 530,118" fill="none" stroke="#EF9F27" strokeWidth="2" strokeLinejoin="round" />
-            {[[80,44],[170,54],[260,62],[350,68],[440,76],[530,84]].map(([x,y],i) => <circle key={i} cx={x} cy={y} r="3" fill="#378ADD" />)}
-            {[[80,92],[170,98],[260,104],[350,106],[440,110],[530,112]].map(([x,y],i) => <circle key={i} cx={x} cy={y} r="3" fill="#1D9E75" />)}
-            {[[80,104],[170,106],[260,110],[350,113],[440,116],[530,118]].map(([x,y],i) => <circle key={i} cx={x} cy={y} r="3" fill="#EF9F27" />)}
-          </svg>
-        </div>
-      </div>
 
-      {/* GEO Tracker */}
-      <div id="geo">
-        <SectionHeader label="GEO Tracker — respuestas de IA" badge="Actualizado hace 3h" badgeColor="amber" tooltip="Le preguntamos a ChatGPT, Perplexity, Claude y Gemini si conocen tol.ar. Verde = nos conocen, Rojo = todavía no." />
-        <div className="grid grid-cols-2 gap-3">
-          {PREGUNTAS.map((q, qi) => {
-            const resultados = [
-              { engine: "ChatGPT", status: "no" },
-              { engine: "Perplexity", status: qi === 0 ? "pos3" : qi === 2 ? "yes" : "no" },
-              { engine: "Claude", status: qi === 0 ? "yes" : qi === 1 ? "pos2" : "no" },
-              { engine: "Gemini", status: "no" },
-            ]
-            return (
-              <div key={qi} className="border border-slate-200 rounded-xl p-4">
-                <p className="text-xs italic text-slate-700 mb-3 leading-relaxed">"{q}"</p>
-                <div className="space-y-1.5">
-                  {resultados.map(r => (
-                    <div key={r.engine} className="flex items-center gap-2">
-                      <span className="text-xs text-slate-500 w-20">{r.engine}</span>
-                      {r.status === "no" && <span className="text-[11px] px-2 py-0.5 rounded-full bg-red-100 text-red-700">No aparece</span>}
-                      {r.status === "yes" && <span className="text-[11px] px-2 py-0.5 rounded-full bg-green-100 text-green-700">Mencionado</span>}
-                      {r.status === "pos2" && <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Posición 2</span>}
-                      {r.status === "pos3" && <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Posición 3</span>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
 
-      {/* Competencia */}
-      <div id="competencia">
-        <SectionHeader label="Inteligencia competitiva" badge="tol.ar gana 2 de 8" badgeColor="red" tooltip="Espiamos a Tiendanube y Empretienda. Vemos cuánto aparecen en las IAs y qué cosas malas dicen de ellos — eso es nuestra munición." />
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          {[
-            { name: "tol.ar", url: "tol.ar", nosotros: true, ia: "2/8", iapct: 25, color: "#1D9E75", pos: "#47", posdir: "↓ 6", menciones: "5", mendir: "↑ 2" },
-            { name: "Tiendanube", url: "tiendanube.com", nosotros: false, ia: "6/8", iapct: 75, color: "#E24B4A", pos: "#1", posdir: "Dominante", menciones: "84", mendir: "↑ 12" },
-            { name: "Empretienda", url: "empretienda.com", nosotros: false, ia: "3/8", iapct: 37, color: "#EF9F27", pos: "#4", posdir: "Long tail", menciones: "21", mendir: "↔ igual" },
-          ].map(c => (
-            <div key={c.name} className={`border rounded-xl overflow-hidden ${c.nosotros ? "border-green-400 border-2" : "border-slate-200"}`}>
-              <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
-                <div><p className="text-sm font-semibold">{c.name}</p><p className="text-xs text-slate-400">{c.url}</p></div>
-                {c.nosotros && <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-800">Nosotros</span>}
-              </div>
-              <div className="px-4 py-3 space-y-2.5">
-                <div><p className="text-[10px] text-slate-400 mb-1">Apariciones en IA</p><p className="text-sm font-semibold">{c.ia}</p><div className="h-1 bg-slate-100 rounded mt-1"><div className="h-1 rounded" style={{ width: `${c.iapct}%`, background: c.color }} /></div></div>
-                <div className="h-px bg-slate-100" />
-                <div><p className="text-[10px] text-slate-400">Keyword principal</p><p className="text-sm font-semibold">{c.pos}</p><p className="text-[11px] text-slate-400">{c.posdir}</p></div>
-                <div className="h-px bg-slate-100" />
-                <div><p className="text-[10px] text-slate-400">Menciones este mes</p><p className="text-sm font-semibold">{c.menciones}</p><p className="text-[11px] text-slate-400">{c.mendir}</p></div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {[
-            { engine: "ChatGPT", bars: [{ name: "Tiendanube", pct: 75, color: "#E24B4A" }, { name: "Empretienda", pct: 20, color: "#EF9F27" }, { name: "tol.ar", pct: 5, color: "#1D9E75" }] },
-            { engine: "Perplexity", bars: [{ name: "Tiendanube", pct: 50, color: "#E24B4A" }, { name: "tol.ar", pct: 30, color: "#1D9E75" }, { name: "Empretienda", pct: 20, color: "#EF9F27" }] },
-            { engine: "Claude", bars: [{ name: "tol.ar", pct: 45, color: "#1D9E75" }, { name: "Tiendanube", pct: 40, color: "#E24B4A" }, { name: "Empretienda", pct: 15, color: "#EF9F27" }] },
-            { engine: "Gemini", bars: [{ name: "Tiendanube", pct: 80, color: "#E24B4A" }, { name: "Empretienda", pct: 18, color: "#EF9F27" }, { name: "tol.ar", pct: 2, color: "#1D9E75" }] },
-          ].map(e => (
-            <div key={e.engine} className="bg-slate-50 rounded-lg p-3">
-              <p className="text-[11px] text-slate-400 mb-2">{e.engine}</p>
-              {e.bars.map(b => (
-                <div key={b.name} className="flex items-center gap-2 mb-1.5">
-                  <span className="text-[11px] text-slate-500 w-20 flex-shrink-0">{b.name}</span>
-                  <div className="flex-1 h-1.5 bg-slate-200 rounded"><div className="h-1.5 rounded" style={{ width: `${b.pct}%`, background: b.color }} /></div>
-                  <span className="text-[11px] text-slate-400 w-7 text-right">{b.pct}%</span>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
+      {/* 4. Puntos débiles competencia */}
+      <div>
+        <SectionHeader label="Puntos débiles de la competencia" badge="Tu munición" badgeColor="green" tooltip="Lo que las IAs dicen malo de Tiendanube y Empretienda. Cada debilidad es una oportunidad de contenido para tol.ar." />
         <div className="border border-slate-200 rounded-xl overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2 border-b border-slate-100 bg-slate-50">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Puntos débiles de la competencia</span>
-            <span className="text-[11px] px-2 py-0.5 rounded-full bg-green-100 text-green-800">Tu munición</span>
-          </div>
           {DEBILIDADES.map((d, i) => (
             <div key={i} className={`flex gap-3 p-3 ${i < DEBILIDADES.length - 1 ? "border-b border-slate-100" : ""} hover:bg-slate-50 transition-colors`}>
               <div className="min-w-[90px]"><p className="text-xs font-medium">{d.comp}</p><p className="text-[11px] text-slate-400 mt-0.5">{d.ia}</p></div>
@@ -354,9 +239,9 @@ export function SeoAiTab() {
         </div>
       </div>
 
-      {/* Generador */}
-      <div id="generador">
-        <SectionHeader label="Generador de contenido con IA" badge="Powered by Claude" badgeColor="purple" tooltip="Escribís el tema y Claude escribe la página completa lista para publicar. Como tener un redactor gratis las 24 horas." />
+      {/* 5. Generador de contenido */}
+      <div>
+        <SectionHeader label="Generador de contenido con IA" badge="Powered by Claude" badgeColor="purple" tooltip="Escribís el tema y Claude escribe la página lista para publicar. Una buena página sube en Google Y hace que las IAs te citen." />
         <div className="border border-slate-200 rounded-xl p-4">
           <div className="inline-flex items-center gap-1.5 text-[11px] text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full mb-3">
             <span className="w-1.5 h-1.5 rounded-full bg-purple-500 inline-block" />Claude genera el borrador listo para publicar
@@ -389,9 +274,9 @@ export function SeoAiTab() {
         </div>
       </div>
 
-      {/* Menciones */}
-      <div id="menciones">
-        <SectionHeader label="Radar de menciones web" badge={`${menciones.length} este mes`} badgeColor="green" tooltip="Cada vez que alguien nos menciona en internet aparece acá. Cuantas más menciones, más nos conocen los robots de IA." right={
+      {/* 6. Radar de menciones */}
+      <div>
+        <SectionHeader label="Radar de menciones web" badge={`${menciones.length} este mes`} badgeColor="green" tooltip="Cuantas más veces nos mencionan en internet, más nos conocen las IAs." right={
           <Button size="sm" variant="outline" onClick={() => setShowAddMencion(!showAddMencion)} className="flex items-center gap-1 text-xs"><Plus className="w-3 h-3" /> Agregar mención</Button>
         } />
         {showAddMencion && (
@@ -399,7 +284,7 @@ export function SeoAiTab() {
             <p className="text-xs font-medium text-slate-700">Nueva mención</p>
             <Input placeholder="Fuente (ej: La Nación, blog propio...)" value={newMencion.source} onChange={e => setNewMencion({ ...newMencion, source: e.target.value })} className="text-sm" />
             <Input placeholder="URL (https://...)" value={newMencion.url} onChange={e => setNewMencion({ ...newMencion, url: e.target.value })} className="text-sm" />
-            <Input placeholder='Extracto del texto que nos menciona' value={newMencion.text} onChange={e => setNewMencion({ ...newMencion, text: e.target.value })} className="text-sm" />
+            <Input placeholder="Extracto del texto que nos menciona" value={newMencion.text} onChange={e => setNewMencion({ ...newMencion, text: e.target.value })} className="text-sm" />
             <div className="flex gap-2"><Button size="sm" onClick={handleAgregarMencion}>Guardar</Button><Button size="sm" variant="outline" onClick={() => setShowAddMencion(false)}>Cancelar</Button></div>
           </div>
         )}
@@ -420,9 +305,32 @@ export function SeoAiTab() {
         </div>
       </div>
 
-      {/* Oportunidades */}
-      <div id="oportunidades">
-        <SectionHeader label="Content opportunities" badge="12 en zona de oportunidad" badgeColor="red" tooltip="Palabras que la gente busca en Google donde casi nos encuentran. Con una página bien escrita podemos pasar a la primera página." />
+      {/* 7. Evolución de posiciones */}
+      <div>
+        <SectionHeader label="Evolución de posiciones en Google" badge="Últimos 6 meses" badgeColor="gray" tooltip="Historial de posición en Google. El número tiene que bajar — más abajo = mejor posición." />
+        <div className="border border-slate-200 rounded-xl p-4">
+          <div className="flex gap-4 mb-3 flex-wrap">
+            {[{ color: "#378ADD", label: "venta online argentina gratis" }, { color: "#1D9E75", label: "alternativas tiendanube" }, { color: "#EF9F27", label: "tienda sin comisiones" }].map(l => (
+              <div key={l.label} className="flex items-center gap-1.5 text-xs text-slate-500"><span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: l.color }} />{l.label}</div>
+            ))}
+          </div>
+          <svg viewBox="0 0 600 160" className="w-full" style={{ height: 160 }}>
+            {[0,20,40,60,80,100].map(v => <line key={v} x1="40" y1={140 - v * 1.2} x2="580" y2={140 - v * 1.2} stroke="#f1f5f9" strokeWidth="1" />)}
+            {["Oct","Nov","Dic","Ene","Feb","Mar"].map((m, i) => <text key={m} x={80 + i * 90} y={158} fontSize="10" fill="#94a3b8" textAnchor="middle">{m}</text>)}
+            {[10,30,60,90].map(v => <text key={v} x="32" y={144 - v * 1.2} fontSize="10" fill="#94a3b8" textAnchor="end">#{v}</text>)}
+            <polyline points="80,44 170,54 260,62 350,68 440,76 530,84" fill="none" stroke="#378ADD" strokeWidth="2" strokeLinejoin="round" />
+            <polyline points="80,92 170,98 260,104 350,106 440,110 530,112" fill="none" stroke="#1D9E75" strokeWidth="2" strokeLinejoin="round" />
+            <polyline points="80,104 170,106 260,110 350,113 440,116 530,118" fill="none" stroke="#EF9F27" strokeWidth="2" strokeLinejoin="round" />
+            {[[80,44],[170,54],[260,62],[350,68],[440,76],[530,84]].map(([x,y],i) => <circle key={i} cx={x} cy={y} r="3" fill="#378ADD" />)}
+            {[[80,92],[170,98],[260,104],[350,106],[440,110],[530,112]].map(([x,y],i) => <circle key={i} cx={x} cy={y} r="3" fill="#1D9E75" />)}
+            {[[80,104],[170,106],[260,110],[350,113],[440,116],[530,118]].map(([x,y],i) => <circle key={i} cx={x} cy={y} r="3" fill="#EF9F27" />)}
+          </svg>
+        </div>
+      </div>
+
+      {/* 8. Content opportunities */}
+      <div>
+        <SectionHeader label="Content opportunities" badge="12 en zona de oportunidad" badgeColor="red" tooltip="Keywords donde estás cerca de la primera página en Google. Con una página bien escrita podés llegar." />
         <div className="space-y-2">
           {OPORTUNIDADES.map((o, i) => (
             <div key={i} className="border border-slate-200 rounded-lg px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors">
