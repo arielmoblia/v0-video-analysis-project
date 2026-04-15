@@ -537,12 +537,12 @@ export function SuperAdminDashboard() {
             </div>
 
             {/* Filtros por Plan */}
-            <div className="flex items-center gap-1 flex-wrap pb-1">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2">
               <Button
                 variant={planFilter === "all" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setPlanFilter("all")}
-                className={planFilter === "all" ? "bg-slate-800 text-white" : "bg-transparent border-slate-300 text-slate-600 hover:bg-slate-100"}
+                className={planFilter === "all" ? "bg-slate-800 text-white text-xs px-2 h-7" : "bg-transparent border-slate-300 text-slate-600 hover:bg-slate-100 text-xs px-2 h-7"}
               >
                 TODAS ({stores.length})
               </Button>
@@ -550,7 +550,7 @@ export function SuperAdminDashboard() {
                 variant={planFilter === "templates" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setPlanFilter("templates")}
-                className={planFilter === "templates" ? "bg-slate-800 text-white" : "bg-transparent border-slate-300 text-slate-600 hover:bg-slate-100"}
+                className={planFilter === "templates" ? "bg-slate-800 text-white text-xs px-2 h-7" : "bg-transparent border-slate-300 text-slate-600 hover:bg-slate-100 text-xs px-2 h-7"}
               >
                 TEMPLATES ({templates})
               </Button>
@@ -558,7 +558,7 @@ export function SuperAdminDashboard() {
                 variant={planFilter === "free" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setPlanFilter("free")}
-                className={planFilter === "free" ? "bg-green-600 text-white" : "bg-transparent border-slate-300 text-slate-600 hover:bg-slate-100"}
+                className={planFilter === "free" ? "bg-green-600 text-white text-xs px-2 h-7" : "bg-transparent border-slate-300 text-slate-600 hover:bg-slate-100 text-xs px-2 h-7"}
               >
                 PLAN GRATIS ({freeStores})
               </Button>
@@ -566,7 +566,7 @@ export function SuperAdminDashboard() {
                 variant={planFilter === "cositas" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setPlanFilter("cositas")}
-                className={planFilter === "cositas" ? "bg-orange-500 text-white" : "bg-transparent border-slate-300 text-slate-600 hover:bg-slate-100"}
+                className={planFilter === "cositas" ? "bg-orange-500 text-white text-xs px-2 h-7" : "bg-transparent border-slate-300 text-slate-600 hover:bg-slate-100 text-xs px-2 h-7"}
               >
                 PLAN COSITAS ({cositas})
               </Button>
@@ -574,7 +574,7 @@ export function SuperAdminDashboard() {
                 variant={planFilter === "socios" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setPlanFilter("socios")}
-                className={planFilter === "socios" ? "bg-blue-600 text-white" : "bg-transparent border-slate-300 text-slate-600 hover:bg-slate-100"}
+                className={planFilter === "socios" ? "bg-blue-600 text-white text-xs px-2 h-7" : "bg-transparent border-slate-300 text-slate-600 hover:bg-slate-100 text-xs px-2 h-7"}
               >
                 PLAN SOCIOS ({socios})
               </Button>
@@ -582,7 +582,7 @@ export function SuperAdminDashboard() {
                 variant={planFilter === "custom" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setPlanFilter("custom")}
-                className={planFilter === "custom" ? "bg-purple-600 text-white" : "bg-transparent border-slate-300 text-slate-600 hover:bg-slate-100"}
+                className={planFilter === "custom" ? "bg-purple-600 text-white text-xs px-2 h-7" : "bg-transparent border-slate-300 text-slate-600 hover:bg-slate-100 text-xs px-2 h-7"}
               >
                 PLAN COSTUMIZADAS ({custom})
               </Button>
@@ -590,7 +590,7 @@ export function SuperAdminDashboard() {
                 variant={planFilter === "mayoristas" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setPlanFilter("mayoristas")}
-                className={planFilter === "mayoristas" ? "bg-amber-600 text-white" : "bg-transparent border-slate-300 text-slate-600 hover:bg-slate-100"}
+                className={planFilter === "mayoristas" ? "bg-amber-600 text-white text-xs px-2 h-7" : "bg-transparent border-slate-300 text-slate-600 hover:bg-slate-100 text-xs px-2 h-7"}
               >
                 MAYORISTAS ({mayoristas})
               </Button>

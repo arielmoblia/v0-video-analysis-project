@@ -20,22 +20,28 @@ interface StoreWithCoords extends StoreData {
 
 function defaultCoords(index: number): { lat: number; lng: number } {
   const base = [
-    { lat: -34.6, lng: -58.4 },
-    { lat: -31.4, lng: -64.2 },
-    { lat: -32.9, lng: -60.7 },
-    { lat: -34.9, lng: -57.9 },
-    { lat: -26.8, lng: -65.2 },
-    { lat: -33.0, lng: -68.8 },
-    { lat: -24.8, lng: -65.4 },
-    { lat: -38.0, lng: -57.6 },
-    { lat: -43.3, lng: -65.1 },
-    { lat: -51.6, lng: -69.2 },
+    { lat: -34.61, lng: -58.41 },
+    { lat: -31.42, lng: -64.18 },
+    { lat: -32.88, lng: -60.70 },
+    { lat: -34.92, lng: -57.95 },
+    { lat: -26.83, lng: -65.20 },
+    { lat: -33.00, lng: -68.83 },
+    { lat: -24.78, lng: -65.41 },
+    { lat: -38.00, lng: -57.55 },
+    { lat: -43.30, lng: -65.10 },
+    { lat: -51.62, lng: -69.22 },
+    { lat: -34.65, lng: -58.55 },
+    { lat: -31.52, lng: -64.28 },
+    { lat: -32.78, lng: -60.60 },
+    { lat: -34.82, lng: -58.05 },
+    { lat: -26.73, lng: -65.30 },
+    { lat: -33.10, lng: -68.73 },
+    { lat: -24.88, lng: -65.31 },
+    { lat: -38.10, lng: -57.65 },
+    { lat: -43.20, lng: -65.20 },
+    { lat: -51.52, lng: -69.12 },
   ]
-  const c = base[index % base.length]
-  return {
-    lat: c.lat + (Math.random() - 0.5) * 0.3,
-    lng: c.lng + (Math.random() - 0.5) * 0.3,
-  }
+  return base[index % base.length]
 }
 
 function LeafletMap({ stores }: { stores: StoreWithCoords[] }) {
@@ -93,7 +99,7 @@ function LeafletMap({ stores }: { stores: StoreWithCoords[] }) {
 }
 
 function isActive(store: any): boolean {
-  if (store.plan === "templates") return true
+  if (store.plan === "templates") return false
   if (!store.trial_expires_at) return true
   return new Date(store.trial_expires_at) >= new Date()
 }
@@ -105,7 +111,8 @@ export function StoresMap({ stores }: { stores: StoreData[] }) {
 
   useEffect(() => {
     if (typeof window === "undefined") return
-    const result = stores.map((store, i) => ({
+    const filtered = stores.filter((s: any) => s.plan !== 'templates')
+    const result = filtered.map((store: any, i: number) => ({
       ...store,
       status: isActive(store) ? "active" : "inactive",
       ...defaultCoords(i),
