@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic"
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { encryptFields, decryptFields } from "@/lib/crypto"
 import { type NextRequest, NextResponse } from "next/server"
