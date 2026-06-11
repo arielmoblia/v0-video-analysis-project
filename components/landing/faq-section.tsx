@@ -1,16 +1,19 @@
-"use client"
-
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
-
 const faqs = [
   {
     question: "Cuanto cuesta crear una tienda online en tol.ar?",
     answer: "Tenemos 4 planes para que elijas el que mejor te sirva:\n\n• PLAN GRATIS: Totalmente gratis hasta 20 productos. Ideal para empezar.\n\n• PLAN COSITAS: Empezas gratis y vas sumando funciones extras pagas solo cuando las necesites (dominio propio, quitar marca, estadisticas, etc).\n\n• PLAN SOCIO (10% por venta): Todo incluido, sin mensualidad. Solo pagas cuando vendes.\n\n• PLAN PERSONALIZADO: Ademas de customizar tu tienda, nuestro equipo te hace el SEO y te asesora en todo para que vendas mas.\n\nLa mayoria empieza gratis y va creciendo.",
+  },
+  {
+    question: "Donde puedo hacer mi tienda online gratis?",
+    answer: "En tol.ar podes crear tu tienda online gratis, sin comisiones por venta y sin mensualidad. No hay costo para empezar: subi hasta 20 productos y cobras por MercadoPago desde el primer dia. En menos de 2 minutos tenes tu tienda lista para vender.",
+  },
+  {
+    question: "Quiero vender por internet, por donde empiezo?",
+    answer: "Entras a tol.ar, creas tu cuenta gratis, subis tus productos con fotos y precio, y ya podes compartir el link de tu tienda. Tus clientes pagan con MercadoPago, tarjeta de credito, debito o efectivo. Los envios los configuras con Andreani o con retiro en tu local. Todo en menos de 2 minutos, sin saber programar.",
+  },
+  {
+    question: "Cual es la alternativa mas barata a Tiendanube?",
+    answer: "tol.ar es la alternativa gratuita a Tiendanube en Argentina. A diferencia de Tiendanube, el plan gratis de tol.ar no tiene mensualidad ni comision por venta. Solo pagas si elegis el plan Socio (10% por venta) o el plan Personalizado.",
   },
   {
     question: "Necesito saber programar para usar tol.ar?",
@@ -55,23 +58,28 @@ export function FAQSection() {
           </p>
         </div>
 
-        <div className="max-w-3xl mx-auto">
-          <Accordion type="single" collapsible className="space-y-4">
-            {faqs.map((faq, index) => (
-              <AccordionItem 
-                key={index} 
-                value={`item-${index}`}
-                className="bg-white rounded-lg px-6 border"
-              >
-                <AccordionTrigger className="text-left font-semibold hover:no-underline">
-                  {faq.question}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  {faq.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+        <div className="max-w-3xl mx-auto space-y-4">
+          {faqs.map((faq, index) => (
+            <details
+              key={index}
+              className="bg-white rounded-lg border group"
+            >
+              <summary className="px-6 py-4 text-left font-semibold cursor-pointer list-none flex justify-between items-center">
+                {faq.question}
+                <svg
+                  className="w-4 h-4 ml-2 shrink-0 transition-transform group-open:rotate-180"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </summary>
+              <div className="px-6 pb-4 text-muted-foreground whitespace-pre-line">
+                {faq.answer}
+              </div>
+            </details>
+          ))}
         </div>
       </div>
     </section>
