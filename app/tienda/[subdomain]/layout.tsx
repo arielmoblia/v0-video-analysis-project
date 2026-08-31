@@ -1,5 +1,6 @@
 import type React from "react"
 import { CartProvider } from "@/components/store/cart-provider"
+import { CartDrawer } from "@/components/store/cart-drawer"
 import { PageTracker } from "@/components/store/page-tracker"
 import { TrackingPixels } from "@/components/store/tracking-pixels"
 import { WhatsAppButton } from "@/components/store/whatsapp-button"
@@ -37,6 +38,7 @@ export default async function StoreLayout({
         domainVerificationGoogle={verification.google_site}
       />
       {children}
+      <CartDrawer />
       <LupaTracker subdomain={subdomain} hasLupa={hasLupaFeature} />
       {hasWhatsAppFeature && whatsappNumber && (
         <WhatsAppButton phoneNumber={whatsappNumber} storeName={store?.site_title} />

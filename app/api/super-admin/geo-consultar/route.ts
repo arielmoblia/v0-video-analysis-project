@@ -66,7 +66,7 @@ export async function POST(request: Request) {
   try {
     const cookieStore = await cookies()
     if (cookieStore.get("super_admin")?.value !== "true") {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+      return NextResponse.json({ error: "No autorizado" }, { status: 401, headers: { "Cache-Control": "no-store" } })
     }
 
     const { preguntas } = await request.json()
@@ -118,8 +118,8 @@ export async function POST(request: Request) {
       }, { onConflict: "pregunta_id,ia" })
     }
 
-    return NextResponse.json({ success: true, resultados })
+    return NextResponse.json({ success: true, resultados }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
-    return NextResponse.json({ error: "Error" }, { status: 500 })
+    return NextResponse.json({ error: "Error" }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }

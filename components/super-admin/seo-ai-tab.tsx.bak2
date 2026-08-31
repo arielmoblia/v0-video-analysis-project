@@ -1,0 +1,479 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { GeoMatriz } from "./geo-matriz"
+import { GerencialIABlock } from "./gerencial-ia-block"
+import { MencionesIABlock } from "./menciones-ia-block"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { RefreshCw, Brain, FileText, Plus, ExternalLink, X, ChevronRight, ChevronLeft, Check } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+
+const TOUR_PASOS = [
+  { titulo: "📊 Cómo figuramos en cada IA", texto: "Las 4 tarjetas muestran qué porcentaje de las respuestas de cada IA menciona a tol.ar vs la competencia. La barra verde tiene que crecer." },
+  { titulo: "📋 La tabla de preguntas", texto: "Le hacemos 10 preguntas a cada IA y registramos si tol.ar aparece o no. Verde = nos conocen, Rojo = no saben que existimos." },
+  { titulo: "🔍 Puntos débiles de la competencia", texto: "Lo que las IAs dicen malo de Tiendanube y Empretienda es tu munición para crear contenido." },
+  { titulo: "✍️ El redactor automático", texto: "Escribís el tema y Claude escribe la página completa lista para publicar." },
+  { titulo: "📡 Radar de menciones", texto: "Cuantas más veces nos mencionan en internet, más nos conocen las IAs." },
+  { titulo: "📈 Evolución y oportunidades", texto: "El gráfico muestra cómo evolucionan tus posiciones en Google." },
+]
+
+const DEBILIDADES = [
+  { comp: "Tiendanube", ia: "ChatGPT · Perplexity", quote: '"Tiendanube cobra entre 2% y 15% de comisión por venta según el plan"', opp: "Oportunidad: tol.ar 0% comisión" },
+  { comp: "Tiendanube", ia: "Claude", quote: '"El plan gratuito de Tiendanube tiene limitaciones en cantidad de productos"', opp: "Oportunidad: plan gratis sin límites" },
+  { comp: "Empretienda", ia: "Perplexity", quote: '"Empretienda tiene menos integraciones de pago que otras plataformas"', opp: "Oportunidad: MP + Mobbex + MODO + Ualá" },
+  { comp: "Tiendanube", ia: "Gemini", quote: '"Para pequeños emprendedores los costos de Tiendanube pueden ser elevados"', opp: "Oportunidad: precio fijo, sin sorpresas" },
+]
+
+const MENCIONES_INICIALES = [
+  { source: "tol.ar blog", url: "https://tol.ar/blog/lanzamiento", text: "Lanzamos tol.ar: la primera plataforma e-commerce argentina sin comisiones por venta.", date: "hace 1 día", tipo: "propia" },
+  { source: "Reddit r/argentina", url: "https://reddit.com/r/argentina", text: "Yo uso tol.ar y la verdad que no te cobra nada por venta...", date: "hace 5 días", tipo: "auto" },
+  { source: "TechArgentina", url: "https://techargentina.com", text: "Startups argentinas de e-commerce: tol.ar y el nuevo ecosistema sin comisiones...", date: "hace 12 días", tipo: "auto" },
+]
+
+const IA_STATIC = [
+  { engine: "ChatGPT", bars: [{ name: "Tiendanube", pct: 75, color: "#E24B4A" }, { name: "Empretienda", pct: 20, color: "#EF9F27" }, { name: "tol.ar", pct: 5, color: "#1D9E75" }] },
+  { engine: "Gemini", bars: [{ name: "Tiendanube", pct: 80, color: "#E24B4A" }, { name: "Empretienda", pct: 18, color: "#EF9F27" }, { name: "tol.ar", pct: 2, color: "#1D9E75" }] },
+  { engine: "Claude", bars: [{ name: "tol.ar", pct: 45, color: "#1D9E75" }, { name: "Tiendanube", pct: 40, color: "#E24B4A" }, { name: "Empretienda", pct: 15, color: "#EF9F27" }] },
+  { engine: "Perplexity", bars: [{ name: "Tiendanube", pct: 50, color: "#E24B4A" }, { name: "tol.ar", pct: 30, color: "#1D9E75" }, { name: "Empretienda", pct: 20, color: "#EF9F27" }] },
+]
+
+function InfoTooltip({ text }: { text: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <span className="relative inline-block">
+      <button onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} className="w-4 h-4 rounded-full border border-slate-300 text-slate-400 text-[10px] font-medium flex items-center justify-center hover:border-slate-500 hover:text-slate-600 transition-colors">i</button>
+      {open && <span className="absolute left-1/2 -translate-x-1/2 top-6 z-50 w-52 rounded-lg border border-slate-200 bg-white p-2 text-xs text-slate-600 shadow-md leading-relaxed">{text}</span>}
+    </span>
+  )
+}
+
+function SectionHeader({ label, badge, badgeColor, tooltip, right }: { label: string; badge?: string; badgeColor?: string; tooltip: string; right?: React.ReactNode }) {
+  const colors: Record<string, string> = { green: "bg-green-100 text-green-800", amber: "bg-amber-100 text-amber-800", red: "bg-red-100 text-red-800", blue: "bg-blue-100 text-blue-800", gray: "bg-slate-100 text-slate-600", purple: "bg-purple-100 text-purple-800" }
+  return (
+    <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{label}</span>
+        <InfoTooltip text={tooltip} />
+        {badge && <span className={`text-[11px] px-2 py-0.5 rounded-full ${colors[badgeColor || "gray"]}`}>{badge}</span>}
+      </div>
+      {right}
+    </div>
+  )
+}
+
+function TourOverlay({ paso, total, onNext, onPrev, onClose }: { paso: number; total: number; onNext: () => void; onPrev: () => void; onClose: () => void }) {
+  const p = TOUR_PASOS[paso]
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 relative" onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X className="w-4 h-4" /></button>
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-xs font-medium text-slate-400">Paso {paso + 1} de {total}</span>
+          <div className="flex gap-1 ml-2">
+            {Array.from({ length: total }).map((_, i) => (
+              <div key={i} className={`h-1.5 rounded-full transition-all ${i === paso ? "w-6 bg-purple-500" : "w-1.5 bg-slate-200"}`} />
+            ))}
+          </div>
+        </div>
+        <h3 className="text-lg font-semibold text-slate-800 mb-3">{p.titulo}</h3>
+        <p className="text-sm text-slate-600 leading-relaxed mb-6">{p.texto}</p>
+        <div className="flex items-center justify-between">
+          <button onClick={onClose} className="text-xs text-slate-400 hover:text-slate-600">Saltar tutorial</button>
+          <div className="flex gap-2">
+            {paso > 0 && <Button size="sm" variant="outline" onClick={onPrev}><ChevronLeft className="w-3 h-3 mr-1" />Anterior</Button>}
+            {paso < total - 1
+              ? <Button size="sm" onClick={onNext} className="bg-purple-600 hover:bg-purple-700 text-white">Siguiente<ChevronRight className="w-3 h-3 ml-1" /></Button>
+              : <Button size="sm" onClick={onClose} className="bg-green-600 hover:bg-green-700 text-white">¡Entendido! ✓</Button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const CYCLE: Record<string, string> = { pendiente: "aprobado", aprobado: "hecho", hecho: "pendiente" }
+const CHIP_LABEL: Record<string, string> = { pendiente: "pendiente", aprobado: "aprobado", hecho: "ejecutado" }
+const CHIP_CLASS: Record<string, string> = { pendiente: "bg-amber-100 text-amber-800", aprobado: "bg-blue-100 text-blue-800", hecho: "bg-green-100 text-green-800" }
+const CHECK_CLASS: Record<string, string> = { pendiente: "border-2 border-dashed border-amber-400 bg-transparent", aprobado: "bg-blue-600 border-2 border-blue-600", hecho: "bg-green-700 border-2 border-green-700" }
+
+interface Tarea { id: number; text: string; date: string; state: string; detalle: string; comentario: string; expandOpen: boolean; chatOpen: boolean; msgs: { who: string; text: string }[] }
+
+function ChatInput({ onSend }: { onSend: (msg: string) => void }) {
+  const [val, setVal] = useState("")
+  return (
+    <div className="flex gap-2 px-3 py-2 border-t border-slate-100 bg-white">
+      <input value={val} onChange={e => setVal(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSend(val); setVal("") } }} placeholder="Preguntale al Jefe..." className="flex-1 text-xs px-2 py-1.5 rounded border border-slate-200 bg-slate-50 focus:outline-none" />
+      <button onClick={() => { onSend(val); setVal("") }} className="text-xs px-3 py-1.5 rounded bg-blue-600 text-white">enviar</button>
+    </div>
+  )
+}
+
+function PlanAccionBlock() {
+  const { toast } = useToast()
+  const [situacion, setSituacion] = useState("tol.ar no aparece en resultados de IA. Tiendanube tiene 130 menciones activas.")
+  const [tareas, setTareas] = useState<Tarea[]>([
+    { id: 1, text: "Actualizar llms.txt con contexto de marca", date: "2 jun", state: "hecho", detalle: "El archivo llms.txt le dice a los modelos de IA quién sos. Sin él, Google AI y ChatGPT no tienen contexto para mencionarte.", comentario: "", expandOpen: false, chatOpen: false, msgs: [{ who: "jefe", text: "Completado. El llms.txt incluye descripción completa de tol.ar." }] },
+    { id: 2, text: "Crear página comparación vs Tiendanube", date: "10 jun", state: "aprobado", detalle: "Las páginas de comparación son la fuente principal que usan los LLMs para recomendar alternativas.", comentario: "", expandOpen: false, chatOpen: false, msgs: [{ who: "jefe", text: "Borrador listo. ¿Querés revisarla antes de publicar?" }] },
+    { id: 3, text: "Agregar FAQ estructurada en la home", date: "15 jun", state: "pendiente", detalle: "Los LLMs extraen respuestas de FAQs para responder preguntas directas sobre tol.ar.", comentario: "", expandOpen: false, chatOpen: false, msgs: [] },
+    { id: 4, text: "Publicar 3 artículos de blog con keywords IA", date: "20 jun", state: "pendiente", detalle: "Artículos con keywords como 'crear tienda online argentina gratis' son el contenido que los LLMs rastrean.", comentario: "", expandOpen: false, chatOpen: false, msgs: [] },
+    { id: 5, text: "Crear página comparación vs Empretienda", date: "25 jun", state: "pendiente", detalle: "Mismo principio que Tiendanube pero para Empretienda, segundo competidor más mencionado.", comentario: "", expandOpen: false, chatOpen: false, msgs: [] },
+  ])
+
+  useEffect(() => {
+    fetch("/api/super-admin/seo-plan-accion").then(r => r.json()).then(d => { if (d.situacion) setSituacion(d.situacion) }).catch(() => {})
+  }, [])
+
+  const advance = (id: number) => setTareas(prev => prev.map(t => t.id === id ? { ...t, state: CYCLE[t.state] } : t))
+  const toggleExpand = (id: number) => setTareas(prev => prev.map(t => t.id === id ? { ...t, expandOpen: !t.expandOpen, chatOpen: false } : t))
+  const toggleChat = (id: number) => setTareas(prev => prev.map(t => {
+    if (t.id !== id) return t
+    const opening = !t.chatOpen
+    const msgs = opening && t.msgs.length === 0 ? [{ who: "jefe", text: "Hola, te puedo explicar más o ajustar el plan. ¿Qué necesitás?" }] : t.msgs
+    return { ...t, chatOpen: opening, expandOpen: false, msgs }
+  }))
+  const sendMsg = async (id: number, text: string) => {
+    if (!text.trim()) return
+    setTareas(prev => prev.map(t => t.id === id ? { ...t, msgs: [...t.msgs, { who: "user", text }] } : t))
+    setTareas(prev => prev.map(t => t.id === id ? { ...t, msgs: [...t.msgs, { who: "jefe", text: "..." }] } : t))
+    try {
+      const r = await fetch("/api/seo-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, conversationId: `seo-tarea-${id}` }),
+      })
+      const d = await r.json()
+      const reply = d.reply || d.error || "Sin respuesta del Jefe."
+      setTareas(prev => prev.map(t => {
+        if (t.id !== id) return t
+        const msgs = [...t.msgs]
+        const lastIdx = msgs.map(m => m.text).lastIndexOf("...")
+        if (lastIdx >= 0) msgs[lastIdx] = { who: "jefe", text: reply }
+        else msgs.push({ who: "jefe", text: reply })
+        return { ...t, msgs }
+      }))
+    } catch {
+      setTareas(prev => prev.map(t => {
+        if (t.id !== id) return t
+        const msgs = [...t.msgs]
+        const lastIdx = msgs.map(m => m.text).lastIndexOf("...")
+        if (lastIdx >= 0) msgs[lastIdx] = { who: "jefe", text: "Error de conexión con el Jefe." }
+        return { ...t, msgs }
+      }))
+    }
+  }
+  const saveComentario = (id: number, val: string) => { setTareas(prev => prev.map(t => t.id === id ? { ...t, comentario: val } : t)); toast({ title: "Comentario guardado" }) }
+  const done = tareas.filter(t => t.state === "hecho").length
+  const pct = Math.round(done / tareas.length * 100)
+
+  return (
+    <div className="rounded-xl border border-yellow-300 bg-yellow-50 p-5">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs font-semibold text-yellow-800 uppercase tracking-wide">Plan de acción</span>
+        <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800">✦ generado por Jefe</span>
+      </div>
+      <p className="text-sm text-slate-600 mb-4 p-3 bg-white rounded-lg border-l-4 border-yellow-300 leading-relaxed">{situacion}</p>
+      <div className="flex gap-4 mb-3 flex-wrap">
+        {([["border-2 border-dashed border-amber-400","pendiente"],["bg-blue-600","aprobado"],["bg-green-700","ejecutado"]] as [string,string][]).map(([cls,lbl]) => (
+          <div key={lbl} className="flex items-center gap-1.5 text-xs text-slate-500"><div className={`w-3 h-3 rounded-sm ${cls}`} />{lbl}</div>
+        ))}
+      </div>
+      <div className="space-y-2">
+        {tareas.map(t => (
+          <div key={t.id} className="rounded-lg border border-slate-200 overflow-hidden">
+            <div className={`flex items-center gap-2 px-3 py-2.5 bg-white ${t.state === "hecho" ? "opacity-60" : ""}`}>
+              <button onClick={() => advance(t.id)} className={`w-5 h-5 rounded flex-shrink-0 flex items-center justify-center transition-all ${CHECK_CLASS[t.state]}`}>
+                {t.state !== "pendiente" && <Check className="w-3 h-3 text-white" />}
+              </button>
+              <span className={`flex-1 text-sm ${t.state === "hecho" ? "line-through text-slate-400" : "text-slate-800"}`}>{t.text}</span>
+              <span className="text-xs text-slate-400 flex-shrink-0">{t.date}</span>
+              <button onClick={() => toggleExpand(t.id)} className="text-[11px] px-2 py-1 rounded border border-slate-200 text-slate-500 hover:bg-slate-50 flex-shrink-0">{t.expandOpen ? "▲ cerrar" : "▼ leer más"}</button>
+              <button onClick={() => toggleChat(t.id)} className="text-[11px] px-2 py-1 rounded border border-blue-200 text-blue-600 hover:bg-blue-50 flex-shrink-0">{t.chatOpen ? "cerrar" : "💬 Jefe"}</button>
+              <span onClick={() => advance(t.id)} className={`text-[11px] px-2 py-0.5 rounded-full cursor-pointer flex-shrink-0 ${CHIP_CLASS[t.state]}`}>{CHIP_LABEL[t.state]}</span>
+            </div>
+            {t.expandOpen && (
+              <div className="px-3 py-3 bg-slate-50 border-t border-slate-100 space-y-2">
+                <p className="text-xs text-slate-600 leading-relaxed">{t.detalle}</p>
+                <textarea defaultValue={t.comentario} placeholder="Agregá un comentario para el Jefe..." className="w-full text-xs p-2 rounded border border-slate-200 bg-white resize-none h-14 focus:outline-none" onBlur={e => saveComentario(t.id, e.target.value)} />
+                <p className="text-[11px] text-slate-400">el comentario se enviará al Jefe al ejecutar</p>
+              </div>
+            )}
+            {t.chatOpen && (
+              <div className="border-t border-slate-100">
+                <div className="px-3 py-2 bg-blue-50 flex justify-between items-center">
+                  <span className="text-xs font-medium text-blue-700">Chat con el Jefe</span>
+                  <button onClick={() => toggleChat(t.id)} className="text-xs text-blue-400 hover:text-blue-600">✕</button>
+                </div>
+                <div className="px-3 py-2 flex flex-col gap-2 max-h-[480px] min-h-[300px] overflow-y-auto bg-white">
+                  {t.msgs.map((m, i) => (
+                    <div key={i} className={`text-xs px-3 py-2 rounded-lg max-w-[85%] leading-relaxed ${m.who === "jefe" ? "bg-blue-50 text-blue-900 self-start" : "bg-green-50 text-green-900 self-end"}`}>{m.text}</div>
+                  ))}
+                </div>
+                <ChatInput onSend={msg => sendMsg(t.id, msg)} />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center justify-between mt-4 pt-3 border-t border-yellow-200">
+        <div className="flex items-center gap-2">
+          <div className="w-32 h-1.5 bg-yellow-100 rounded-full overflow-hidden"><div className="h-1.5 bg-green-600 rounded-full" style={{ width: `${pct}%` }} /></div>
+          <span className="text-xs text-slate-500">{done} de {tareas.length} ejecutadas</span>
+        </div>
+        <button onClick={() => { const text = prompt("Descripción:"); if (!text) return; const date = prompt("Fecha:") || "—"; setTareas(prev => [...prev, { id: Date.now(), text, date, state: "pendiente", detalle: "", comentario: "", expandOpen: false, chatOpen: false, msgs: [] }]) }} className="text-xs px-3 py-1.5 rounded border border-slate-200 text-slate-500 hover:bg-slate-50">+ agregar tarea</button>
+      </div>
+    </div>
+  )
+}
+
+
+const IA_NAMES = ["ChatGPT", "Gemini", "Claude", "Perplexity"]
+const IA_KEY_MAP: Record<string, string> = { ChatGPT: "chatgpt", Gemini: "gemini", Claude: "claude", Perplexity: "perplexity" }
+
+function IaBarras() {
+  const [entraron, setEntraron] = useState<Record<string, number>>({})
+  const [competencia, setCompetencia] = useState<Record<string, { pct: number; name: string; color: string }[]>>({})
+
+  useEffect(() => {
+    fetch("/api/super-admin/geo-tracker?periodo=anio")
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          const map: Record<string, number> = {}
+          d.data.forEach((item: { nombre: string; entraron: number }) => { map[item.nombre] = item.entraron })
+          setEntraron(map)
+        }
+      }).catch(() => {})
+
+    fetch("/api/super-admin/geo-competencia")
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          const map: Record<string, { pct: number; name: string; color: string }[]> = {}
+          d.data.forEach((item: { ia: string; bars: { name: string; pct: number; color: string }[] }) => {
+            map[item.ia] = item.bars
+          })
+          setCompetencia(map)
+        }
+      }).catch(() => {})
+  }, [])
+
+  return (
+    <div className="grid grid-cols-4 gap-3">
+      {IA_NAMES.map(engine => {
+        const key = IA_KEY_MAP[engine]
+        const bars = competencia[key] || []
+        return (
+          <div key={engine} className="border border-slate-200 rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-3 py-2.5 bg-slate-50 border-b border-slate-100">
+              <span className="text-sm font-semibold">{engine}</span>
+              <div className="text-right">
+                <div className="text-base font-semibold text-green-600">{engine in entraron ? entraron[engine] : "0"}</div>
+                <div className="text-[10px] text-slate-400">llegaron a tol.ar</div>
+              </div>
+            </div>
+            <div className="px-3 py-2.5 space-y-2 min-h-[80px]">
+              {bars.length === 0 ? (
+                <p className="text-[11px] text-slate-400 italic pt-2">Sin datos — corré el análisis</p>
+              ) : bars.map(b => (
+                <div key={b.name} className="flex items-center gap-2">
+                  <span className="text-[11px] text-slate-500 w-20 flex-shrink-0">{b.name}</span>
+                  <div className="flex-1 h-1.5 bg-slate-100 rounded-full">
+                    <div className="h-1.5 rounded-full" style={{ width: `${b.pct}%`, background: b.color }} />
+                  </div>
+                  <span className="text-[11px] font-medium w-7 text-right" style={{ color: b.color }}>{b.pct}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+export function SeoAiTab() {
+  const { toast } = useToast()
+  const [corriendo, setCorriendo] = useState(false)
+  const [ultimoAnalisis, setUltimoAnalisis] = useState("hace 3 horas")
+  const [kwInput, setKwInput] = useState("")
+  const [tipoContenido, setTipoContenido] = useState("Página comparativa")
+  const [genOutput, setGenOutput] = useState<{ title: string; intro: string; items: string[]; faqQ: string; faqA: string } | null>(null)
+  const [generando, setGenerando] = useState(false)
+  const [menciones, setMenciones] = useState(MENCIONES_INICIALES)
+  const [showAddMencion, setShowAddMencion] = useState(false)
+  const [newMencion, setNewMencion] = useState({ source: "", url: "", text: "" })
+  const [tourActivo, setTourActivo] = useState(false)
+  const [tourPaso, setTourPaso] = useState(0)
+
+  const handleCorrer = () => {
+    setCorriendo(true)
+    setTimeout(() => { setCorriendo(false); setUltimoAnalisis("hace unos segundos"); toast({ title: "Análisis completado" }) }, 3000)
+  }
+
+  const handleGenerar = async () => {
+    if (!kwInput.trim()) return
+    setGenerando(true)
+    await new Promise(r => setTimeout(r, 1200))
+    setGenOutput({
+      title: `${tipoContenido}: ${kwInput}`,
+      intro: `tol.ar es la plataforma de e-commerce argentina que no cobra comisión por venta. A diferencia de Tiendanube, que cobra entre 2% y 15% por transacción, tol.ar permite que el 100% de cada venta quede en manos del comerciante.`,
+      items: ["Sin comisión por venta — en todos los planes", "Subdominio propio: tutienda.tol.ar", "MercadoPago, Mobbex y MODO integrados", "Plan gratis disponible desde el día uno"],
+      faqQ: "¿Cuánto cobra tol.ar de comisión?",
+      faqA: "tol.ar no cobra comisión por venta. El modelo es un plan mensual fijo sin porcentaje sobre las ventas.",
+    })
+    setGenerando(false)
+  }
+
+  const handleAgregarMencion = () => {
+    if (!newMencion.source || !newMencion.text) return
+    setMenciones([{ ...newMencion, date: "recién ahora", tipo: "manual" }, ...menciones])
+    setNewMencion({ source: "", url: "", text: "" })
+    setShowAddMencion(false)
+    toast({ title: "Mención agregada" })
+  }
+
+  const tagStyle = (tipo: string) => tipo === "propia" ? "bg-green-100 text-green-800" : tipo === "auto" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"
+  const tagLabel = (tipo: string) => tipo === "propia" ? "Publicación propia" : tipo === "auto" ? "Automática" : "Manual"
+
+  return (
+    <div className="space-y-6 pb-10 relative">
+
+      <PlanAccionBlock />
+
+      <GerencialIABlock />
+
+      <MencionesIABlock />
+
+      {tourActivo && <TourOverlay paso={tourPaso} total={TOUR_PASOS.length} onNext={() => setTourPaso(p => p + 1)} onPrev={() => setTourPaso(p => p - 1)} onClose={() => setTourActivo(false)} />}
+
+      <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div>
+          <h3 className="text-lg font-semibold flex items-center gap-2"><Brain className="w-5 h-5 text-purple-500" />SEO AI</h3>
+          <p className="text-sm text-slate-500">Visibilidad en motores de IA y búsqueda</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => { setTourPaso(0); setTourActivo(true) }} className="border-purple-200 text-purple-700 hover:bg-purple-50">▶ Tutorial</Button>
+          <div className="text-right">
+            <Button size="sm" variant="outline" onClick={handleCorrer} disabled={corriendo} className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${corriendo ? "bg-amber-400" : "bg-green-500"}`} />
+              <RefreshCw className={`w-3 h-3 ${corriendo ? "animate-spin" : ""}`} />
+              {corriendo ? "Analizando..." : "Correr análisis"}
+            </Button>
+            <p className="text-xs text-slate-400 mt-1">Último análisis: {ultimoAnalisis}</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <SectionHeader label="¿Cómo figuramos vs la competencia?" badge="Datos reales" badgeColor="green" tooltip="Porcentaje de respuestas de cada IA que menciona a tol.ar vs competidores." />
+        <IaBarras />
+      </div>
+
+      <div>
+        <SectionHeader label="Apariciones por pregunta" badge="Actualizable" badgeColor="amber" tooltip="Le hacemos estas preguntas a cada IA y registramos si tol.ar aparece en la respuesta." />
+        <GeoMatriz />
+      </div>
+
+      <div>
+        <SectionHeader label="Puntos débiles de la competencia" badge="Tu munición" badgeColor="green" tooltip="Lo que las IAs dicen malo de Tiendanube y Empretienda. Cada debilidad es una oportunidad de contenido para tol.ar." />
+        <div className="border border-slate-200 rounded-xl overflow-hidden">
+          {DEBILIDADES.map((d, i) => (
+            <div key={i} className={`flex gap-3 p-3 ${i < DEBILIDADES.length - 1 ? "border-b border-slate-100" : ""} hover:bg-slate-50 transition-colors`}>
+              <div className="min-w-[90px]"><p className="text-xs font-medium">{d.comp}</p><p className="text-[11px] text-slate-400 mt-0.5">{d.ia}</p></div>
+              <div className="flex-1"><p className="text-xs text-slate-600 italic leading-relaxed">{d.quote}</p><span className="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-800">{d.opp}</span></div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <SectionHeader label="Generador de contenido con IA" badge="Powered by Claude" badgeColor="purple" tooltip="Escribís el tema y Claude escribe la página lista para publicar." />
+        <div className="border border-slate-200 rounded-xl p-4">
+          <div className="inline-flex items-center gap-1.5 text-[11px] text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full mb-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-500 inline-block" />Claude genera el borrador listo para publicar
+          </div>
+          <div className="flex gap-2">
+            <Input value={kwInput} onChange={e => setKwInput(e.target.value)} placeholder="Ej: alternativas a Tiendanube en Argentina sin comisiones" className="flex-1 text-sm" />
+            <select value={tipoContenido} onChange={e => setTipoContenido(e.target.value)} className="text-sm border border-input rounded-md px-3 py-2 bg-background">
+              <option>Página comparativa</option>
+              <option>FAQ extendida</option>
+              <option>Nota de lanzamiento</option>
+              <option>Caso de éxito</option>
+            </select>
+            <Button size="sm" onClick={handleGenerar} disabled={generando || !kwInput.trim()}>
+              {generando ? <RefreshCw className="w-3 h-3 animate-spin" /> : <><FileText className="w-3 h-3 mr-1" />Generar</>}
+            </Button>
+          </div>
+          {genOutput && (
+            <div className="mt-3 border border-slate-200 rounded-lg p-4 bg-slate-50 space-y-2">
+              <p className="text-sm font-semibold">{genOutput.title}</p>
+              <p className="text-xs text-slate-600 leading-relaxed">{genOutput.intro}</p>
+              <ul className="text-xs text-slate-600 space-y-1 list-disc pl-4">{genOutput.items.map((it, i) => <li key={i}>{it}</li>)}</ul>
+              <p className="text-xs font-medium text-slate-800 mt-2">{genOutput.faqQ}</p>
+              <p className="text-xs text-slate-600">{genOutput.faqA}</p>
+              <div className="flex gap-2 pt-1">
+                <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(genOutput.intro); toast({ title: "Copiado!" }) }}>Copiar texto</Button>
+                <Button size="sm" variant="outline" onClick={handleGenerar}>Regenerar</Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <SectionHeader label="Radar de menciones web" badge={`${menciones.length} este mes`} badgeColor="green" tooltip="Cuantas más veces nos mencionan en internet, más nos conocen las IAs." right={
+          <Button size="sm" variant="outline" onClick={() => setShowAddMencion(!showAddMencion)} className="flex items-center gap-1 text-xs"><Plus className="w-3 h-3" /> Agregar mención</Button>
+        } />
+        {showAddMencion && (
+          <div className="border border-slate-200 rounded-xl p-4 mb-3 bg-slate-50 space-y-2">
+            <p className="text-xs font-medium text-slate-700">Nueva mención</p>
+            <Input placeholder="Fuente (ej: La Nación, blog propio...)" value={newMencion.source} onChange={e => setNewMencion({ ...newMencion, source: e.target.value })} className="text-sm" />
+            <Input placeholder="URL (https://...)" value={newMencion.url} onChange={e => setNewMencion({ ...newMencion, url: e.target.value })} className="text-sm" />
+            <Input placeholder="Extracto del texto que nos menciona" value={newMencion.text} onChange={e => setNewMencion({ ...newMencion, text: e.target.value })} className="text-sm" />
+            <div className="flex gap-2"><Button size="sm" onClick={handleAgregarMencion}>Guardar</Button><Button size="sm" variant="outline" onClick={() => setShowAddMencion(false)}>Cancelar</Button></div>
+          </div>
+        )}
+        <div className="border border-slate-200 rounded-xl overflow-hidden">
+          {menciones.map((m, i) => (
+            <div key={i} className={`flex items-start gap-3 p-3 ${i < menciones.length - 1 ? "border-b border-slate-100" : ""} hover:bg-slate-50 transition-colors`}>
+              <div className="min-w-[108px]">
+                <p className="text-xs font-medium">{m.source}</p>
+                {m.url && <a href={m.url} target="_blank" rel="noreferrer" className="text-[11px] text-blue-500 hover:underline flex items-center gap-0.5 mt-0.5">ver fuente <ExternalLink className="w-2.5 h-2.5" /></a>}
+              </div>
+              <p className="text-xs text-slate-500 flex-1 leading-relaxed">{m.text}</p>
+              <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                <span className="text-[11px] text-slate-400">{m.date}</span>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full ${tagStyle(m.tipo)}`}>{tagLabel(m.tipo)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <SectionHeader label="Evolución de posiciones en Google" badge="Últimos 6 meses" badgeColor="gray" tooltip="Historial de posición en Google. El número tiene que bajar — más abajo = mejor posición." />
+        <div className="border border-slate-200 rounded-xl p-4">
+          <div className="flex gap-4 mb-3 flex-wrap">
+            {[{ color: "#378ADD", label: "venta online argentina gratis" }, { color: "#1D9E75", label: "alternativas tiendanube" }, { color: "#EF9F27", label: "tienda sin comisiones" }].map(l => (
+              <div key={l.label} className="flex items-center gap-1.5 text-xs text-slate-500"><span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: l.color }} />{l.label}</div>
+            ))}
+          </div>
+          <svg viewBox="0 0 600 160" className="w-full" style={{ height: 160 }}>
+            {[0,20,40,60,80,100].map(v => <line key={v} x1="40" y1={140 - v * 1.2} x2="580" y2={140 - v * 1.2} stroke="#f1f5f9" strokeWidth="1" />)}
+            {["Oct","Nov","Dic","Ene","Feb","Mar"].map((m, i) => <text key={m} x={80 + i * 90} y={158} fontSize="10" fill="#94a3b8" textAnchor="middle">{m}</text>)}
+            {[10,30,60,90].map(v => <text key={v} x="32" y={144 - v * 1.2} fontSize="10" fill="#94a3b8" textAnchor="end">#{v}</text>)}
+            <polyline points="80,44 170,54 260,62 350,68 440,76 530,84" fill="none" stroke="#378ADD" strokeWidth="2" strokeLinejoin="round" />
+            <polyline points="80,92 170,98 260,104 350,106 440,110 530,112" fill="none" stroke="#1D9E75" strokeWidth="2" strokeLinejoin="round" />
+            <polyline points="80,104 170,106 260,110 350,113 440,116 530,118" fill="none" stroke="#EF9F27" strokeWidth="2" strokeLinejoin="round" />
+            {[[80,44],[170,54],[260,62],[350,68],[440,76],[530,84]].map(([x,y],i) => <circle key={i} cx={x} cy={y} r="3" fill="#378ADD" />)}
+            {[[80,92],[170,98],[260,104],[350,106],[440,110],[530,112]].map(([x,y],i) => <circle key={i} cx={x} cy={y} r="3" fill="#1D9E75" />)}
+            {[[80,104],[170,106],[260,110],[350,113],[440,116],[530,118]].map(([x,y],i) => <circle key={i} cx={x} cy={y} r="3" fill="#EF9F27" />)}
+          </svg>
+        </div>
+      </div>
+
+    </div>
+  )
+}

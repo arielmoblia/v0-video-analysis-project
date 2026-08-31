@@ -5,7 +5,7 @@ export async function POST(request: Request) {
     const { secret_key } = await request.json()
 
     if (!secret_key) {
-      return NextResponse.json({ error: "Secret key requerida" }, { status: 400 })
+      return NextResponse.json({ error: "Secret key requerida" }, { status: 400, headers: { "Cache-Control": "no-store" } })
     }
 
     // Probar la conexión con Stripe
@@ -16,12 +16,12 @@ export async function POST(request: Request) {
     })
 
     if (response.ok) {
-      return NextResponse.json({ success: true })
+      return NextResponse.json({ success: true }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
     } else {
-      return NextResponse.json({ error: "Clave inválida" }, { status: 400 })
+      return NextResponse.json({ error: "Clave inválida" }, { status: 400, headers: { "Cache-Control": "no-store" } })
     }
   } catch (error) {
     console.error("Error testing Stripe:", error)
-    return NextResponse.json({ error: "Error de conexión" }, { status: 500 })
+    return NextResponse.json({ error: "Error de conexión" }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }

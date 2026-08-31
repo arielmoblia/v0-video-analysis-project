@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies()
     const isAuthenticated = cookieStore.get("super_admin")?.value === "true"
-    if (!isAuthenticated) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+    if (!isAuthenticated) return NextResponse.json({ error: "No autorizado" }, { status: 401, headers: { "Cache-Control": "no-store" } })
 
     const now = new Date()
     const starts = {
@@ -51,13 +51,13 @@ export async function GET(request: NextRequest) {
       tiendas:     { hoy: t_hoy, semana: t_sem, mes: t_mes, anio: t_anio },
       compradores: { hoy: c_hoy, semana: c_sem, mes: c_mes, anio: c_anio },
       url: "https://app.smartlook.com/org/vq72x3vilvwbhabt1fyti0dn/project/wf4je1lke0xwvcbbp81a2o8q/recordings?segment=all"
-    })
+    }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
     return NextResponse.json({
       landing:     { hoy: 0, semana: 0, mes: 0, anio: 0 },
       tiendas:     { hoy: 0, semana: 0, mes: 0, anio: 0 },
       compradores: { hoy: 0, semana: 0, mes: 0, anio: 0 },
       url: "https://app.smartlook.com"
-    })
+    }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   }
 }

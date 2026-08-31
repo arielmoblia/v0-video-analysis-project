@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/migrar/layout,_N_T_/migrar/sistema/layout,_N_T_/migrar/sistema/page,_N_T_/migrar/sistema"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/migrar/sistema/__PAGE__",
+    "/migrar/sistema",
+    "/migrar",
+    "/_index",
+    "/_head"
+  ]
+}

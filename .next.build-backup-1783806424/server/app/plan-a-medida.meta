@@ -1,0 +1,15 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/plan-a-medida/layout,_N_T_/plan-a-medida/page,_N_T_/plan-a-medida"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/plan-a-medida/__PAGE__",
+    "/plan-a-medida",
+    "/_index",
+    "/_head"
+  ]
+}

@@ -94,6 +94,7 @@ export function YoutubeAgent() {
   const [genActivo, setGenActivo] = useState("")
   const [showPopup, setShowPopup] = useState(false)
   const [nuevoGen, setNuevoGen] = useState({nombre:"",api_key:"",endpoint:""})
+  const [vista, setVista] = useState<"crear"|"historial">("crear")
 
   useEffect(() => { cargar(); cargarGeneradores(); cargarConfig() }, [])
 
@@ -257,7 +258,30 @@ export function YoutubeAgent() {
 
       {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-600">{error}</div>}
 
-      <div className="flex gap-4 items-start">
+      <div className="flex gap-2">
+        <button
+          onClick={() => setVista("crear")}
+          className="text-xs px-3 py-1.5 rounded font-medium transition-colors"
+          style={vista==="crear"
+            ? {background:"#f97316",color:"white",border:"1px solid #f97316"}
+            : {background:"transparent",color:"var(--color-text-secondary)",border:"1px solid var(--color-border-secondary)"}}
+        >
+          Crear videos
+        </button>
+        <button
+          onClick={() => setVista("historial")}
+          className="text-xs px-3 py-1.5 rounded font-medium transition-colors"
+          style={vista==="historial"
+            ? {background:"#f97316",color:"white",border:"1px solid #f97316"}
+            : {background:"transparent",color:"var(--color-text-secondary)",border:"1px solid var(--color-border-secondary)"}}
+        >
+          Historial de videos
+        </button>
+      </div>
+
+      {vista === "historial" && <HistorialVideos />}
+
+      {vista === "crear" && <div className="flex gap-4 items-start">
         <div className="space-y-3" style={{width:"260px",flexShrink:0}}>
           <div className="rounded-lg p-3 space-y-2" style={{background:"#f5f3ff",border:"0.5px solid #c4b5fd"}}>
             <p className="text-xs font-medium uppercase tracking-wide" style={{color:"#6d28d9"}}>Para el agente</p>
@@ -438,7 +462,7 @@ export function YoutubeAgent() {
             + Guión propio — sin IA
           </button>
         </div>
-      </div>
+      </div>}
       {showPopup && (
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:50}}>
           <div style={{background:"var(--color-background-primary)",borderRadius:"var(--border-radius-lg)",padding:"1.5rem",width:"400px",border:"0.5px solid var(--color-border-secondary)"}}>
@@ -631,6 +655,83 @@ function GuionCard({ guion, idx, nota, onNotaChange, onGuardarNota, genActivo, g
             )}
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+interface VideoHistorial {
+  id: string
+  titulo: string
+  miniatura: string
+  fecha: string
+  url: string
+}
+
+function HistorialVideos() {
+  const [videos, setVideos] = useState<VideoHistorial[]>([])
+  const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => { cargarHistorial() }, [])
+
+  const cargarHistorial = async () => {
+    setCargando(true)
+    setError("")
+    try {
+      const tokenRes = await fetch("/api/super-admin/youtube-token")
+      const tokenData = await tokenRes.json()
+      if (!tokenData.access_token) { setError("YouTube no conectado"); setCargando(false); return }
+      const auth = { Authorization: "Bearer " + tokenData.access_token }
+
+      const chRes = await fetch(
+        "https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true",
+        { headers: auth }
+      )
+      const chData = await chRes.json()
+      const uploadsId = chData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads
+      if (!uploadsId) { setError("No se encontró el canal de YouTube"); setCargando(false); return }
+
+      const itemsRes = await fetch(
+        `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${uploadsId}`,
+        { headers: auth }
+      )
+      const itemsData = await itemsRes.json()
+      if (itemsData.error) { setError("Error YouTube: " + itemsData.error.message); setCargando(false); return }
+
+      const lista: VideoHistorial[] = (itemsData.items || []).map((it: any) => ({
+        id: it.snippet.resourceId.videoId,
+        titulo: it.snippet.title,
+        miniatura: it.snippet.thumbnails?.medium?.url || it.snippet.thumbnails?.default?.url || "",
+        fecha: it.snippet.publishedAt,
+        url: "https://youtube.com/watch?v=" + it.snippet.resourceId.videoId
+      }))
+      setVideos(lista)
+    } catch (e: any) {
+      setError("Error de conexión: " + e.message)
+    }
+    setCargando(false)
+  }
+
+  if (cargando) return <div className="text-xs text-muted-foreground animate-pulse p-4 text-center">Cargando historial de YouTube...</div>
+  if (error) return <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-600">{error}</div>
+  if (videos.length === 0) return <div className="rounded-lg border p-6 text-center text-xs text-muted-foreground">Todavía no hay videos subidos a este canal.</div>
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-muted-foreground">{videos.length} video{videos.length !== 1 ? "s" : ""} publicado{videos.length !== 1 ? "s" : ""} en el canal</p>
+      <div className="grid gap-3" style={{gridTemplateColumns:"repeat(auto-fill, minmax(160px, 1fr))"}}>
+        {videos.map(v => (
+          <a key={v.id} href={v.url} target="_blank" rel="noopener noreferrer"
+            className="rounded-lg border overflow-hidden no-underline hover:shadow-md transition-shadow"
+            style={{color:"inherit"}}>
+            {v.miniatura && <img src={v.miniatura} alt={v.titulo} className="w-full" style={{aspectRatio:"16/9",objectFit:"cover"}} />}
+            <div className="p-2">
+              <p className="text-xs font-medium line-clamp-2">{v.titulo}</p>
+              <p className="text-xs text-muted-foreground mt-1">{new Date(v.fecha).toLocaleDateString("es-AR")}</p>
+            </div>
+          </a>
+        ))}
       </div>
     </div>
   )

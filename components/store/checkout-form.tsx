@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { ShippingOptions } from "./shipping-options"
+import { EnviameloPointsPicker } from "./enviamelo-points-picker"
 import { useCart } from "./cart-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,19 +25,45 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
   const [loading, setLoading] = useState(false)
   const [orderId, setOrderId] = useState<string | null>(null)
   const [shippingCost, setShippingCost] = useState<number | null>(null)
+  const [selectedShippingOption, setSelectedShippingOption] = useState<any>(null)
+  const [showEnviameloPoints, setShowEnviameloPoints] = useState(false)
+  const [selectedEnviameloPoint, setSelectedEnviameloPoint] = useState<any>(null)
   const [shippingLoading, setShippingLoading] = useState(false)
   const [shippingError, setShippingError] = useState<string | null>(null)
+  const [shippingConfig, setShippingConfig] = useState<any>(null)
+  const [deliveryChoice, setDeliveryChoice] = useState<"pickup" | "delivery" | null>(null)
   const [orderData, setOrderData] = useState({
     name: "",
     email: "",
     phone: "",
+    dni: "",
     address: "",
+    streetNumber: "",
+    province: "",
     city: "",
     postalCode: "",
     notes: "",
     paymentMethod: "",
     shippingMethod: "pickup",
+    shippingLabel: "Retiro en local",
   })
+  // Fetch config de envíos al montar para saber qué métodos hay habilitados
+  useEffect(() => {
+    fetch(`/api/shipping/config?storeId=${store.id}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.config) {
+          setShippingConfig(d.config)
+          const hasPickup = !!d.config.pickup_enabled
+          const hasDelivery = !!(d.config.own_delivery_enabled || d.config.andreani_enabled || d.config.enviamelo_enabled)
+          // Si solo hay un tipo, lo elegimos automáticamente (sin radios)
+          if (hasPickup && !hasDelivery) setDeliveryChoice("pickup")
+          else if (!hasPickup && hasDelivery) setDeliveryChoice("delivery")
+        }
+      })
+      .catch(() => {})
+  }, [store.id])
+
   const [paymentSettings, setPaymentSettings] = useState<{
     cash_enabled?: boolean
     cash_instructions?: string
@@ -123,8 +151,12 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
   }, [clearCart])
 
   const formatPrice = (price: number) => {
-    return `$${price.toLocaleString()}`
+    return `$${price.toLocaleString('es-AR')}`
   }
+  // Precio del envío derivado directo del option seleccionado
+  const envioPrice = selectedShippingOption && selectedShippingOption.price > 0
+    ? (selectedShippingOption.type === "pickup" ? 0 : selectedShippingOption.price)
+    : (selectedShippingOption?.type === "pickup" ? 0 : null)
 
   // Cotizar envío con Andreani cuando cambia el código postal
   const fetchShippingQuote = async (postalCode: string) => {
@@ -167,17 +199,18 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
     }
   }
 
-  // Efecto para cotizar cuando cambia el CP
+  // Efecto para cotizar con Andreani cuando cambia el CP
   useEffect(() => {
+    const type = selectedShippingOption?.type
+    // Solo correr para Andreani explícitamente
+    if (type !== "andreani") return
     if (orderData.shippingMethod === "delivery" && orderData.postalCode) {
       const timer = setTimeout(() => {
         fetchShippingQuote(orderData.postalCode)
-      }, 500) // Debounce de 500ms
+      }, 500)
       return () => clearTimeout(timer)
-    } else {
-      setShippingCost(null)
     }
-  }, [orderData.postalCode, orderData.shippingMethod])
+  }, [orderData.postalCode, orderData.shippingMethod, selectedShippingOption])
 
   const getItemKey = (item: (typeof items)[0]) => {
     return `${item.product.id}-${item.product.selectedSize || "no-size"}`
@@ -217,14 +250,28 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
             name: orderData.name,
             email: orderData.email,
             phone: orderData.phone,
+            dni: orderData.dni,
           },
           shipping: {
-            method: orderData.shippingMethod,
-            address: orderData.address,
-            city: orderData.city,
-            postalCode: orderData.postalCode,
+            method: selectedShippingOption?.type || orderData.shippingMethod,
+            label: orderData.shippingLabel || (orderData.shippingMethod === "pickup" ? "Retiro en local" : "Envío a domicilio"),
+            address: selectedShippingOption?.type === "enviamelo_retiro" && selectedEnviameloPoint
+              ? `${selectedEnviameloPoint.address}, ${selectedEnviameloPoint.location}`
+              : orderData.address,
+            streetNumber: orderData.streetNumber,
+            province: selectedShippingOption?.type === "enviamelo_retiro" && selectedEnviameloPoint
+              ? selectedEnviameloPoint.province
+              : orderData.province,
+            city: selectedShippingOption?.type === "enviamelo_retiro" && selectedEnviameloPoint
+              ? selectedEnviameloPoint.province
+              : orderData.city,
+            postalCode: selectedShippingOption?.type === "enviamelo_retiro" && selectedEnviameloPoint
+              ? selectedEnviameloPoint.postalCode
+              : orderData.postalCode,
             notes: orderData.notes,
+            shippingCost: shippingCost || 0,
           },
+          total: total + (shippingCost || 0),
           paymentMethod: orderData.paymentMethod,
         }),
       })
@@ -242,9 +289,11 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
                 storeId: store.id,
                 orderId: data.orderId,
                 items: items.map((item) => ({
+                  productId: item.product.id,
                   name: item.product.name,
                   price: Number(item.product.price),
                   quantity: item.quantity,
+                  size: item.product.selectedSize || null,
                 })),
                 customer: {
                   name: orderData.name,
@@ -282,6 +331,7 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
                   quantity: item.quantity,
                   size: item.product.selectedSize || null,
                 })),
+                shippingCost: shippingCost || 0,
               }),
             })
 
@@ -504,13 +554,128 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
                   />
                 </div>
 
-                <Button
-                  className="w-full mt-4"
-                  onClick={() => setStep("shipping")}
-                  disabled={!orderData.name || !orderData.email || !orderData.phone}
-                >
-                  Continuar
-                </Button>
+                {(() => {
+                  const hasPickup = !!shippingConfig?.pickup_enabled
+                  const hasDelivery = !!(shippingConfig?.own_delivery_enabled || shippingConfig?.andreani_enabled || shippingConfig?.enviamelo_enabled)
+                  const showRadios = hasPickup && hasDelivery
+                  const showAddress = (deliveryChoice === "delivery") || (!hasPickup && hasDelivery)
+                  const contactOk = !!(orderData.name && orderData.email && orderData.phone)
+                  const choiceOk = showRadios ? deliveryChoice !== null : true
+                  const addressOk = showAddress
+                    ? !!(orderData.dni && orderData.province && orderData.address && orderData.streetNumber && orderData.city && orderData.postalCode)
+                    : true
+                  const canContinue = contactOk && choiceOk && addressOk
+                  return (
+                    <>
+                      {showRadios && (
+                        <div className="mt-6 pt-6 border-t space-y-3">
+                          <h2 className="text-lg font-medium">¿Cómo querés recibir tu pedido?</h2>
+                          <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:border-gray-400">
+                            <input
+                              type="radio"
+                              name="deliveryChoice"
+                              value="pickup"
+                              checked={deliveryChoice === "pickup"}
+                              onChange={() => setDeliveryChoice("pickup")}
+                              className="h-4 w-4"
+                            />
+                            <span>Retiro en local</span>
+                          </label>
+                          <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:border-gray-400">
+                            <input
+                              type="radio"
+                              name="deliveryChoice"
+                              value="delivery"
+                              checked={deliveryChoice === "delivery"}
+                              onChange={() => setDeliveryChoice("delivery")}
+                              className="h-4 w-4"
+                            />
+                            <span>Quiero que me lo envíen</span>
+                          </label>
+                        </div>
+                      )}
+
+                      {showAddress && (
+                        <>
+                          <h2 className="text-lg font-medium mb-4 mt-6 pt-6 border-t">Lugar de entrega</h2>
+                          <div className="space-y-2">
+                            <Label htmlFor="dni">DNI *</Label>
+                            <Input
+                              id="dni"
+                              value={orderData.dni}
+                              onChange={(e) => setOrderData({ ...orderData, dni: e.target.value })}
+                              placeholder="Sin puntos"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="province">Provincia *</Label>
+                            <select
+                              id="province"
+                              className="w-full border rounded-md h-10 px-3 text-sm bg-background"
+                              value={orderData.province}
+                              onChange={(e) => setOrderData({ ...orderData, province: e.target.value })}
+                            >
+                              <option value="">Seleccionar...</option>
+                              {["Capital Federal", "Buenos Aires-GBA", "Buenos Aires", "Santa Fe", "Entre Ríos",
+                                "Corrientes", "Tucumán", "Salta", "Córdoba", "Mendoza", "Neuquén", "Río Negro",
+                                "Chubut", "Santa Cruz"].map((p) => (
+                                <option key={p} value={p}>{p}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="grid grid-cols-3 gap-4">
+                            <div className="col-span-2 space-y-2">
+                              <Label htmlFor="address">Calle *</Label>
+                              <Input
+                                id="address"
+                                value={orderData.address}
+                                onChange={(e) => setOrderData({ ...orderData, address: e.target.value })}
+                                placeholder="Nombre de la calle"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="streetNumber">Altura *</Label>
+                              <Input
+                                id="streetNumber"
+                                value={orderData.streetNumber}
+                                onChange={(e) => setOrderData({ ...orderData, streetNumber: e.target.value })}
+                                placeholder="1234"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="city">Ciudad *</Label>
+                              <Input
+                                id="city"
+                                value={orderData.city}
+                                onChange={(e) => setOrderData({ ...orderData, city: e.target.value })}
+                                placeholder="Ciudad"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="postalCode">Código postal *</Label>
+                              <Input
+                                id="postalCode"
+                                value={orderData.postalCode}
+                                onChange={(e) => setOrderData({ ...orderData, postalCode: e.target.value })}
+                                placeholder="1234"
+                              />
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      <Button
+                        className="w-full mt-4"
+                        onClick={() => setStep("shipping")}
+                        disabled={!canContinue}
+                      >
+                        Continuar
+                      </Button>
+                    </>
+                  )
+                })()}
               </div>
             )}
 
@@ -519,81 +684,58 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
               <div className="bg-white p-6 rounded-lg shadow-sm space-y-4">
                 <h2 className="text-lg font-medium mb-4">Método de envío</h2>
 
-                <RadioGroup
-                  value={orderData.shippingMethod}
-                  onValueChange={(value) => setOrderData({ ...orderData, shippingMethod: value })}
-                  className="space-y-3"
-                >
-                  <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:border-black">
-                    <RadioGroupItem value="pickup" id="pickup" />
-                    <Label htmlFor="pickup" className="flex items-center gap-3 cursor-pointer flex-1">
-                      <Truck className="h-5 w-5" />
-                      <div>
-                        <p className="font-medium">Retiro en local</p>
-                        <p className="text-sm text-neutral-500">Gratis</p>
-                      </div>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:border-black">
-                    <RadioGroupItem value="delivery" id="delivery" />
-                    <Label htmlFor="delivery" className="flex items-center gap-3 cursor-pointer flex-1">
-                      <Truck className="h-5 w-5" />
-                      <div>
-                        <p className="font-medium">Envío a domicilio</p>
-                        <p className="text-sm text-neutral-500">Calculado según destino</p>
-                      </div>
-                    </Label>
-                  </div>
-                </RadioGroup>
+                <ShippingOptions
+                  storeId={store.id}
+                  postalCode={orderData.postalCode || "1000"}
+                  city={orderData.city}
+                  deliveryChoice={deliveryChoice}
+                  cartTotal={total}
+                  onSelect={(option) => {
+                    if (option) {
+                      setSelectedShippingOption(option)
+                      setShippingCost(option.price)
+                      const method = option.type === "pickup" ? "pickup" : "delivery"
+                      setOrderData({ ...orderData, shippingMethod: method, shippingLabel: option.name })
+                      if (option.type === "enviamelo_retiro") {
+                        setShowEnviameloPoints(true)
+                      }
+                    }
+                  }}
+                  selectedOption={selectedShippingOption}
+                />
 
-                {orderData.shippingMethod === "delivery" && (
+                {selectedEnviameloPoint && selectedShippingOption?.type === "enviamelo_retiro" && (
+                  <div className="mt-2 p-3 bg-neutral-50 border border-neutral-200 rounded-lg flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-xs font-medium text-neutral-700">{selectedEnviameloPoint.name}</p>
+                      <p className="text-xs text-neutral-500">{selectedEnviameloPoint.address} — {selectedEnviameloPoint.location}</p>
+                    </div>
+                    <button
+                      onClick={() => setShowEnviameloPoints(true)}
+                      className="text-xs text-blue-600 underline shrink-0"
+                    >Cambiar</button>
+                  </div>
+                )}
+
+                {selectedShippingOption && selectedShippingOption.type !== "pickup" && selectedShippingOption.type !== "enviamelo_retiro" && (
                   <div className="space-y-4 mt-4 pt-4 border-t">
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Dirección *</Label>
-                      <Input
-                        id="address"
-                        value={orderData.address}
-                        onChange={(e) => setOrderData({ ...orderData, address: e.target.value })}
-                        placeholder="Calle y número"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="city">Ciudad *</Label>
-                        <Input
-                          id="city"
-                          value={orderData.city}
-                          onChange={(e) => setOrderData({ ...orderData, city: e.target.value })}
-                          placeholder="Ciudad"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="postalCode">Código postal</Label>
-                        <Input
-                          id="postalCode"
-                          value={orderData.postalCode}
-                          onChange={(e) => setOrderData({ ...orderData, postalCode: e.target.value })}
-                          placeholder="1234"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Mostrar costo de envío */}
-                    {orderData.postalCode && orderData.postalCode.length >= 4 && (
-                      <div className="mt-4 p-3 bg-muted rounded-lg">
-                        {shippingLoading ? (
-                          <p className="text-sm text-muted-foreground">Calculando costo de envío...</p>
-                        ) : shippingError ? (
-                          <p className="text-sm text-red-600">{shippingError}</p>
-                        ) : shippingCost !== null ? (
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-medium">Costo de envío (Andreani):</span>
-                            <span className="text-lg font-bold">${shippingCost.toLocaleString()}</span>
-                          </div>
-                        ) : null}
-                      </div>
-                    )}
+                    {/* Bloque de costo de envío removido - ya se muestra en el resumen de la derecha */}
                   </div>
+                )}
+
+                {showEnviameloPoints && (
+                  <EnviameloPointsPicker
+                    storeId={store.id}
+                    postalCode={orderData.postalCode || "1000"}
+                    selectedPoint={selectedEnviameloPoint}
+                    onSelect={(point) => {
+                      setSelectedEnviameloPoint(point)
+                      setOrderData({ ...orderData, 
+                        shippingLabel: `Enviamelo — Retiro en ${point.address}, ${point.location}` 
+                      })
+                    }}
+                    onClose={() => setShowEnviameloPoints(false)}
+                  />
                 )}
 
                 <div className="space-y-2">
@@ -613,7 +755,7 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
                   <Button
                     className="flex-1"
                     onClick={() => setStep("payment")}
-                    disabled={orderData.shippingMethod === "delivery" && (!orderData.address || !orderData.city)}
+                    disabled={(orderData.shippingMethod === "delivery" && selectedShippingOption?.type !== "enviamelo_retiro") && (!orderData.address || !orderData.city)}
                   >
                     Continuar
                   </Button>
@@ -787,27 +929,83 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
                   <div className="pb-4 border-b">
                     <p className="text-neutral-500 mb-1">Envío</p>
                     <p className="font-medium">
-                      {orderData.shippingMethod === "pickup" ? "Retiro en local" : "Envío a domicilio"}
+                      {orderData.shippingLabel || (orderData.shippingMethod === "pickup" ? "Retiro en local" : "Envío a domicilio")}
                     </p>
-                    {orderData.shippingMethod === "delivery" && (
-                      <p>
-                        {orderData.address}, {orderData.city} {orderData.postalCode}
+                    {selectedEnviameloPoint && selectedShippingOption?.type === "enviamelo_retiro" && (
+                      <p className="text-sm text-neutral-600">
+                        {selectedEnviameloPoint.address} — {selectedEnviameloPoint.location}, {selectedEnviameloPoint.province}
+                      </p>
+                    )}
+                    {orderData.shippingMethod === "delivery" && selectedShippingOption?.type !== "enviamelo_retiro" && orderData.address && (
+                      <p className="text-sm text-neutral-600">
+                        {orderData.address} {orderData.streetNumber}, {orderData.city} {orderData.postalCode} ({orderData.province})
                       </p>
                     )}
                   </div>
 
                   <div>
                     <p className="text-neutral-500 mb-1">Pago</p>
-                    <p className="font-medium">
-                      {orderData.paymentMethod === "cash" && "Efectivo"}
-                      {orderData.paymentMethod === "transfer" && "Transferencia bancaria"}
-                      {orderData.paymentMethod === "card" && "Tarjeta presencial"}
-                      {orderData.paymentMethod === "mercadopago" && "Mercado Pago"}
-                      {orderData.paymentMethod === "mobbex" && "Mobbex"}
-                      {orderData.paymentMethod === "modo" && "MODO"}
-                      {orderData.paymentMethod === "uala" && "Ualá Bis"}
-                      {orderData.paymentMethod === "rapipago" && "Rapipago / Pago Fácil"}
-                    </p>
+                    {orderData.paymentMethod === "cash" && (
+                      <div>
+                        <p className="font-medium">Efectivo</p>
+                        {paymentSettings?.cash_instructions && (
+                          <p className="text-sm text-neutral-600 mt-1">{paymentSettings.cash_instructions}</p>
+                        )}
+                      </div>
+                    )}
+                    {orderData.paymentMethod === "transfer" && (
+                      <div>
+                        <p className="font-medium">Transferencia bancaria</p>
+                        <div className="mt-2 space-y-1 text-sm text-neutral-600 bg-blue-50 p-3 rounded-lg">
+                          {paymentSettings?.transfer_bank_name && <p>Banco: <span className="font-medium">{paymentSettings.transfer_bank_name}</span></p>}
+                          {paymentSettings?.transfer_account_holder && <p>Titular: <span className="font-medium">{paymentSettings.transfer_account_holder}</span></p>}
+                          {paymentSettings?.transfer_cbu && <p>CBU: <span className="font-medium">{paymentSettings.transfer_cbu}</span></p>}
+                          {paymentSettings?.transfer_alias && <p>Alias: <span className="font-medium">{paymentSettings.transfer_alias}</span></p>}
+                        </div>
+                      </div>
+                    )}
+                    {orderData.paymentMethod === "card" && (
+                      <div>
+                        <p className="font-medium">Tarjeta presencial</p>
+                        {paymentSettings?.card_instructions && (
+                          <p className="text-sm text-neutral-600 mt-1">{paymentSettings.card_instructions}</p>
+                        )}
+                      </div>
+                    )}
+                    {orderData.paymentMethod === "mercadopago" && (
+                      <div>
+                        <p className="font-medium">Mercado Pago</p>
+                        <p className="text-sm text-neutral-600 mt-1">Serás redirigido a Mercado Pago para completar el pago.</p>
+                      </div>
+                    )}
+                    {orderData.paymentMethod === "mobbex" && (
+                      <div>
+                        <p className="font-medium">Mobbex</p>
+                        <p className="text-sm text-neutral-600 mt-1">Serás redirigido a Mobbex para completar el pago.</p>
+                      </div>
+                    )}
+                    {orderData.paymentMethod === "modo" && (
+                      <div>
+                        <p className="font-medium">MODO</p>
+                        {paymentSettings?.modo_phone && (
+                          <p className="text-sm text-neutral-600 mt-1">Transferí al número: <span className="font-medium">{paymentSettings.modo_phone}</span></p>
+                        )}
+                      </div>
+                    )}
+                    {orderData.paymentMethod === "uala" && (
+                      <div>
+                        <p className="font-medium">Ualá Bis</p>
+                        {paymentSettings?.uala_link && (
+                          <p className="text-sm text-neutral-600 mt-1">Link de pago: <span className="font-medium">{paymentSettings.uala_link}</span></p>
+                        )}
+                      </div>
+                    )}
+                    {orderData.paymentMethod === "rapipago" && (
+                      <div>
+                        <p className="font-medium">Rapipago / Pago Fácil</p>
+                        <p className="text-sm text-neutral-600 mt-1">Presentate en cualquier sucursal con el número de pedido.</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -816,7 +1014,17 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
                     Atrás
                   </Button>
                   <Button className="flex-1" onClick={handleSubmit} disabled={loading}>
-                    {loading ? "Procesando..." : "Pagar"}
+                    {loading ? "Procesando..." : 
+                      orderData.paymentMethod === "mercadopago" ? "Pagar con Mercado Pago" :
+                      orderData.paymentMethod === "mobbex" ? "Pagar con Mobbex" :
+                      orderData.paymentMethod === "transfer" ? "Confirmar y ver datos de transferencia" :
+                      orderData.paymentMethod === "cash" ? "Confirmar pedido" :
+                      orderData.paymentMethod === "card" ? "Confirmar pedido" :
+                      orderData.paymentMethod === "modo" ? "Confirmar y pagar con MODO" :
+                      orderData.paymentMethod === "uala" ? "Confirmar y pagar con Ualá" :
+                      orderData.paymentMethod === "rapipago" ? "Confirmar pedido" :
+                      "Confirmar pedido"
+                    }
                   </Button>
                 </div>
               </div>
@@ -867,16 +1075,16 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
                 <div className="flex justify-between text-sm">
                   <span className="text-neutral-500">Envío</span>
                   <span>
-                    {orderData.shippingMethod === "pickup" 
-                      ? "Gratis (retiro en local)" 
-                      : shippingCost !== null 
-                        ? formatPrice(shippingCost)
-                        : "A calcular"
+                    {!selectedShippingOption
+                      ? "A calcular"
+                      : selectedShippingOption.price === 0
+                        ? "Gratis"
+                        : formatPrice(selectedShippingOption.price)
                   }</span>
                 </div>
                 <div className="flex justify-between text-lg font-medium pt-2 border-t">
                   <span>Total</span>
-                  <span>{formatPrice(total + (orderData.shippingMethod === "delivery" && shippingCost ? shippingCost : 0))}</span>
+                  <span>{formatPrice(total + (selectedShippingOption?.price || 0))}</span>
                 </div>
               </div>
             </div>

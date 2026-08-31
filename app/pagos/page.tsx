@@ -21,9 +21,10 @@ import {
 } from "@/components/ui/accordion"
 import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
+import { SeoExtraBlock } from "@/components/seo-extra-block"
 
 export const metadata: Metadata = {
-  title: "Medios de Pago para tu Tienda Online | Mercado Pago, MODO, Ualá | tol.ar",
+  title: "Medios de Pago para tu Tienda Online | Mercado Pago, MODO, Ualá",
   description: "Cobrá tus ventas online con Mercado Pago, MODO y Ualá Bis. Sin comisiones extra por transacción. Integración gratuita en tol.ar.",
   keywords: "mercado pago, modo, uala bis, medios de pago argentina, cobrar online, pasarela de pagos, tienda online argentina",
 }
@@ -68,9 +69,9 @@ const paymentMethods = [
 ]
 
 const comparisonData = [
-  { feature: "Comisión por venta", tolar: "0% (Plan Gratis)", others: "2% o más por transacción" },
-  { feature: "Integración Local", tolar: "Nativas (Mercado Pago, MODO)", others: "Requiere configuraciones extra" },
-  { feature: "Soporte Humano", tolar: "WhatsApp directo en español", others: "Bots o tickets demorados" },
+  { feature: "Comisión por venta", tolar: "0% (Plan Gratis)", others: "Variable según la plataforma" },
+  { feature: "Integración Local", tolar: "Nativas (Mercado Pago, MODO)", others: "Variable según la plataforma" },
+  { feature: "Soporte Humano", tolar: "WhatsApp directo en español", others: "Variable según la plataforma" },
 ]
 
 const faqs = [
@@ -88,9 +89,38 @@ const faqs = [
   },
 ]
 
+const videoJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "VideoObject",
+  name: "Cómo integrar Mercado Pago en tu tienda tol.ar",
+  description: "Tutorial paso a paso para conectar Mercado Pago con tu tienda online en tol.ar. Aprendé a configurar pagos con tarjeta, transferencia y efectivo en minutos.",
+  thumbnailUrl: "https://tol.ar/images/placeholders/placeholder.svg",
+  contentUrl: "https://tol.ar/videos/mercado-pago-tutorial.mp4",
+  embedUrl: "https://tol.ar/pagos",
+  uploadDate: "2026-01-01",
+  duration: "PT5M",
+  publisher: {
+    "@type": "Organization",
+    name: "tol.ar",
+    url: "https://tol.ar",
+    logo: { "@type": "ImageObject", url: "https://tol.ar/tol-logo.png" },
+  },
+}
+
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "tol.ar", item: "https://tol.ar" },
+    { "@type": "ListItem", position: 2, name: "Medios de Pago", item: "https://tol.ar/pagos" },
+  ],
+}
+
 export default function PagosPage() {
   return (
     <div className="min-h-screen bg-background">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(videoJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <Header />
       
       <main>
@@ -231,7 +261,7 @@ export default function PagosPage() {
         <section className="py-16">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-4">
-              tol.ar vs. Tiendanube y Otros
+              tol.ar vs. Otras plataformas
             </h2>
             <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
               Compará las diferencias y descubrí por qué somos la mejor opción para emprendedores argentinos.
@@ -243,7 +273,7 @@ export default function PagosPage() {
                   <TableRow>
                     <TableHead className="w-1/3">Función</TableHead>
                     <TableHead className="w-1/3 bg-green-50 text-green-700 font-bold">tol.ar</TableHead>
-                    <TableHead className="w-1/3">Tiendanube / Otros</TableHead>
+                    <TableHead className="w-1/3">Otras plataformas</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -303,6 +333,7 @@ export default function PagosPage() {
         </section>
       </main>
 
+      <SeoExtraBlock page="pagos" />
       <Footer />
     </div>
   )

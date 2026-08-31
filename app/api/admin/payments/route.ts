@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (data) {
-    const decrypted = decryptFields(data, ["mercadopago_access_token","mercadopago_test_token","mobbex_api_key","mobbex_access_token"])
+    const decrypted = decryptFields(data, ["mercadopago_access_token","mercadopago_test_token","mobbex_api_key","mobbex_access_token","mercadopago_oauth_access_token","mercadopago_oauth_refresh_token"])
     return NextResponse.json(decrypted)
   }
   return NextResponse.json(null)

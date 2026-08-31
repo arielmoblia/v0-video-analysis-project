@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { Loader2, Truck, MapPin, Package } from "lucide-react"
+import { Loader2, Truck, MapPin, Package, Store, Bike } from "lucide-react"
 
 interface ShippingOption {
   id: string
@@ -11,21 +12,56 @@ interface ShippingOption {
   description: string
   price: number
   estimatedDays?: string
-  type: "pickup" | "own_delivery" | "andreani" | "enviamelo"
+  type: "pickup" | "own_delivery" | "andreani" | "enviamelo_domicilio" | "enviamelo_retiro"
 }
 
 interface ShippingOptionsProps {
   storeId: string
   postalCode: string
+  city?: string
+  deliveryChoice?: "pickup" | "delivery" | null
   cartTotal: number
   cartWeight?: number
   onSelect: (option: ShippingOption | null) => void
   selectedOption?: ShippingOption | null
 }
 
+// Match de zona de envío propio: ciudad o CP/rango. Vacío = siempre muestra.
+const matchOwnDeliveryZone = (zonas: string, ciudadCliente: string, cpCliente: string): boolean => {
+  if (!zonas || zonas.trim() === "") return true
+  const normalize = (s: string) => (s || "").toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim()
+  const cpNum = parseInt(cpCliente, 10)
+  const ciudadNorm = normalize(ciudadCliente)
+  const tokens = zonas.split(",").map(t => normalize(t)).filter(Boolean)
+  for (const token of tokens) {
+    const rango = token.match(/^(\d{4})\s*-\s*(\d{4})$/)
+    if (rango) {
+      const desde = parseInt(rango[1], 10)
+      const hasta = parseInt(rango[2], 10)
+      if (!isNaN(cpNum) && cpNum >= desde && cpNum <= hasta) return true
+      continue
+    }
+    if (/^\d{4}$/.test(token)) {
+      if (token === (cpCliente || "").trim()) return true
+      continue
+    }
+    if (ciudadNorm && (ciudadNorm.includes(token) || token.includes(ciudadNorm))) return true
+  }
+  return false
+}
+
+// CP AMBA: 4 dígitos empezando con 1 (CABA + GBA)
+const isAMBA = (cp: string): boolean => {
+  const clean = cp.trim()
+  return clean.length === 4 && clean.startsWith("1")
+}
+
 export function ShippingOptions({
   storeId,
   postalCode,
+  city = "",
+  deliveryChoice = null,
   cartTotal,
   cartWeight = 1000,
   onSelect,
@@ -47,7 +83,6 @@ export function ShippingOptions({
     const availableOptions: ShippingOption[] = []
 
     try {
-      // Obtener configuración de envío de la tienda
       const configRes = await fetch(`/api/shipping/config?storeId=${storeId}`)
       const configData = await configRes.json()
 
@@ -70,20 +105,23 @@ export function ShippingOptions({
         })
       }
 
-      // Envío propio
+      // Envío propio (filtra por zona si está configurada)
       if (config.own_delivery_enabled) {
-        const cost = parseFloat(config.own_delivery_cost) || 0
-        const freeAbove = parseFloat(config.delivery_free_above) || 0
-        const isFree = freeAbove > 0 && cartTotal >= freeAbove
-
-        availableOptions.push({
-          id: "own_delivery",
-          name: "Envío a domicilio",
-          description: config.own_delivery_zones || "Zona de cobertura",
-          price: isFree ? 0 : cost,
-          estimatedDays: config.own_delivery_time || "24-48hs",
-          type: "own_delivery",
-        })
+        const zonas = config.own_delivery_zones || ""
+        const enZona = matchOwnDeliveryZone(zonas, city, postalCode)
+        if (enZona) {
+          const cost = parseFloat(config.own_delivery_cost) || 0
+          const freeAbove = parseFloat(config.delivery_free_above) || 0
+          const isFree = freeAbove > 0 && cartTotal >= freeAbove
+          availableOptions.push({
+            id: "own_delivery",
+            name: "Envío propio",
+            description: zonas || "Zona de cobertura",
+            price: isFree ? 0 : cost,
+            estimatedDays: config.own_delivery_time || "24-48hs",
+            type: "own_delivery",
+          })
+        }
       }
 
       // Andreani
@@ -99,9 +137,7 @@ export function ShippingOptions({
               valorDeclarado: cartTotal,
             }),
           })
-
           const andreaniData = await andreaniRes.json()
-
           if (andreaniData.success && andreaniData.quote) {
             availableOptions.push({
               id: "andreani",
@@ -113,18 +149,72 @@ export function ShippingOptions({
             })
           }
         } catch (e) {
-          console.error("[v0] Error cotizando Andreani:", e)
+          console.error("[shipping] Error cotizando Andreani:", e)
         }
       }
 
-      setOptions(availableOptions)
-
-      // Si hay opciones y ninguna seleccionada, seleccionar la primera
-      if (availableOptions.length > 0 && !selectedOption) {
-        onSelect(availableOptions[0])
+      // Enviamelo — domicilio + punto retiro (precios en tiempo real)
+      if (config.enviamelo_enabled && config.enviamelo_token) {
+        const amba = isAMBA(postalCode)
+        try {
+          const priceRes = await fetch("/api/shipping/enviamelo/price", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ storeId, postalCode }),
+          })
+          const priceData = await priceRes.json()
+          const freeAbove = priceData.freeAbove || 0
+          const isFree = freeAbove > 0 && cartTotal >= freeAbove
+          const domPrecio = priceData.domicilio || 0
+          const retiroPrecio = priceData.retiro || 0
+          if (domPrecio > 0 || isFree) {
+            availableOptions.push({
+              id: "enviamelo_domicilio",
+              name: "Entrega a domicilio",
+              description: amba ? "AMBA · 24/48hs hábiles" : "Interior · 48/96hs hábiles",
+              price: isFree ? 0 : domPrecio,
+              estimatedDays: amba ? "24-48hs" : "48-96hs",
+              type: "enviamelo_domicilio",
+            })
+          }
+          if (retiroPrecio > 0 || isFree) {
+            availableOptions.push({
+              id: "enviamelo_retiro",
+              name: "Retiro en punto cercano",
+              description: "+190 puntos en todo el país · 48hs hábiles",
+              price: isFree ? 0 : retiroPrecio,
+              estimatedDays: "48hs",
+              type: "enviamelo_retiro",
+            })
+          }
+        } catch {
+          // Si falla la API no mostramos Enviamelo
+        }
+      }
+      // Filtrar según la elección del paso 1
+      let filtered = availableOptions
+      if (deliveryChoice === "pickup") {
+        filtered = availableOptions.filter(o => o.type === "pickup")
+      } else if (deliveryChoice === "delivery") {
+        filtered = availableOptions.filter(o => o.type !== "pickup")
+      }
+      setOptions(filtered)
+      if (filtered.length > 0) {
+        if (!selectedOption) {
+          onSelect(filtered[0])
+        } else {
+          // Si ya hay opción seleccionada, actualizar su precio (ej: cuando llega precio real de Enviamelo)
+          const updated = filtered.find(o => o.id === selectedOption.id)
+          if (updated && updated.price !== selectedOption.price) {
+            onSelect(updated)
+          } else if (!updated) {
+            // La opción anterior ya no está disponible (cambió deliveryChoice) → seleccionamos la primera
+            onSelect(filtered[0])
+          }
+        }
       }
     } catch (e) {
-      console.error("[v0] Error obteniendo opciones de envío:", e)
+      console.error("[shipping] Error obteniendo opciones:", e)
       setError("Error al cargar opciones de envío")
     } finally {
       setLoading(false)
@@ -133,14 +223,12 @@ export function ShippingOptions({
 
   const getIcon = (type: string) => {
     switch (type) {
-      case "pickup":
-        return <MapPin className="h-5 w-5" />
-      case "own_delivery":
-        return <Truck className="h-5 w-5" />
-      case "andreani":
-        return <Package className="h-5 w-5" />
-      default:
-        return <Truck className="h-5 w-5" />
+      case "pickup": return <MapPin className="h-5 w-5" />
+      case "own_delivery": return <Bike className="h-5 w-5" />
+      case "andreani": return <Package className="h-5 w-5" />
+      case "enviamelo_domicilio": return <Image src="/images/enviamelo-logo.png" alt="Enviamelo" width={360} height={84} style={{width:"75px", height:"auto"}} />
+      case "enviamelo_retiro": return <Image src="/images/enviamelo-logo.png" alt="Enviamelo" width={360} height={84} style={{width:"75px", height:"auto"}} />
+      default: return <Truck className="h-5 w-5" />
     }
   }
 
@@ -154,11 +242,7 @@ export function ShippingOptions({
   }
 
   if (error) {
-    return (
-      <div className="text-sm text-red-600 py-2">
-        {error}
-      </div>
-    )
+    return <div className="text-sm text-red-600 py-2">{error}</div>
   }
 
   if (options.length === 0) {

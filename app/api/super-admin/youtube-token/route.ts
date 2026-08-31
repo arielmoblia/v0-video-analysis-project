@@ -10,12 +10,12 @@ export async function GET(request: NextRequest) {
 
     const { data: config } = await supabase
       .from("marketing_config")
-      .select("youtube_access_token, youtube_refresh_token, youtube_token_expiry, id")
+      .select("youtube_access_token, youtube_refresh_token, youtube_token_expiry, youtube_client_id, youtube_client_secret, id")
       .limit(1)
       .single()
 
     if (!config?.youtube_access_token) {
-      return NextResponse.json({ error: "YouTube no conectado" }, { status: 401 })
+      return NextResponse.json({ error: "YouTube no conectado" }, { status: 401, headers: { "Cache-Control": "no-store" } })
     }
 
     let accessToken = config.youtube_access_token
@@ -26,8 +26,8 @@ export async function GET(request: NextRequest) {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
-          client_id: process.env.YOUTUBE_CLIENT_ID!,
-          client_secret: process.env.YOUTUBE_CLIENT_SECRET!,
+          client_id: config.youtube_client_id || process.env.YOUTUBE_CLIENT_ID!,
+          client_secret: config.youtube_client_secret || process.env.YOUTUBE_CLIENT_SECRET!,
           refresh_token: config.youtube_refresh_token,
           grant_type: "refresh_token"
         })
@@ -42,8 +42,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ access_token: accessToken })
+    return NextResponse.json({ access_token: accessToken }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
-    return NextResponse.json({ error: "Error obteniendo token" }, { status: 500 })
+    return NextResponse.json({ error: "Error obteniendo token" }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }

@@ -31,10 +31,38 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Verificar el precio real contra la base de datos antes de cobrar
+    // (nunca confiar en el precio que manda el navegador)
+    const verifiedItems = await Promise.all(
+      items.map(async (item: any) => {
+        if (!item.productId) return item
+
+        const { data: product } = await supabase
+          .from("products")
+          .select("price, sizes")
+          .eq("id", item.productId)
+          .single()
+
+        if (!product) return item
+
+        let realPrice = product.price
+        if (item.size && Array.isArray(product.sizes)) {
+          const sizeData = product.sizes.find((s: any) => s.name === item.size || s.size === item.size)
+          if (sizeData && typeof sizeData.price === "number") realPrice = sizeData.price
+        }
+
+        if (realPrice !== item.price) {
+          console.warn(`[precio] Corregido en Mobbex: producto ${item.productId} vino en $${item.price}, precio real $${realPrice}`)
+        }
+
+        return { ...item, price: realPrice }
+      })
+    )
+
     const mobbex = createMobbexClient(store.mobbex_api_key, store.mobbex_access_token)
 
     // Calcular total
-    const total = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)
+    const total = verifiedItems.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)
 
     // Crear checkout en Mobbex
     const checkout = await mobbex.createCheckout({
@@ -42,7 +70,7 @@ export async function POST(request: NextRequest) {
       currency: "ARS",
       reference: orderId,
       description: `Compra en ${store.site_title}`,
-      items: items.map((item: any) => ({
+      items: verifiedItems.map((item: any) => ({
         description: item.name,
         quantity: item.quantity,
         total: item.price * item.quantity,

@@ -1,0 +1,18 @@
+{
+  "status": 307,
+  "headers": {
+    "location": "/plan-socio",
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/arielmobilia/layout,_N_T_/arielmobilia/plan-socio/layout,_N_T_/arielmobilia/plan-socio/page,_N_T_/arielmobilia/plan-socio"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/arielmobilia/plan-socio/__PAGE__",
+    "/arielmobilia/plan-socio",
+    "/arielmobilia",
+    "/_index",
+    "/_head"
+  ]
+}

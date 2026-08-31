@@ -1,0 +1,18 @@
+{
+  "status": 307,
+  "headers": {
+    "location": "/plan-cositas",
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/arielmobilia/layout,_N_T_/arielmobilia/plan-cositas/layout,_N_T_/arielmobilia/plan-cositas/page,_N_T_/arielmobilia/plan-cositas"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/arielmobilia/plan-cositas/__PAGE__",
+    "/arielmobilia/plan-cositas",
+    "/arielmobilia",
+    "/_index",
+    "/_head"
+  ]
+}

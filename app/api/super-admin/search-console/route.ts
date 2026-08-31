@@ -22,7 +22,7 @@ export async function GET() {
     const cookieStore = await cookies()
     const superAdmin = cookieStore.get("super_admin")
     if (!superAdmin?.value) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+      return NextResponse.json({ error: "No autorizado" }, { status: 401, headers: { "Cache-Control": "no-store" } })
     }
 
     const endDate = new Date()
@@ -34,7 +34,7 @@ export async function GET() {
       getSearchConsoleData('query', { startDate: formatDate(startDate), endDate: formatDate(endDate), dimensions: [], rowLimit: 1 }),
       getSearchConsoleData('query', { startDate: formatDate(startDate), endDate: formatDate(endDate), dimensions: ['date'], rowLimit: 28 }),
       getSearchConsoleData('query', { startDate: formatDate(startDate), endDate: formatDate(endDate), dimensions: ['query'], rowLimit: 10 }),
-      getSearchConsoleData('query', { startDate: formatDate(startDate), endDate: formatDate(endDate), dimensions: ['page'], rowLimit: 10 }),
+      getSearchConsoleData('query', { startDate: formatDate(startDate), endDate: formatDate(endDate), dimensions: ['page'], rowLimit: 25 }),
     ])
 
     const row = metricsData.rows?.[0] || {}
@@ -43,7 +43,7 @@ export async function GET() {
       metrics: {
         impressions: row.impressions || 0,
         clicks: row.clicks || 0,
-        position: row.position ? Math.round(row.position * 10) / 10 : 0,
+        position: row.position ? Math.round(row.position * 10, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } }) / 10 : 0,
         ctr: row.ctr ? Math.round(row.ctr * 1000) / 10 : 0,
       },
       daily: (dailyData.rows || []).map((r: any) => ({
@@ -74,6 +74,6 @@ export async function GET() {
     })
   } catch (error: any) {
     console.error("[Search Console] Error:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }

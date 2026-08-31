@@ -51,7 +51,7 @@ export async function GET() {
       useAutoRate: false,
       source: "manual",
       lastUpdate: settings.lastUpdate || null,
-    })
+    }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
     console.error("Error:", error)
     const mepRate = await fetchMEPRate()
@@ -59,7 +59,7 @@ export async function GET() {
       rate: mepRate,
       useAutoRate: true,
       source: "mep",
-    })
+    }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   }
 }
 
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
         rate: mepRate,
         useAutoRate: true,
         source: "mep",
-      })
+      }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
     }
 
     const { error } = await supabase.from("platform_settings").upsert(
@@ -111,9 +111,9 @@ export async function POST(request: Request) {
       rate,
       useAutoRate: false,
       source: "manual",
-    })
+    }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
     console.error("Error:", error)
-    return NextResponse.json({ error: "Error guardando cotización" }, { status: 500 })
+    return NextResponse.json({ error: "Error guardando cotización" }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }

@@ -1,0 +1,18 @@
+{
+  "status": 307,
+  "headers": {
+    "location": "/plan-gratis",
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/arielmobilia/layout,_N_T_/arielmobilia/plan-gratis/layout,_N_T_/arielmobilia/plan-gratis/page,_N_T_/arielmobilia/plan-gratis"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/arielmobilia/plan-gratis/__PAGE__",
+    "/arielmobilia/plan-gratis",
+    "/arielmobilia",
+    "/_index",
+    "/_head"
+  ]
+}

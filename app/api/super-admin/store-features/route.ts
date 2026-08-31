@@ -14,14 +14,14 @@ export async function GET(request: Request) {
   const cookieStore = await cookies()
   const isAuthenticated = cookieStore.get("super_admin")?.value === "true"
   if (!isAuthenticated) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+    return NextResponse.json({ error: "No autorizado" }, { status: 401, headers: { "Cache-Control": "no-store" } })
   }
 
   const { searchParams } = new URL(request.url)
   const storeId = searchParams.get("storeId")
 
   if (!storeId) {
-    return NextResponse.json({ error: "storeId requerido" }, { status: 400 })
+    return NextResponse.json({ error: "storeId requerido" }, { status: 400, headers: { "Cache-Control": "no-store" } })
   }
 
   // Obtener features compradas/regaladas de esta tienda
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
   // Debug temporal
   console.log("[v0] GET store-features - storeId:", storeId, "purchasedCodes:", purchasedCodes, "error:", purchasedError)
 
-  return NextResponse.json({ purchasedCodes, debug: { storeId, count: purchased.length, error: purchasedError?.message } })
+  return NextResponse.json({ purchasedCodes, debug: { storeId, count: purchased.length, error: purchasedError?.message } }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
 }
 
 // POST - Regalar o quitar feature a una tienda
@@ -49,13 +49,13 @@ export async function POST(request: Request) {
   const cookieStore = await cookies()
   const isAuthenticated = cookieStore.get("super_admin")?.value === "true"
   if (!isAuthenticated) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+    return NextResponse.json({ error: "No autorizado" }, { status: 401, headers: { "Cache-Control": "no-store" } })
   }
 
   const { storeId, featureCode, action } = await request.json()
 
   if (!storeId || !featureCode || !action) {
-    return NextResponse.json({ error: "Faltan parametros" }, { status: 400 })
+    return NextResponse.json({ error: "Faltan parametros" }, { status: 400, headers: { "Cache-Control": "no-store" } })
   }
 
   if (action === "gift") {
@@ -91,10 +91,10 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("[v0] Error gifting feature:", error)
-      return NextResponse.json({ error: "Error al regalar feature: " + error.message }, { status: 500 })
+      return NextResponse.json({ error: "Error al regalar feature: " + error.message }, { status: 500, headers: { "Cache-Control": "no-store" } })
     }
 
-    return NextResponse.json({ success: true, message: "Feature regalada" })
+    return NextResponse.json({ success: true, message: "Feature regalada" }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } else if (action === "remove") {
     // Quitar feature
     const { error } = await supabase
@@ -105,11 +105,11 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("Error removing feature:", error)
-      return NextResponse.json({ error: "Error al quitar feature" }, { status: 500 })
+      return NextResponse.json({ error: "Error al quitar feature" }, { status: 500, headers: { "Cache-Control": "no-store" } })
     }
 
-    return NextResponse.json({ success: true, message: "Feature quitada" })
+    return NextResponse.json({ success: true, message: "Feature quitada" }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   }
 
-  return NextResponse.json({ error: "Accion no valida" }, { status: 400 })
+  return NextResponse.json({ error: "Accion no valida" }, { status: 400, headers: { "Cache-Control": "no-store" } })
 }

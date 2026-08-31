@@ -1,0 +1,18 @@
+{
+  "status": 307,
+  "headers": {
+    "location": "/templates",
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/arielmobilia/layout,_N_T_/arielmobilia/templates/layout,_N_T_/arielmobilia/templates/page,_N_T_/arielmobilia/templates"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/arielmobilia/templates/__PAGE__",
+    "/arielmobilia/templates",
+    "/arielmobilia",
+    "/_index",
+    "/_head"
+  ]
+}

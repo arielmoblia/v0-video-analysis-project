@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { generatePassword } from "@/lib/utils/generate-password"
+import { generateAutologinToken } from "@/lib/utils/autologin-token"
 
 // Mapeo de template seleccionado -> subdomain de tienda template a clonar
 const TEMPLATE_MAPPING: Record<string, string> = {
@@ -16,8 +17,11 @@ const TEMPLATE_SUBDOMAIN = TEMPLATE_MAPPING["default"] // Declare TEMPLATE_SUBDO
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { username, email, subdomain, siteTitle, allowIndexing, template, referral_source } = body
+    const { username, email, subdomain, siteTitle, allowIndexing, template, referral_source, landing_visitor_id } = body
     const creator_ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || null
+    const cookieHeader = request.headers.get("cookie") || ""
+    const utmMatch = cookieHeader.match(/utm_campaign=([^;]+)/)
+    const utm_campaign = utmMatch ? decodeURIComponent(utmMatch[1]) : null
 
     // Validate required fields
     if (!username || !email || !subdomain || !siteTitle || !template) {
@@ -82,6 +86,8 @@ const { data: templateStore } = await supabase
       allow_indexing: allowIndexing === "yes",
       template,
       referral_source: referral_source || null,
+      landing_visitor_id: landing_visitor_id || null,
+      utm_campaign: utm_campaign || null,
       creator_ip,
       admin_password: adminPassword,
       store_url: storeUrl,
@@ -154,6 +160,7 @@ const { data: templateStore } = await supabase
           category_id: prod.category_id ? categoryMap[prod.category_id] || null : null,
           sizes: prod.sizes,
           active: prod.active,
+          is_template: true,
         }))
 
         await supabase.from("products").insert(newProducts)
@@ -227,7 +234,7 @@ const { data: templateStore } = await supabase
         await resend.emails.send({
           from: "TOL.AR <ventas@tiendaonline.com.ar>",
           to: email,
-          bcc: "hola@tiendaonline.com.ar",
+          bcc: "soporte@tiendaonline.com.ar",
           subject: `Tu tienda ${siteTitle} esta lista en TOL.AR - Tenes 7 dias para configurarla`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -310,6 +317,15 @@ const { data: templateStore } = await supabase
       console.error('[SEO] Google ping error:', seoError);
     }
 
+    let autologinToken: string | null = null
+    if (process.env.ADMIN_AUTOLOGIN_SECRET) {
+      try {
+        autologinToken = await generateAutologinToken(store.subdomain, process.env.ADMIN_AUTOLOGIN_SECRET)
+      } catch (tokenError) {
+        console.error("Error generando autologinToken:", tokenError)
+      }
+    }
+
     return NextResponse.json({
       success: true,
       emailSent,
@@ -321,6 +337,7 @@ const { data: templateStore } = await supabase
         storeUrl,
         adminUrl,
         adminPassword,
+        autologinToken,
       },
     })
   } catch (error) {

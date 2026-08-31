@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   try {
     const cookieStore = await cookies()
     if (cookieStore.get("super_admin")?.value !== "true") {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+      return NextResponse.json({ error: "No autorizado" }, { status: 401, headers: { "Cache-Control": "no-store" } })
     }
 
     const { searchParams } = new URL(request.url)
@@ -45,8 +45,8 @@ export async function GET(request: Request) {
       return { nombre: ia.nombre, entraron: count || 0 }
     }))
 
-    return NextResponse.json({ success: true, data: resultados, periodo, desde: desde.toISOString() })
+    return NextResponse.json({ success: true, data: resultados, periodo, desde: desde.toISOString() }, { headers: { "Cache-Control": "no-store" } })
   } catch (error) {
-    return NextResponse.json({ error: "Error" }, { status: 500 })
+    return NextResponse.json({ error: "Error" }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }

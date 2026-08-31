@@ -1,14 +1,84 @@
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
+import { seoClean, seoDesc } from "@/lib/utils"
 import { getStoreBySubdomain, getProductBySlug } from "@/lib/store-context"
+import { hasStoreFeature } from "@/lib/services/stores"
+import { getStoreCategories } from "@/lib/store-context"
 import { StoreHeader } from "@/components/store/store-header"
 import { StoreFooter } from "@/components/store/store-footer"
-import { CartDrawer } from "@/components/store/cart-drawer"
 import { ProductSelector } from "@/components/store/product-selector"
 
 interface ProductPageProps {
   params: Promise<{ subdomain: string; slug: string }>
+}
+
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const { subdomain, slug } = await params
+  const store = await getStoreBySubdomain(subdomain)
+  if (!store) return {}
+  const product = await getProductBySlug(store.id, slug)
+  if (!product) return {}
+
+  const storeName = store.site_title || subdomain
+  const priceFormatted = product.price.toLocaleString("es-AR")
+
+  // Título: producto primero para keyword match; prefix de categoría para perfumes; sin emojis
+  const titleSuffix = ` | ${storeName}`
+  const maxNameLen = 60 - titleSuffix.length
+  const rawNameForTitle = (store.template === "perfumes" || store.template === "fragrances") && !product.name.toLowerCase().startsWith("perfume")
+    ? `Perfume ${product.name}`
+    : product.name
+  const cleanNameForTitle = seoClean(rawNameForTitle)
+  const productNameForTitle = cleanNameForTitle.length > maxNameLen
+    ? cleanNameForTitle.slice(0, Math.max(maxNameLen - 3, 20)).replace(/\s+\S*$/, '') + "..."
+    : cleanNameForTitle
+  const title = `${productNameForTitle}${titleSuffix}`
+
+  // Descripción: preferir descripción real de la DB (única por producto) para diferenciación SEO
+  const descFromDb = product.description ? seoDesc(product.description) : null
+  // Fallback con keywords de categoría según template de la tienda
+  const productNameClean = seoClean(product.name)
+  const categoryDescTemplates: Record<string, string> = {
+    zapatos: `Comprá ${productNameClean} a $${priceFormatted} en ${storeName}. Elegí tu talle, pagá en cuotas y recibilo en todo Argentina.`,
+    footwear: `Comprá ${productNameClean} a $${priceFormatted} en ${storeName}. Elegí tu talle, pagá en cuotas y recibilo en todo Argentina.`,
+    ropa: `Comprá ${productNameClean} a $${priceFormatted} en ${storeName}. Seleccioná tu talle, stock disponible. Envíos a todo el país.`,
+    clothing: `Comprá ${productNameClean} a $${priceFormatted} en ${storeName}. Seleccioná tu talle, stock disponible. Envíos a todo el país.`,
+    perfumes: `Comprá ${productNameClean} a $${priceFormatted}. Perfume 100% original con envío a todo Argentina. Precio actualizado en ${storeName}.`,
+    fragrances: `Comprá ${productNameClean} a $${priceFormatted}. Perfume 100% original con envío a todo Argentina. Precio actualizado en ${storeName}.`,
+    cosmetics: `Comprá ${productNameClean} a $${priceFormatted} en ${storeName}. Cosmética original con envío a todo Argentina. Precio actualizado.`,
+    electronicos: `Comprá ${productNameClean} a $${priceFormatted} en ${storeName}. Precio y stock actualizados. Envíos a todo el país, pagá en cuotas con tarjeta.`,
+    electronics: `Comprá ${productNameClean} a $${priceFormatted} en ${storeName}. Precio y stock actualizados. Envíos a todo el país, pagá en cuotas con tarjeta.`,
+    deportes: `Comprá ${productNameClean} a $${priceFormatted} en ${storeName}. Artículo deportivo con envío a todo el país. Pagá en cuotas, stock disponible.`,
+    fitness: `Comprá ${productNameClean} a $${priceFormatted} en ${storeName}. Equipamiento fitness con envío a todo el país. Stock disponible, pagá en cuotas.`,
+    crossfit: `Comprá ${productNameClean} a $${priceFormatted} en ${storeName}. Equipamiento crossfit con envío a todo el país. Stock disponible, pagá en cuotas.`,
+  }
+  // DB primero (descripción única por producto); si cabe en 155 chars, agregar precio e intent comercial
+  const priceTag = ` — $${priceFormatted} en ${storeName}.`
+  const descEnriched = descFromDb
+    ? ((descFromDb + priceTag).length <= 155 ? descFromDb + priceTag : descFromDb)
+    : null
+  const description = descEnriched
+    ?? categoryDescTemplates[store.template]
+    ?? `Comprá ${productNameClean} a $${priceFormatted} en ${storeName}. Precio actualizado, stock disponible. Envíos a todo el país con pago en cuotas.`
+
+  const image = product.image_url && !product.image_url.includes("placeholder")
+    ? product.image_url
+    : undefined
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      ...(image ? { images: [image] } : {}),
+    },
+    alternates: {
+      canonical: `https://tol.ar/tienda/${subdomain}/producto/${slug}`,
+    },
+  }
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
@@ -19,10 +89,18 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound()
   }
 
-  const product = await getProductBySlug(store.id, slug)
+  const [product, hasMultiImages, hasDolarPeso, hasMayoristaMinorista] = await Promise.all([
+    getProductBySlug(store.id, slug),
+    hasStoreFeature(store.id, "multi_images"),
+    hasStoreFeature(store.id, 'dolar_peso'),
+    hasStoreFeature(store.id, 'mayorista_minorista'),
+  ])
+
   if (!product) {
     notFound()
   }
+
+  const exchangeRate = hasDolarPeso ? (store.dolar_valor || 0) : 0
 
   // JSON-LD Product schema automatico
   const categoryMap: Record<string, string> = {
@@ -84,7 +162,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
-      <StoreHeader store={store} categories={[]} />
+      <StoreHeader store={store} categories={[]} hasMayoristaMinorista={hasMayoristaMinorista} />
 
       <main className="flex-1">
         <div className="container mx-auto px-4 py-8">
@@ -97,12 +175,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
             Volver a la tienda
           </Link>
 
-          <ProductSelector product={product} subdomain={subdomain} />
+          <ProductSelector product={product} subdomain={subdomain} hasMultiImages={hasMultiImages} exchangeRate={exchangeRate} template={store.template} />
         </div>
       </main>
 
       <StoreFooter store={store} />
-      <CartDrawer />
     </div>
   )
 }

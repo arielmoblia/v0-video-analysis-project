@@ -25,12 +25,23 @@ interface PlansDashboardProps {
 
 export function PlansDashboard({ stores }: PlansDashboardProps) {
   const [activeTab, setActiveTab] = useState("gratis")
+  const [sortField, setSortField] = useState<string>("subdomain")
+  const [sortDir, setSortDir] = useState<"asc"|"desc">("asc")
   const [cositasSubTab, setCositasSubTab] = useState("estadisticas")
+  const [catalogChanges, setCatalogChanges] = useState<Record<string, {precio?: number, trial_days?: number}>>({})
+  const [savingCatalog, setSavingCatalog] = useState(false)
+  const [featureTrialDays, setFeatureTrialDays] = useState<Record<string, number>>({})
+  const [catalogFeatures, setCatalogFeatures] = useState<any[]>([])
   const [sociosSubTab, setSociosSubTab] = useState("estadisticas")
   const [pageContent, setPageContent] = useState<Record<string, string>>({})
   const [savingKey, setSavingKey] = useState<string | null>(null)
   const [savedKey, setSavedKey] = useState<string | null>(null)
   const [storesWithProducts, setStoresWithProducts] = useState<Set<string>>(new Set())
+  const [productCount, setProductCount] = useState<Record<string, number>>({})
+  const [storeViews, setStoreViews] = useState<Record<string, number>>({})
+  const [orderCount, setOrderCount] = useState<Record<string, number>>({})
+  const [orderPaid, setOrderPaid] = useState<Record<string, number>>({})
+  const [viewsDays, setViewsDays] = useState(7)
   const [storesWithMP, setStoresWithMP] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [cositasPorTienda, setCositasPorTienda] = useState<Record<string, any[]>>({})
@@ -49,8 +60,12 @@ export function PlansDashboard({ stores }: PlansDashboardProps) {
       const { data: products } = await supabase
         .from("products")
         .select("store_id")
+        .limit(500000)
       if (products) {
         setStoresWithProducts(new Set(products.map((p: any) => p.store_id)))
+        const counts: Record<string, number> = {}
+        products.forEach((p: any) => { counts[p.store_id] = (counts[p.store_id] || 0) + 1 })
+        setProductCount(counts)
       }
 
       // Tiendas con MercadoPago
@@ -73,6 +88,27 @@ export function PlansDashboard({ stores }: PlansDashboardProps) {
         })
         setCositasPorTienda(grouped)
       }
+      // Pedidos por tienda
+      const { data: orders } = await supabase
+        .from("orders")
+        .select("store_id, status")
+        .limit(500000)
+      if (orders) {
+        const oc: Record<string, number> = {}
+        const op: Record<string, number> = {}
+        orders.forEach((o: any) => {
+          oc[o.store_id] = (oc[o.store_id] || 0) + 1
+          if (o.status === "pagado") op[o.store_id] = (op[o.store_id] || 0) + 1
+        })
+        setOrderCount(oc)
+        setOrderPaid(op)
+      }
+      // Visitas por tienda via API (excluye IP del dueño, últimos 7 días)
+      const viewsRes = await fetch('/api/super-admin/stores-activity')
+      if (viewsRes.ok) {
+        const viewsData = await viewsRes.json()
+        setStoreViews(viewsData)
+      }
       // Contenido de la pagina publica
       const { data: pageData } = await supabase
         .from('page_content')
@@ -83,10 +119,28 @@ export function PlansDashboard({ stores }: PlansDashboardProps) {
         pageData.forEach((r: any) => { map[r.key] = r.value })
         setPageContent(map)
       }
+      // Features desde Supabase (fuente de verdad)
+      const { data: featuresData } = await supabase
+        .from('store_features')
+        .select('*')
+        .order('is_active', { ascending: false })
+        .order('created_at', { ascending: true })
+      if (featuresData) {
+        const trialMap: Record<string, number> = {}
+        featuresData.forEach((f: any) => { trialMap[f.code] = f.trial_days || 0 })
+        setFeatureTrialDays(trialMap)
+        setCatalogFeatures(featuresData)
+      }
       setLoading(false)
     }
     fetchExtra()
   }, [])
+
+  useEffect(() => {
+    fetch(`/api/super-admin/stores-activity?days=${viewsDays}`)
+      .then(r => r.json())
+      .then(data => setStoreViews(data))
+  }, [viewsDays])
 
   const activeFreestores = freeStores.filter(s => s.last_login && new Date(s.last_login) > thirtyDaysAgo)
   const dormidas = freeStores.filter(s => !s.last_login || new Date(s.last_login) <= thirtyDaysAgo)
@@ -122,6 +176,11 @@ export function PlansDashboard({ stores }: PlansDashboardProps) {
             {tab.label}
           </button>
         ))}
+        <div className="ml-auto pb-2">
+          <button onClick={() => window.open('https://claude.ai/chat/ff4fd46a-f313-41ea-83a0-681484cd18d1', '_blank')} className="inline-flex items-center gap-2 px-3 h-7 rounded-md text-xs font-medium text-white cursor-pointer border-0" style={{ backgroundColor: '#1a7f5a' }}>
+            💬 Hablar con Claudio
+          </button>
+        </div>
       </div>
 
       {/* PLAN GRATIS */}
@@ -165,7 +224,17 @@ export function PlansDashboard({ stores }: PlansDashboardProps) {
                     <tbody className="divide-y divide-slate-100">
                       {candidatas.map(s => (
                         <tr key={s.id} className="hover:bg-orange-50 transition-colors">
-                          <td className="px-6 py-3 font-medium text-slate-800">{s.subdomain}.tol.ar</td>
+                          <td className="px-6 py-3 text-center">
+                          <span className="inline-flex items-center justify-center w-8 h-6 rounded text-xs font-bold bg-slate-100 text-slate-600">
+                            {storeViews[s.id] || 0}
+                          </span>
+                        </td>
+                        <td className="px-6 py-3 font-medium text-slate-800">
+                          <a href={`https://${s.subdomain}.tol.ar`} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 hover:underline flex items-center gap-1">
+                            {s.subdomain}.tol.ar
+                            <span className="text-slate-300 text-xs">↗</span>
+                          </a>
+                        </td>
                           <td className="px-6 py-3 text-slate-500">{s.email}</td>
                           <td className="px-6 py-3 text-slate-400">{new Date(s.created_at).toLocaleDateString("es-AR")}</td>
                           <td className="px-6 py-3 text-slate-400">{s.last_login ? new Date(s.last_login).toLocaleDateString("es-AR") : "Nunca"}</td>
@@ -178,41 +247,110 @@ export function PlansDashboard({ stores }: PlansDashboardProps) {
 
               {/* Todas las gratis */}
               <div className="bg-white border border-slate-200 rounded-lg">
-                <div className="px-6 py-4 border-b border-slate-100">
+                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                   <h3 className="font-semibold text-slate-800">Todas las tiendas en Plan Gratis</h3>
+                  <div className="flex gap-1">
+                    {[{d:7,l:"7D"},{d:30,l:"1M"},{d:180,l:"6M"},{d:365,l:"1A"}].map(p => (
+                      <button key={p.d} onClick={() => setViewsDays(p.d)}
+                        className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${viewsDays === p.d ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}>
+                        {p.l}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+                <div className="overflow-auto max-h-[600px]">
                 <table className="w-full text-sm">
-                  <thead>
+                  <thead className="sticky top-0 z-10">
                     <tr className="bg-slate-50 text-left text-slate-500 text-xs uppercase">
-                      <th className="px-6 py-3">Tienda</th>
-                      <th className="px-6 py-3">Email</th>
-                      <th className="px-6 py-3">Productos</th>
-                      <th className="px-6 py-3">MercadoPago</th>
-                      <th className="px-6 py-3">Último ingreso</th>
+                      {[
+                        { key: "ranking", label: "Ranking" },
+                        { key: "subdomain", label: "Tienda" },
+                        { key: "email", label: "Email" },
+                        { key: "productos", label: "Prod." },
+                        { key: "mp", label: "MP" },
+                        { key: "last_login", label: "Última entrada" },
+                      ].map(col => (
+                        <th key={col.key} className="px-2 py-2 cursor-pointer select-none hover:text-slate-800 hover:bg-slate-100 transition-colors" onClick={() => { if (sortField === col.key) { setSortDir(sortDir === "asc" ? "desc" : "asc") } else { setSortField(col.key); setSortDir("asc") } }}>
+                          <span className="flex items-center gap-1">
+                            {col.label}
+                            {sortField === col.key ? (sortDir === "asc" ? " ↑" : " ↓") : " ↕"}
+                          </span>
+                        </th>
+                      ))}
+                      <th colSpan={3} className="px-2 py-2 text-center border-l border-slate-200">
+                        <span className="text-xs font-semibold text-slate-500 uppercase">Ventas</span>
+                      </th>
+                    </tr>
+                    <tr className="bg-slate-50 text-slate-400 text-xs uppercase border-t border-slate-100">
+                      <th colSpan={6}></th>
+                      {[{key:"ventas_pend",label:"Pendiente"},{key:"ventas_pag",label:"Pagado"},{key:"ventas",label:"Total"}].map(col => (
+                        <th key={col.key} className="px-2 py-1 text-center cursor-pointer hover:text-slate-800 hover:bg-slate-100 border-l border-slate-200 first:border-l-0" onClick={() => { if (sortField === col.key) { setSortDir(sortDir === "asc" ? "desc" : "asc") } else { setSortField(col.key); setSortDir("asc") } }}>
+                          {col.label}{sortField === col.key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {freeStores.map(s => (
+                    {[...freeStores].sort((a, b) => {
+                      let va: any, vb: any
+                      if (sortField === "subdomain") { va = a.subdomain || ""; vb = b.subdomain || "" }
+                      else if (sortField === "email") { va = a.email || ""; vb = b.email || "" }
+                      else if (sortField === "ranking") { va = storeViews[a.id] || 0; vb = storeViews[b.id] || 0 }
+                      else if (sortField === "productos") { va = storesWithProducts.has(a.id) ? 1 : 0; vb = storesWithProducts.has(b.id) ? 1 : 0 }
+                      else if (sortField === "ventas") { va = orderCount[a.id] || 0; vb = orderCount[b.id] || 0 }
+                      else if (sortField === "ventas_pag") { va = orderPaid[a.id] || 0; vb = orderPaid[b.id] || 0 }
+                      else if (sortField === "ventas_pend") { va = (orderCount[a.id]||0)-(orderPaid[a.id]||0); vb = (orderCount[b.id]||0)-(orderPaid[b.id]||0) }
+                      else if (sortField === "mp") { va = storesWithMP.has(a.id) ? 1 : 0; vb = storesWithMP.has(b.id) ? 1 : 0 }
+                      else if (sortField === "last_login") { va = a.last_login ? new Date(a.last_login).getTime() : 0; vb = b.last_login ? new Date(b.last_login).getTime() : 0 }
+                      if (va < vb) return sortDir === "asc" ? -1 : 1
+                      if (va > vb) return sortDir === "asc" ? 1 : -1
+                      return 0
+                    }).map(s => (
                       <tr key={s.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-3 font-medium text-slate-800">{s.subdomain}.tol.ar</td>
-                        <td className="px-6 py-3 text-slate-500">{s.email}</td>
-                        <td className="px-6 py-3">
-                          {storesWithProducts.has(s.id)
-                            ? <span className="text-green-600 font-medium">✓ Sí</span>
+                        <td className="px-2 py-2 text-center">
+                          <span className="inline-flex items-center justify-center w-8 h-6 rounded text-xs font-bold bg-slate-100 text-slate-600">
+                            {storeViews[s.id] || 0}
+                          </span>
+                        </td>
+                        <td className="px-2 py-2 font-medium text-slate-800">
+                          <a href={`https://${s.subdomain}.tol.ar`} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 hover:underline flex items-center gap-1">
+                            {s.subdomain}.tol.ar <span className="text-slate-300 text-xs">↗</span>
+                          </a>
+                        </td>
+                        <td className="px-2 py-2 text-slate-500 text-xs">{s.email}</td>
+                        <td className="px-2 py-2 text-center">
+                          {productCount[s.id]
+                            ? <span className="text-green-600 font-medium text-xs">{productCount[s.id]}</span>
                             : <span className="text-slate-300">—</span>}
                         </td>
-                        <td className="px-6 py-3">
+                        <td className="px-2 py-2 text-center">
                           {storesWithMP.has(s.id)
-                            ? <span className="text-blue-600 font-medium">✓ Sí</span>
+                            ? <span className="text-blue-600 font-medium text-xs">✓</span>
                             : <span className="text-slate-300">—</span>}
                         </td>
-                        <td className="px-6 py-3 text-slate-400">
+                        <td className="px-2 py-2 text-slate-400 text-xs text-center">
                           {s.last_login ? new Date(s.last_login).toLocaleDateString("es-AR") : "Nunca"}
+                        </td>
+                        <td className="px-2 py-2 text-center border-l border-slate-100">
+                          {(orderCount[s.id]||0)-(orderPaid[s.id]||0) > 0
+                            ? <span className="text-orange-500 font-medium text-xs">{(orderCount[s.id]||0)-(orderPaid[s.id]||0)}</span>
+                            : <span className="text-slate-300">—</span>}
+                        </td>
+                        <td className="px-2 py-2 text-center">
+                          {orderPaid[s.id]
+                            ? <span className="text-green-600 font-medium text-xs">{orderPaid[s.id]}</span>
+                            : <span className="text-slate-300">—</span>}
+                        </td>
+                        <td className="px-2 py-2 text-center">
+                          {orderCount[s.id]
+                            ? <span className="text-purple-600 font-medium text-xs">{orderCount[s.id]}</span>
+                            : <span className="text-slate-300">—</span>}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             </>
           )}
@@ -300,9 +438,35 @@ export function PlansDashboard({ stores }: PlansDashboardProps) {
           ) : cositasSubTab === "cositas" ? (
             <div className="space-y-4">
               <div className="bg-white border border-slate-200 rounded-lg">
-                <div className="px-6 py-4 border-b border-slate-100">
-                  <h3 className="font-semibold text-slate-800">Catálogo de Cositas</h3>
-                  <p className="text-xs text-slate-400 mt-1">Las cositas disponibles se pueden comprar. Las próximamente están griseadas.</p>
+                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-slate-800">Catálogo de Cositas</h3>
+                    <p className="text-xs text-slate-400 mt-1">Las cositas disponibles se pueden comprar. Las próximamente están griseadas.</p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      setSavingCatalog(true)
+                      for (const [code, changes] of Object.entries(catalogChanges)) {
+                        const updates: any = {}
+                        if (changes.precio !== undefined) updates.price = changes.precio
+                        if (changes.trial_days !== undefined) updates.trial_days = changes.trial_days
+                        if (Object.keys(updates).length > 0) {
+                          await fetch("/api/super-admin/cositas", {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ code, ...updates })
+                          })
+                        }
+                      }
+                      setCatalogChanges({})
+                      setSavingCatalog(false)
+                      alert("Guardado!")
+                    }}
+                    disabled={savingCatalog || Object.keys(catalogChanges).length === 0}
+                    className="text-sm font-semibold px-4 py-2 rounded-lg border border-orange-400 text-orange-600 hover:bg-orange-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {savingCatalog ? "Guardando..." : "GUARDAR"}
+                  </button>
                 </div>
                 <table className="w-full text-sm">
                   <thead>
@@ -311,45 +475,42 @@ export function PlansDashboard({ stores }: PlansDashboardProps) {
                       <th className="px-6 py-3">Código</th>
                       <th className="px-6 py-3">Precio</th>
                       <th className="px-6 py-3">Tiendas activas</th>
+                      <th className="px-6 py-3">Trial (días)</th>
                       <th className="px-6 py-3">Estado</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {[
-                      { code: "multi_images", name: "Galería de Imágenes", desc: "Hasta 5 fotos por producto", precio: 1, tipo: "mes", disponible: true },
-                      { code: "whatsapp_chat", name: "Chat WhatsApp", desc: "Botón flotante de WhatsApp", precio: 1, tipo: "mes", disponible: true },
-                      { code: "custom_variants", name: "Variantes Personalizables", desc: "Aromas, colores, sabores", precio: 3, tipo: "mes", disponible: true },
-                      { code: "csv_import", name: "Importar Productos CSV/Excel", desc: "Carga masiva de productos", precio: 1, tipo: "mes", disponible: true },
-                      { code: "estadisticas", name: "Estadísticas de visitas", desc: "Métricas de tu tienda", precio: 2, tipo: "mes", disponible: false },
-                      { code: "video_portada", name: "Video en portada", desc: "Video en el banner principal", precio: 5, tipo: "única", disponible: false },
-                      { code: "chat_ai", name: "Chat con IA", desc: "Atención al cliente 24/7", precio: 3, tipo: "mes", disponible: false },
-                      { code: "dominio_propio", name: "Dominio propio", desc: "Tu propia URL personalizada", precio: 5, tipo: "única", disponible: false },
-                      { code: "productos_ilimitados", name: "Productos ilimitados", desc: "Sin límite de productos", precio: 2, tipo: "mes", disponible: false },
-                      { code: "soporte_prioritario", name: "Soporte prioritario", desc: "Respuesta en menos de 2hs", precio: 3, tipo: "mes", disponible: false },
-                      { code: "dolar_pesos", name: "Dólar/Peso automático", desc: "Precios en USD actualizados", precio: 2, tipo: "mes", disponible: false },
-                      { code: "google_shopping", name: "Google Shopping", desc: "Tus productos en Google", precio: 3, tipo: "única", disponible: false },
-                      { code: "marketing_pro", name: "Marketing Pro", desc: "Email, cupones, carritos", precio: 4, tipo: "mes", disponible: false },
-                      { code: "diseno_ai", name: "Diseño con IA", desc: "IA copia el diseño que te gusta", precio: 5, tipo: "única", disponible: false },
-                      { code: "variedades_personalizadas", name: "Variantes Combinadas", desc: "Talle + color por ejemplo", precio: 2, tipo: "mes", disponible: false },
-                    ].map(c => {
+                    {catalogFeatures.map(c => {
                       const activas = Object.values(cositasPorTienda).flat().filter((f: any) => f.feature_code === c.code && f.is_active).length
                       return (
-                        <tr key={c.code} className={c.disponible ? "hover:bg-orange-50" : "opacity-50 bg-slate-50"}>
+                        <tr key={c.code} className={c.is_active ? "hover:bg-orange-50" : "opacity-50 bg-slate-50"}>
                           <td className="px-6 py-3">
                             <div className="font-medium text-slate-800">{c.name}</div>
-                            <div className="text-xs text-slate-400">{c.desc}</div>
+                            <div className="text-xs text-slate-400">{c.description}</div>
                           </td>
                           <td className="px-6 py-3 text-xs font-mono text-slate-400">{c.code}</td>
-                          <td className="px-6 py-3"><div className="flex items-center gap-1"><span className="text-slate-400 text-xs">USD</span><input type="number" defaultValue={c.precio} step="0.5" min="0.5" className="w-16 text-sm border border-slate-200 rounded px-2 py-0.5 text-slate-700 focus:outline-none focus:border-orange-400" /><span className="text-slate-400 text-xs">/{c.tipo}</span></div></td>
+                          <td className="px-6 py-3"><div className="flex items-center gap-1"><span className="text-slate-400 text-xs">USD</span><input type="number" defaultValue={c.precio} step="0.5" min="0.5" onChange={(e) => setCatalogChanges(prev => ({...prev, [c.code]: {...(prev[c.code]||{}), precio: parseFloat(e.target.value)}}))} className="w-16 text-sm border border-slate-200 rounded px-2 py-0.5 text-slate-700 focus:outline-none focus:border-orange-400" /><span className="text-slate-400 text-xs"></span></div></td>
                           <td className="px-6 py-3">
                             {activas > 0
                               ? <span className="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full">{activas} tiendas</span>
                               : <span className="text-slate-300 text-xs">—</span>}
                           </td>
                           <td className="px-6 py-3">
-                            {c.disponible
-                              ? <span className="bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1 rounded-full">✓ Disponible</span>
-                              : <span className="bg-slate-200 text-slate-500 text-xs px-3 py-1 rounded-full">Próximamente</span>}
+                            <input type="number" key={`trial-${c.code}-${featureTrialDays[c.code]}`} defaultValue={featureTrialDays[c.code] ?? c.trial_days ?? 0} min="0" max="90" onChange={(e) => setCatalogChanges(prev => ({...prev, [c.code]: {...(prev[c.code]||{}), trial_days: parseInt(e.target.value)}}))} className="w-16 text-sm border border-slate-200 rounded px-2 py-0.5 text-slate-700 focus:outline-none focus:border-orange-400" />
+                          </td>
+                          <td className="px-6 py-3">
+                            <button
+                              onClick={async () => {
+                                const newVal = !c.is_active
+                                const { createClient } = await import("@supabase/supabase-js")
+                                const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL as string, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string)
+                                await sb.from("store_features").update({ is_active: newVal }).eq("code", c.code)
+                                setCatalogFeatures(prev => prev.map(x => x.code === c.code ? {...x, is_active: newVal} : x))
+                              }}
+                              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${c.is_active ? "bg-orange-500" : "bg-slate-300"}`}
+                            >
+                              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${c.is_active ? "translate-x-6" : "translate-x-1"}`} />
+                            </button>
                           </td>
                         </tr>
                       )

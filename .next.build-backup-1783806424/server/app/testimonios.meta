@@ -1,0 +1,15 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/testimonios/layout,_N_T_/testimonios/page,_N_T_/testimonios"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/testimonios/__PAGE__",
+    "/testimonios",
+    "/_index",
+    "/_head"
+  ]
+}

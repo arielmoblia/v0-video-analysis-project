@@ -1,0 +1,3 @@
+{
+  "/api/tolar/mercadopago/webhook/route": "app/api/tolar/mercadopago/webhook/route.js"
+}

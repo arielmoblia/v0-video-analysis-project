@@ -1,0 +1,15 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/alternativa-mercado-shops/layout,_N_T_/alternativa-mercado-shops/page,_N_T_/alternativa-mercado-shops"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/alternativa-mercado-shops/__PAGE__",
+    "/alternativa-mercado-shops",
+    "/_index",
+    "/_head"
+  ]
+}

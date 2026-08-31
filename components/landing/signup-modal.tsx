@@ -9,7 +9,20 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { Check, AlertCircle, Eye, Sparkles, Shirt, Smartphone, Footprints, Crown, Lock, Palette } from "lucide-react"
+import {
+  Check,
+  AlertCircle,
+  Eye,
+  Sparkles,
+  Shirt,
+  Smartphone,
+  Footprints,
+  Crown,
+  Lock,
+  Palette,
+  ExternalLink,
+  Settings,
+} from "lucide-react"
 
 type Step = "user-info" | "loading-user" | "store-config" | "creating-store" | "success" | "error"
 
@@ -26,6 +39,7 @@ interface StoreData {
   adminPassword: string
   emailSent: boolean
   subdomain: string
+  autologinToken: string | null
 }
 
 const freeTemplates = [
@@ -129,9 +143,10 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
   const [subdomain, setSubdomain] = useState("")
   const [siteTitle, setSiteTitle] = useState("")
   const [allowIndexing, setAllowIndexing] = useState("yes")
-  const [selectedTemplate, setSelectedTemplate] = useState("clothing")
+  const [selectedTemplate, setSelectedTemplate] = useState("")
   const [referralSource, setReferralSource] = useState("")
-  const [storeReady, setStoreReady] = useState(false)
+  const [isCreatingStore, setIsCreatingStore] = useState(false)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   
   // Validacion subdominio en tiempo real
   const [subdomainAvailable, setSubdomainAvailable] = useState<boolean | null>(null)
@@ -148,10 +163,11 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
       setSiteOption("site")
       setSubdomain("")
       setAllowIndexing("yes")
-      setSelectedTemplate(preselectedTemplate || "clothing")
+      setSelectedTemplate(preselectedTemplate || "")
       setSubdomainAvailable(null)
       setReferralSource("")
-      setStoreReady(false)
+      setIsCreatingStore(false)
+      setAcceptedTerms(false)
     }
   }, [isOpen, preselectedTemplate])
 
@@ -207,62 +223,72 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
     }
   }
 
-  const handleStoreConfigSubmit = async () => {
-    if (subdomain.length >= 4) {
+  const handleStoreConfigSubmit = () => {
+    if (subdomain.length >= 4 && acceptedTerms) {
       setStep("creating-store")
-      setProgress(0)
-      setError("")
+    }
+  }
 
-      const progressInterval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 90) return 90
-          return prev + 2
-        })
-      }, 100)
+  const handleCreateStore = async () => {
+    if (!referralSource || isCreatingStore) return
 
-      try {
-        const response = await fetch("/api/create-store", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username,
-            email,
-            subdomain,
-            siteTitle: subdomain, // Usa el subdominio como título
-            allowIndexing,
-            template: selectedTemplate,
-            referral_source: referralSource,
-          }),
-        })
+    setIsCreatingStore(true)
+    setProgress(0)
+    setError("")
 
-        const data = await response.json()
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 90) return 90
+        return prev + 2
+      })
+    }, 100)
 
-        clearInterval(progressInterval)
+    try {
+      const response = await fetch("/api/create-store", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          email,
+          subdomain,
+          siteTitle: subdomain, // Usa el subdominio como título
+          allowIndexing,
+          template: selectedTemplate,
+          referral_source: referralSource,
+          landing_visitor_id: typeof window !== "undefined" ? localStorage.getItem("visitor_id") : null,
+        }),
+      })
 
-        if (!response.ok) {
-          setError(data.error || "Error al crear la tienda")
-          setStep("error")
-          return
-        }
+      const data = await response.json()
 
-        setProgress(100)
-        setStoreData({
-          storeUrl: data.store.storeUrl,
-          adminUrl: data.store.adminUrl,
-          username: data.store.username,
-          adminPassword: data.store.adminPassword,
-          emailSent: data.emailSent,
-          subdomain: data.store.subdomain,
-        })
+      clearInterval(progressInterval)
 
-        setStoreReady(true)
-      } catch (err) {
-        clearInterval(progressInterval)
-        setError("Error de conexión. Por favor intente nuevamente.")
+      if (!response.ok) {
+        setError(data.error || "Error al crear la tienda")
         setStep("error")
+        return
       }
+
+      setProgress(100)
+      setStoreData({
+        storeUrl: data.store.storeUrl,
+        adminUrl: data.store.adminUrl,
+        username: data.store.username,
+        adminPassword: data.store.adminPassword,
+        emailSent: data.emailSent,
+        subdomain: data.store.subdomain,
+        autologinToken: data.store.autologinToken ?? null,
+      })
+
+      setStep("success")
+    } catch (err) {
+      clearInterval(progressInterval)
+      setError("Error de conexión. Por favor intente nuevamente.")
+      setStep("error")
+    } finally {
+      setIsCreatingStore(false)
     }
   }
 
@@ -282,6 +308,12 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
       return `${window.location.origin}/tienda/${sub}/admin`
     }
     return `https://${sub}.tol.ar/admin`
+  }
+
+  const getAutologinAdminUrl = (sub: string, token: string | null) => {
+    const base = getTestAdminUrl(sub)
+    if (!token) return base
+    return `${base}?al=${encodeURIComponent(token)}`
   }
 
   return (
@@ -469,22 +501,22 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
                               <Check className="h-3 w-3 text-white" />
                             </div>
                           )}
-                          {/* Overlay para ver demo */}
-                          <div className="absolute inset-0 bg-black/0 hover:bg-black/50 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                            <span className="flex items-center gap-1 text-white text-xs font-medium bg-black/70 px-2 py-1 rounded">
+                          {/* Overlay para ver demo - siempre visible, no solo al pasar el mouse */}
+                          <div className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-all flex items-end justify-center">
+                            <span className="flex items-center gap-1 text-white text-xs font-medium bg-black/70 w-full justify-center py-1.5">
                               <Eye className="h-3 w-3" />
                               Ver demo
                             </span>
                           </div>
                         </a>
-                        
+
                         {/* Boton verde con nombre - clic selecciona template */}
                         <button
                           type="button"
                           onClick={() => setSelectedTemplate(template.id)}
                           className="w-full bg-green-500 hover:bg-green-600 text-white text-center py-1.5 text-xs font-medium transition-colors"
                         >
-                          {template.name}
+                          Elegir {template.name}
                         </button>
                         
                         {/* Subtitulo */}
@@ -494,6 +526,11 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
                       </div>
                     ))}
                   </div>
+                  {!selectedTemplate && (
+                    <p className="text-xs text-red-500 font-medium mt-2">
+                      Elegí un rubro para poder crear tu tienda
+                    </p>
+                  )}
                 </div>
 
                 {/* Templates Premium */}
@@ -547,9 +584,31 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
               </div>
             </div>
 
+            <div className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                id="acceptedTerms"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <Label htmlFor="acceptedTerms" className="text-sm font-normal text-gray-700 cursor-pointer">
+                Estoy de acuerdo con los{" "}
+                <a
+                  href="/terminos"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline hover:text-blue-800"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Términos y Condiciones
+                </a>
+              </Label>
+            </div>
+
             <Button
               onClick={handleStoreConfigSubmit}
-              disabled={subdomain.length < 4 || subdomainAvailable === false || checkingSubdomain}
+              disabled={subdomain.length < 4 || subdomainAvailable === false || checkingSubdomain || !selectedTemplate || !acceptedTerms}
               className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {checkingSubdomain ? "Verificando nombre..." : "Crear mi tienda ya"}
@@ -570,12 +629,13 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
                 { id: "whatsapp", label: "WhatsApp" },
                 { id: "google",   label: "Google" },
                 { id: "youtube",  label: "YouTube" },
-                { id: "otro",     label: "Otro" },
+                { id: "tiktok",  label: "TikTok" },
               ].map((op) => (
                 <button
                   key={op.id}
                   type="button"
                   onClick={() => setReferralSource(op.id)}
+                  disabled={isCreatingStore}
                   className={`py-2 px-3 text-sm rounded-lg border transition-all ${
                     referralSource === op.id
                       ? "bg-gray-900 text-white border-gray-900 font-medium"
@@ -586,29 +646,21 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
                 </button>
               ))}
             </div>
-            {!referralSource && (
-              <p className="text-center text-sm text-red-500">Seleccioná la opción para ver tu tienda</p>
+            {!referralSource && !isCreatingStore && (
+              <p className="text-center text-sm text-red-500">Seleccioná la opción para crear tu tienda</p>
             )}
-            <div className="border-t pt-4 space-y-2">
-              <p className="text-center text-sm font-medium text-gray-700">Estamos creando tu tienda...</p>
-              <Progress value={storeReady ? 100 : progress} className="h-2 bg-muted" />
-            </div>
+            {isCreatingStore && (
+              <div className="border-t pt-4 space-y-2">
+                <p className="text-center text-sm font-medium text-gray-700">Estamos creando tu tienda...</p>
+                <Progress value={progress} className="h-2 bg-muted" />
+              </div>
+            )}
             <Button
-              onClick={async () => {
-                if (!referralSource || !storeReady || !storeData) return
-                try {
-                  await fetch("/api/stores/" + storeData.subdomain, {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ referral_source: referralSource })
-                  })
-                } catch {}
-                setStep("success")
-              }}
-              disabled={!referralSource || !storeReady}
+              onClick={handleCreateStore}
+              disabled={!referralSource || isCreatingStore}
               className="w-full bg-gray-900 hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {storeReady ? "Ver tu tienda" : "Creando tu tienda..."}
+              {isCreatingStore ? "Creando tu tienda..." : "Crear mi tienda"}
             </Button>
           </div>
         )}
@@ -644,7 +696,7 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
                 <div>
                   <p className="text-sm font-medium mb-1">Panel de administración:</p>
                   <a
-                    href={getTestAdminUrl(storeData.subdomain)}
+                    href={getAutologinAdminUrl(storeData.subdomain, storeData.autologinToken)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary text-sm break-all hover:underline"
@@ -667,7 +719,25 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
                 </div>
               </div>
             </div>
-            <Button onClick={onClose} className="w-full bg-primary hover:bg-primary/90">
+            <div className="grid grid-cols-2 gap-3">
+              <Button asChild className="w-full bg-primary hover:bg-primary/90">
+                <a href={getTestStoreUrl(storeData.subdomain)} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Ir a la tienda
+                </a>
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <a
+                  href={getAutologinAdminUrl(storeData.subdomain, storeData.autologinToken)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Ir al administrador
+                </a>
+              </Button>
+            </div>
+            <Button onClick={onClose} variant="ghost" className="w-full">
               Cerrar
             </Button>
           </div>

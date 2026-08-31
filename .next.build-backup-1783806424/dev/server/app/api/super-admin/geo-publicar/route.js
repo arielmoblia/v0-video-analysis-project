@@ -1,0 +1,10 @@
+var R=require("../../../../chunks/[turbopack]_runtime.js")("server/app/api/super-admin/geo-publicar/route.js")
+R.c("server/chunks/node_modules_google-auth-library_build_src_index_34d41c81.js")
+R.c("server/chunks/node_modules_next_3c3e256b._.js")
+R.c("server/chunks/node_modules_@opentelemetry_api_build_esm_7e8f41ca._.js")
+R.c("server/chunks/node_modules_@supabase_auth-js_dist_module_02e1b12e._.js")
+R.c("server/chunks/node_modules_62644f13._.js")
+R.c("server/chunks/[root-of-the-server]__7cf59e22._.js")
+R.c("server/chunks/_next-internal_server_app_api_super-admin_geo-publicar_route_actions_16e5ca39.js")
+R.m("[project]/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/app/api/super-admin/geo-publicar/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)")
+module.exports=R.m("[project]/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/app/api/super-admin/geo-publicar/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)").exports

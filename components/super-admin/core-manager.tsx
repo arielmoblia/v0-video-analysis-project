@@ -166,7 +166,7 @@ export function CoreManager() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-green-500 p-4 rounded-lg">
       {/* Header con stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -254,7 +254,7 @@ export function CoreManager() {
                 Estas funcionalidades se actualizan automaticamente en TODAS las tiendas cuando activas/desactivas
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 bg-blue-500 p-4 rounded-lg">
               {/* Pagos */}
               <div>
                 <h4 className="font-semibold mb-3 flex items-center gap-2">

@@ -15,13 +15,13 @@ export async function POST(request: NextRequest) {
       const minutesLeft = Math.ceil(resetIn / 60000)
       return NextResponse.json({ 
         error: `Demasiados intentos. Intentá de nuevo en ${minutesLeft} minutos.` 
-      }, { status: 429 })
+      }, { status: 429, headers: { "Cache-Control": "no-store" } })
     }
 
     const { password } = await request.json()
 
     if (password !== SUPER_ADMIN_PASSWORD) {
-      return NextResponse.json({ error: "Contraseña incorrecta" }, { status: 401 })
+      return NextResponse.json({ error: "Contraseña incorrecta" }, { status: 401, headers: { "Cache-Control": "no-store" } })
     }
     
     // Login exitoso - resetear rate limit
@@ -36,9 +36,9 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 7,
     })
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
     console.error("Super admin login error:", error)
-    return NextResponse.json({ error: "Error al iniciar sesión" }, { status: 500 })
+    return NextResponse.json({ error: "Error al iniciar sesión" }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }

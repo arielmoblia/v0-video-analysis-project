@@ -46,22 +46,22 @@ interface ProductsManagerProps {
 // Variantes segun el template
 const TEMPLATE_VARIANTS: Record<string, { label: string; options: string[]; type: "sizes" | "specs" | "volumes" | "custom" }> = {
   zapatos: {
-    label: "Talles disponibles",
+    label: "Disponibles",
     options: ["34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46"],
     type: "sizes"
   },
   footwear: {
-    label: "Talles disponibles",
+    label: "Disponibles",
     options: ["34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46"],
     type: "sizes"
   },
   ropa: {
-    label: "Talles disponibles", 
+    label: "Disponibles", 
     options: ["S", "M", "L", "XL", "XXL", "UNICO"],
     type: "sizes"
   },
   clothing: {
-    label: "Talles disponibles", 
+    label: "Disponibles", 
     options: ["S", "M", "L", "XL", "XXL", "UNICO"],
     type: "sizes"
   },
@@ -162,12 +162,7 @@ export function ProductsManager({ storeId, template = "default", customVariants,
     fetchCategories()
   }, [storeId])
 
-  useEffect(() => {
-    if (dialogOpen) {
-      setEditableVariants([...AVAILABLE_SIZES])
-      setNewVariantInput("")
-    }
-  }, [dialogOpen])
+
 
   useEffect(() => {
     setEditableVariants([...AVAILABLE_SIZES])
@@ -206,7 +201,7 @@ export function ProductsManager({ storeId, template = "default", customVariants,
       } else {
         return {
           ...prev,
-          sizeStocks: [...prev.sizeStocks, { size, stock: 1 }].sort((a, b) => Number(a.size) - Number(b.size)),
+          sizeStocks: [...prev.sizeStocks, { size, stock: 1, price: Number.parseFloat(formData.price) || undefined }].sort((a, b) => Number(a.size) - Number(b.size)),
         }
       }
     })
@@ -297,6 +292,7 @@ export function ProductsManager({ storeId, template = "default", customVariants,
       category_id: product.category_id || "",
       sizeStocks,
     })
+    if (sizeStocks.length > 0) setEditableVariants(sizeStocks.map(s => s.size))
     setDialogOpen(true)
   }
 
@@ -327,10 +323,13 @@ export function ProductsManager({ storeId, template = "default", customVariants,
       category_id: product.category_id || "",
       sizeStocks,
     })
+    if (sizeStocks.length > 0) setEditableVariants(sizeStocks.map(s => s.size))
     setDialogOpen(true)
   }
 
   const resetForm = () => {
+    setEditableVariants([...AVAILABLE_SIZES])
+    setNewVariantInput("")
     setEditingProduct(null)
     setFormData({
       name: "",
@@ -544,52 +543,7 @@ export function ProductsManager({ storeId, template = "default", customVariants,
                 </div>
 
                 <div>
-                  {/* Selector de modo de variantes - solo si tiene la feature */}
-                  {hasCustom && (
-                    <div className="mb-4 p-3 bg-slate-50 rounded-lg border">
-                      <Label className="text-sm font-medium mb-2 block">Tipo de variantes</Label>
-                      <div className="grid grid-cols-3 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => { setVariantMode("standard"); setFormData(prev => ({ ...prev, sizeStocks: [] })) }}
-                          className={`text-xs p-2 rounded-md border transition-colors ${
-                            variantMode === "standard"
-                              ? "bg-black text-white border-black"
-                              : "bg-white text-neutral-700 border-neutral-300 hover:border-neutral-400"
-                          }`}
-                        >
-                          Estandar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setVariantMode("custom"); setFormData(prev => ({ ...prev, sizeStocks: [] })) }}
-                          className={`text-xs p-2 rounded-md border transition-colors ${
-                            variantMode === "custom"
-                              ? "bg-orange-500 text-white border-orange-500"
-                              : "bg-white text-neutral-700 border-neutral-300 hover:border-neutral-400"
-                          }`}
-                        >
-                          Personalizadas
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setVariantMode("both"); setFormData(prev => ({ ...prev, sizeStocks: [] })) }}
-                          className={`text-xs p-2 rounded-md border transition-colors ${
-                            variantMode === "both"
-                              ? "bg-violet-500 text-white border-violet-500"
-                              : "bg-white text-neutral-700 border-neutral-300 hover:border-neutral-400"
-                          }`}
-                        >
-                          Ambas
-                        </button>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground mt-1.5">
-                        {variantMode === "standard" && `Usa las variantes del template: ${templateConfig.options.slice(0, 5).join(", ")}...`}
-                        {variantMode === "custom" && `Usa tus variantes personalizadas: ${customOptions.slice(0, 5).join(", ")}${customOptions.length > 5 ? "..." : ""}`}
-                        {variantMode === "both" && "Combina las variantes del template con las personalizadas"}
-                      </p>
-                    </div>
-                  )}
+
                   
                   <Label>{variantConfig.label}</Label>
                   <p className="text-xs text-neutral-500 mb-2">
@@ -597,7 +551,7 @@ export function ProductsManager({ storeId, template = "default", customVariants,
                       ? "Selecciona las especificaciones. Podes poner precio diferente para cada una."
                       : variantConfig.type === "volumes"
                       ? "Selecciona las presentaciones. Podes poner precio diferente para cada una."
-                      : "Selecciona los talles/variantes y escribi el stock de cada uno"
+                      : "Selecciona y configurá cada variante"
                     }
                   </p>
                   <div className="grid grid-cols-4 gap-2">
@@ -612,11 +566,11 @@ export function ProductsManager({ storeId, template = "default", customVariants,
                               onClick={() => toggleSize(size)}
                               className={`w-full min-w-12 h-10 rounded-md border text-xs font-medium transition-colors px-1 ${isSelected ? "bg-black text-white border-black" : "bg-white text-neutral-700 border-neutral-300 hover:border-neutral-400"}`}
                             >{size}</button>
-                            <button
+                            {isSelected && <button
                               type="button"
                               onClick={(e) => { e.stopPropagation(); setEditableVariants(prev => prev.filter((_, i) => i !== vIdx)); setFormData(prev => ({ ...prev, sizeStocks: prev.sizeStocks.filter(s => s.size !== size) })) }}
                               className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600 leading-none"
-                            >×</button>
+                            >×</button>}
                           </div>
                           <input
                             type="text"
@@ -625,14 +579,10 @@ export function ProductsManager({ storeId, template = "default", customVariants,
                             className="w-full h-6 text-center text-xs border border-neutral-200 rounded p-0.5 focus:outline-none focus:border-neutral-400"
                             placeholder="Nombre"
                           />
-                          {isSelected && (
-                            <div className="flex flex-col gap-1 w-full">
-                              <Input type="number" min="0" value={sizeData.stock} onChange={(e) => updateSizeStock(size, Number.parseInt(e.target.value) || 0)} className="w-full h-7 text-center text-xs p-1" placeholder="Stock" />
-                              {(variantConfig.type === "specs" || variantConfig.type === "volumes") && (
-                                <Input type="number" min="0" step="0.01" value={sizeData.price || ""} onChange={(e) => updateSizePrice(size, Number.parseFloat(e.target.value) || 0)} className="w-full h-7 text-center text-xs p-1" placeholder="$ Precio" />
-                              )}
-                            </div>
-                          )}
+                          <div className="flex flex-col gap-1 w-full">
+                            <Input type="number" min="0" value={sizeData?.stock ?? ""} onChange={(e) => { if (!isSelected) toggleSize(size); updateSizeStock(size, Number.parseInt(e.target.value) || 0) }} className="w-full h-7 text-center text-xs p-1" placeholder="Stock" />
+                            <Input type="number" min="0" step="0.01" value={sizeData?.price ?? ""} onChange={(e) => { if (!isSelected) toggleSize(size); updateSizePrice(size, Number.parseFloat(e.target.value) || 0) }} className="w-full h-7 text-center text-xs p-1" placeholder={formData.price || "$ Precio"} />
+                          </div>
                         </div>
                       )
                     })}

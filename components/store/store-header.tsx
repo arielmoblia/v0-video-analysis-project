@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ShoppingBag, Menu, X, Search, ChevronDown } from "lucide-react"
+import { ShoppingBag, Menu, X, Search, ChevronDown, ArrowLeftRight } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { useCart } from "@/components/store/cart-provider"
@@ -10,9 +10,10 @@ import type { Store, Category } from "@/lib/store-context"
 interface StoreHeaderProps {
   store: Store
   categories: Category[]
+  hasMayoristaMinorista?: boolean
 }
 
-export function StoreHeader({ store, categories }: StoreHeaderProps) {
+export function StoreHeader({ store, categories, hasMayoristaMinorista }: StoreHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [productsMenuOpen, setProductsMenuOpen] = useState(false)
@@ -20,6 +21,7 @@ export function StoreHeader({ store, categories }: StoreHeaderProps) {
   const { items, setCartOpen } = useCart()
 
   const itemCount = items.reduce((acc, item) => acc + item.quantity, 0)
+  const showLinkedStoreButton = Boolean(hasMayoristaMinorista && store.linked_store_url)
 
   useEffect(() => {
     const hostname = window.location.hostname
@@ -93,6 +95,16 @@ export function StoreHeader({ store, categories }: StoreHeaderProps) {
             </nav>
 
             <div className="flex items-center gap-4">
+              {showLinkedStoreButton && (
+                <a
+                  href={store.linked_store_url!}
+                  className="hidden sm:inline-flex items-center gap-1.5 text-sm tracking-wide border border-neutral-300 rounded-full px-4 py-1.5 hover:bg-black hover:text-white hover:border-black transition-colors"
+                >
+                  <ArrowLeftRight className="h-3.5 w-3.5" />
+                  {store.linked_store_label || "Ir a mi otra tienda"}
+                </a>
+              )}
+
               <Button variant="ghost" size="icon" onClick={() => setSearchOpen(!searchOpen)} aria-label={searchOpen ? "Cerrar buscador" : "Buscar productos"} aria-expanded={searchOpen}>
                 <Search className="h-5 w-5" />
               </Button>
@@ -140,6 +152,15 @@ export function StoreHeader({ store, categories }: StoreHeaderProps) {
                     {cat.name}
                   </Link>
                 ))}
+                {showLinkedStoreButton && (
+                  <a
+                    href={store.linked_store_url!}
+                    className="flex items-center gap-1.5 text-sm tracking-wide py-2 border-t border-neutral-100 mt-2 pt-4"
+                  >
+                    <ArrowLeftRight className="h-3.5 w-3.5" />
+                    {store.linked_store_label || "Ir a mi otra tienda"}
+                  </a>
+                )}
               </nav>
             </div>
           )}

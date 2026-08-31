@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/blog/layout,_N_T_/blog/envios-andreani-correo-argentino/layout,_N_T_/blog/envios-andreani-correo-argentino/page,_N_T_/blog/envios-andreani-correo-argentino"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/blog/envios-andreani-correo-argentino/__PAGE__",
+    "/blog/envios-andreani-correo-argentino",
+    "/blog",
+    "/_index",
+    "/_head"
+  ]
+}

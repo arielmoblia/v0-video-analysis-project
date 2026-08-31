@@ -1,0 +1,3 @@
+{
+  "/api/feed/google/[subdomain]/route": "app/api/feed/google/[subdomain]/route.js"
+}

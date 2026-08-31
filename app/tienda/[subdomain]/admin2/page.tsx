@@ -2,6 +2,7 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { AdminLogin } from "@/components/admin/admin-login"
 import { AdminDashboard2 } from "@/components/admin/admin-dashboard2"
+import { AdminPageTracker } from "@/components/admin/admin-page-tracker"
 import { getStoreBySubdomain } from "@/lib/store-context"
 interface AdminPageProps {
   params: Promise<{ subdomain: string }>
@@ -18,5 +19,10 @@ export default async function AdminPage2({ params }: AdminPageProps) {
   if (!isAuthenticated) {
     return <AdminLogin store={store} subdomain={subdomain} />
   }
-  return <AdminDashboard2 store={store} subdomain={subdomain} />
+  return (
+    <>
+      <AdminPageTracker storeId={store.id} />
+      <AdminDashboard2 store={store} subdomain={subdomain} />
+    </>
+  )
 }

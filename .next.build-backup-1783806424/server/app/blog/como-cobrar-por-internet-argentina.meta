@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/blog/layout,_N_T_/blog/como-cobrar-por-internet-argentina/layout,_N_T_/blog/como-cobrar-por-internet-argentina/page,_N_T_/blog/como-cobrar-por-internet-argentina"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/blog/como-cobrar-por-internet-argentina/__PAGE__",
+    "/blog/como-cobrar-por-internet-argentina",
+    "/blog",
+    "/_index",
+    "/_head"
+  ]
+}

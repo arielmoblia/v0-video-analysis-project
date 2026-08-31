@@ -2,6 +2,7 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { AdminLogin } from "@/components/admin/admin-login"
 import { AdminDashboard } from "@/components/admin/admin-dashboard"
+import { AdminPageTracker } from "@/components/admin/admin-page-tracker"
 import { getStoreBySubdomain } from "@/lib/store-context"
 
 interface AdminPageProps {
@@ -24,5 +25,10 @@ export default async function AdminPage({ params }: AdminPageProps) {
     return <AdminLogin store={store} subdomain={subdomain} />
   }
 
-  return <AdminDashboard store={store} subdomain={subdomain} />
+  return (
+    <>
+      <AdminPageTracker storeId={store.id} />
+      <AdminDashboard store={store} subdomain={subdomain} />
+    </>
+  )
 }

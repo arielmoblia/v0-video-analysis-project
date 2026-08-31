@@ -83,6 +83,7 @@ interface PaymentMethods {
   mercadopago_test_mode: boolean
   mercadopago_test_token: string
   mercadopago_checkout_type: "redirect" | "modal"
+  mercadopago_oauth_connected: boolean
   mobbex_enabled: boolean
   mobbex_api_key: string
   mobbex_access_token: string
@@ -122,6 +123,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
     mercadopago_test_mode: false,
     mercadopago_test_token: "",
     mercadopago_checkout_type: "redirect",
+    mercadopago_oauth_connected: false,
     mobbex_enabled: false,
     mobbex_api_key: "",
     mobbex_access_token: "",
@@ -136,6 +138,20 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
   useEffect(() => {
     fetchPayments()
   }, [storeId])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const mpOauth = params.get("mp_oauth")
+    if (mpOauth === "success") {
+      alert("Cuenta de Mercado Pago conectada. El split de envío ya está activo para esta tienda.")
+      window.history.replaceState({}, "", window.location.pathname)
+    } else if (mpOauth === "error") {
+      alert("No se pudo conectar la cuenta de Mercado Pago. Probá de nuevo.")
+      window.history.replaceState({}, "", window.location.pathname)
+    }
+  }, [])
+
+  const isMarketplaceTestStore = storeId === process.env.NEXT_PUBLIC_MP_MARKETPLACE_TEST_STORE_ID
 
   const fetchPayments = async () => {
     try {
@@ -158,6 +174,7 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
             mercadopago_access_token: data.mercadopago_access_token || "",
             mercadopago_test_mode: data.mercadopago_test_mode || false,
             mercadopago_test_token: data.mercadopago_test_token || "",
+            mercadopago_oauth_connected: data.mercadopago_oauth_connected || false,
             mobbex_enabled: data.mobbex_enabled || false,
             mobbex_api_key: data.mobbex_api_key || "",
             mobbex_access_token: data.mobbex_access_token || "",
@@ -570,6 +587,38 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                             </ul>
                           </div>
                         </div>
+
+                        {isMarketplaceTestStore && (
+                          <div className="space-y-3 border-t pt-4">
+                            <Label className="flex items-center gap-2">
+                              Split de pagos con transporte
+                              <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">Beta - solo esta tienda</span>
+                            </Label>
+                            {payments.mercadopago_oauth_connected ? (
+                              <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+                                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                <p className="text-xs text-green-800">
+                                  Cuenta de Mercado Pago conectada. El envío se separa automáticamente en cada venta.
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                <p className="text-xs text-muted-foreground">
+                                  Conectá tu cuenta de Mercado Pago para que el costo de envío se separe solo hacia tol.ar en cada venta.
+                                </p>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => {
+                                    window.location.href = `/api/mercadopago/oauth/connect?storeId=${storeId}`
+                                  }}
+                                >
+                                  Conectar Mercado Pago
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
 
                       </div>
 

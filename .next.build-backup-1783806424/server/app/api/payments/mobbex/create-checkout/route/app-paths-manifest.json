@@ -1,0 +1,3 @@
+{
+  "/api/payments/mobbex/create-checkout/route": "app/api/payments/mobbex/create-checkout/route.js"
+}

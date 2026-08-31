@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "functions": {
+    "/api/seo-chat-general": {
+      "maxDuration": 300
+    },
+    "/api/super-admin/ranking-ai": {
+      "maxDuration": 60
+    },
+    "/api/super-admin/send-promo-mail": {
+      "maxDuration": 300
+    },
+    "/api/seo-chat": {
+      "maxDuration": 300
+    }
+  }
+}

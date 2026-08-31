@@ -6,6 +6,9 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const {
       storeId,
+      site_title,
+      subdomain,
+      email,
       banner_image,
       banner_title,
       banner_subtitle,
@@ -16,9 +19,13 @@ export async function PUT(request: NextRequest) {
       social_twitter,
       social_tiktok,
       social_whatsapp,
+      whatsapp_marketing_consent,
       footer_subtitle,
       address,
       phone,
+      custom_domain,
+      linked_store_url,
+      linked_store_label,
     } = body
 
     if (!storeId) {
@@ -27,9 +34,38 @@ export async function PUT(request: NextRequest) {
 
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
+    // Validar unicidad de subdominio si cambió
+    if (subdomain) {
+      const normalized = subdomain.toLowerCase()
+      const { data: current } = await supabase
+        .from("stores")
+        .select("subdomain")
+        .eq("id", storeId)
+        .single()
+
+      if (current && current.subdomain !== normalized) {
+        const { data: existing } = await supabase
+          .from("stores")
+          .select("id")
+          .eq("subdomain", normalized)
+          .neq("id", storeId)
+          .maybeSingle()
+
+        if (existing) {
+          return NextResponse.json(
+            { error: "Ya existe ese subdominio, elegí otro", field: "subdomain" },
+            { status: 409 }
+          )
+        }
+      }
+    }
+
     const { data, error } = await supabase
       .from("stores")
       .update({
+        ...(site_title !== undefined && { site_title }),
+        ...(subdomain !== undefined && { subdomain: subdomain.toLowerCase() }),
+        ...(email !== undefined && { email }),
         banner_image,
         banner_title,
         banner_subtitle,
@@ -40,9 +76,13 @@ export async function PUT(request: NextRequest) {
         social_twitter,
         social_tiktok,
         social_whatsapp,
+        ...(whatsapp_marketing_consent !== undefined && { whatsapp_marketing_consent }),
         footer_subtitle,
         address,
         phone,
+        ...(custom_domain !== undefined && { custom_domain: custom_domain ? custom_domain.trim().toLowerCase() : null }),
+        ...(linked_store_url !== undefined && { linked_store_url: linked_store_url ? linked_store_url.trim() : null }),
+        ...(linked_store_label !== undefined && { linked_store_label: linked_store_label ? linked_store_label.trim() : null }),
       })
       .eq("id", storeId)
       .select()

@@ -1,0 +1,10 @@
+const { createClient } = require('@supabase/supabase-js');
+const supabase = createClient(
+  'https://tuznlaqncbrsbokbbzhy.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1em5sYXFuY2Jyc2Jva2Jiemh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1NzUzMjEsImV4cCI6MjA1NDE1MTMyMX0.SV0_Hq5akrnAjXjw8dqPmMZLUBuHRRRNEPOJi4EB1B4'
+);
+supabase.from('stores').select('id', { count: 'exact', head: true }).then(r => {
+  console.log('TOTAL:', r.count);
+  console.log('ERROR:', r.error);
+  process.exit(0);
+});

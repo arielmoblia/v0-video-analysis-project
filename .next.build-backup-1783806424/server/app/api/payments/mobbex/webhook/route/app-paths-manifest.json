@@ -1,0 +1,3 @@
+{
+  "/api/payments/mobbex/webhook/route": "app/api/payments/mobbex/webhook/route.js"
+}

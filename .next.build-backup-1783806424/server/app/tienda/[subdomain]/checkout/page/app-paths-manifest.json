@@ -1,0 +1,3 @@
+{
+  "/tienda/[subdomain]/checkout/page": "app/tienda/[subdomain]/checkout/page.js"
+}

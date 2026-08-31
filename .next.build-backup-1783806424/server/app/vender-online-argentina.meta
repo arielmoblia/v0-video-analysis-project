@@ -1,0 +1,15 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/vender-online-argentina/layout,_N_T_/vender-online-argentina/page,_N_T_/vender-online-argentina"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/vender-online-argentina/__PAGE__",
+    "/vender-online-argentina",
+    "/_index",
+    "/_head"
+  ]
+}

@@ -306,9 +306,12 @@ export function AdminDashboard2({ store, subdomain }: AdminDashboardProps) {
           </TabsContent>
 
           <TabsContent value="plans">
-            <PlansManager 
-              storeId={store.id} 
+            <PlansManager
+              storeId={store.id}
               storeName={store.site_title}
+              initialCustomDomain={store.custom_domain}
+              initialLinkedStoreUrl={store.linked_store_url}
+              initialLinkedStoreLabel={store.linked_store_label}
               purchasedFeatures={purchasedFeatures}
               onFeaturePurchased={(code) => setPurchasedFeatures([...purchasedFeatures, code])}
             />

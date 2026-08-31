@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/arielmobilia/layout,_N_T_/arielmobilia/lupa/layout,_N_T_/arielmobilia/lupa/page,_N_T_/arielmobilia/lupa"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/arielmobilia/lupa/__PAGE__",
+    "/arielmobilia/lupa",
+    "/arielmobilia",
+    "/_index",
+    "/_head"
+  ]
+}

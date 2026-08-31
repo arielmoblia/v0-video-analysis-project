@@ -22,7 +22,6 @@ interface Contexto {
 const REDES = [
   { id: "facebook", label: "Facebook" },
   { id: "instagram", label: "Instagram" },
-  { id: "whatsapp", label: "WhatsApp" },
   { id: "tiktok", label: "TikTok" },
   { id: "youtube", label: "YouTube" },
 ]

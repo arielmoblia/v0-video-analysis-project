@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/plan-cositas/layout,_N_T_/plan-cositas/dolar-peso/layout,_N_T_/plan-cositas/dolar-peso/page,_N_T_/plan-cositas/dolar-peso"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/plan-cositas/dolar-peso/__PAGE__",
+    "/plan-cositas/dolar-peso",
+    "/plan-cositas",
+    "/_index",
+    "/_head"
+  ]
+}

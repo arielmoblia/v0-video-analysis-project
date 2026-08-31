@@ -293,7 +293,7 @@ export async function sendOrderEmail(params: SendOrderEmailParams): Promise<bool
 
             <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
               <h4 style="margin-top: 0;">Detalles del envío</h4>
-              <p style="margin: 5px 0;"><strong>Método:</strong> ${shippingMethod === "pickup" ? "Retiro en local" : "Envío a domicilio"}</p>
+              <p style="margin: 5px 0;"><strong>Método:</strong> ${shippingMethod}</p>
               ${shippingAddress ? `<p style="margin: 5px 0;"><strong>Dirección:</strong> ${shippingAddress}</p>` : ""}
               <p style="margin: 5px 0;"><strong>Forma de pago:</strong> ${paymentLabels[paymentMethod] || paymentMethod}</p>
             </div>
@@ -375,7 +375,7 @@ export async function sendOrderEmail(params: SendOrderEmailParams): Promise<bool
                 </tbody>
               </table>
               <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                <p style="margin: 5px 0;"><strong>Envio:</strong> ${shippingMethod === "pickup" ? "Retiro en local" : "Envio a domicilio"}</p>
+                <p style="margin: 5px 0;"><strong>Envio:</strong> ${shippingMethod}</p>
                 ${shippingAddress ? `<p style="margin: 5px 0;"><strong>Direccion:</strong> ${shippingAddress}</p>` : ""}
               </div>
               ${notes ? `

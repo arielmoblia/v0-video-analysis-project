@@ -26,13 +26,12 @@ export async function POST(request: NextRequest) {
     const { error } = await supabase
       .from("stores")
       .update({
+        last_login: new Date().toISOString(),
         last_activity_at: new Date().toISOString(),
         trial_expires_at: newTrialExpires.toISOString(),
-        // Resetear contador de emails si hubo actividad
         warning_emails_sent: 0
       })
       .eq("id", storeId)
-      .eq("is_trial", true) // Solo para tiendas en trial
 
     if (error) {
       console.error("Error updating activity:", error)

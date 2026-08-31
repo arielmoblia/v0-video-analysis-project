@@ -55,7 +55,7 @@ function TabsContent({
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.Content>) {
   return (
-    <TabsPrimitive.Content
+    <TabsPrimitive.Content suppressHydrationWarning
       data-slot="tabs-content"
       className={cn('flex-1 outline-none', className)}
       {...props}

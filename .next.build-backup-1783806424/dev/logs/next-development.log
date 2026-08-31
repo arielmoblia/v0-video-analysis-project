@@ -1,0 +1,9 @@
+[00:00:04.902] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:05.757] Server  LOG      ✓ Ready in 4.6s
+[00:00:27.468] Server  LOG      ○ Compiling /_not-found/page ...
+[00:00:38.163] Server  WARN     ⚠ Cross origin request detected from prueba.tol.ar to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+[00:00:38.228] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:38.861] Browser WARN    [Smartlook] Smartlook is stopped. Automation framework is detected.
+[00:00:57.565] Server  WARN    Image with src "https://tuznlaqncbrsbokbbzhy.supabase.co/storage/v1/object/public/store-images/1774974174282-g5dfltm503u.webp" is using quality "85" which is not configured in images.qualities [75, 80, 90]. Please update your config to [75, 80, 85, 90].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities

@@ -1,0 +1,15 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/tienda-online/layout,_N_T_/tienda-online/page,_N_T_/tienda-online"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/tienda-online/__PAGE__",
+    "/tienda-online",
+    "/_index",
+    "/_head"
+  ]
+}

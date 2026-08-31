@@ -13,10 +13,10 @@ export async function GET() {
 
     if (error) throw error
 
-    return NextResponse.json({ features })
+    return NextResponse.json({ features }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
     console.error("Error fetching features:", error)
-    return NextResponse.json({ error: "Error al obtener features" }, { status: 500 })
+    return NextResponse.json({ error: "Error al obtener features" }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }
 
@@ -41,10 +41,10 @@ export async function POST(request: Request) {
 
     if (error) throw error
 
-    return NextResponse.json({ feature })
+    return NextResponse.json({ feature }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
     console.error("Error creating feature:", error)
-    return NextResponse.json({ error: "Error al crear feature" }, { status: 500 })
+    return NextResponse.json({ error: "Error al crear feature" }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }
 
@@ -63,10 +63,10 @@ export async function PUT(request: Request) {
 
     if (error) throw error
 
-    return NextResponse.json({ feature })
+    return NextResponse.json({ feature }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
     console.error("Error updating feature:", error)
-    return NextResponse.json({ error: "Error al actualizar feature" }, { status: 500 })
+    return NextResponse.json({ error: "Error al actualizar feature" }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }
 
@@ -77,16 +77,16 @@ export async function DELETE(request: Request) {
     const id = searchParams.get("id")
 
     if (!id) {
-      return NextResponse.json({ error: "ID requerido" }, { status: 400 })
+      return NextResponse.json({ error: "ID requerido" }, { status: 400, headers: { "Cache-Control": "no-store" } })
     }
 
     const { error } = await supabase.from("store_features").delete().eq("id", id)
 
     if (error) throw error
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
     console.error("Error deleting feature:", error)
-    return NextResponse.json({ error: "Error al eliminar feature" }, { status: 500 })
+    return NextResponse.json({ error: "Error al eliminar feature" }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }

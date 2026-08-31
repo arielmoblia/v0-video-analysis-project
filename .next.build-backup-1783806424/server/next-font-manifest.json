@@ -1,0 +1,291 @@
+{
+  "app": {
+    "[project]/app/_not-found/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/admin/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/alternativa-mercado-shops/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/arielmobilia/[slug]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/arielmobilia/contacto/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/arielmobilia/lupa/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/arielmobilia/migrar/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/arielmobilia/migrar/sistema/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/arielmobilia/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/arielmobilia/plan-a-medida/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/arielmobilia/plan-cositas/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/arielmobilia/plan-gratis/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/arielmobilia/plan-socio/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/arielmobilia/templates/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/blog/como-cobrar-por-internet-argentina/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/blog/como-crear-tienda-online-gratis-argentina/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/blog/como-empezar-a-vender-online-sin-tecnologia/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/blog/como-vender-por-whatsapp-argentina/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/blog/como-vender-ropa-online-argentina/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/blog/cuanto-cuesta-tienda-online-argentina/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/blog/envios-andreani-correo-argentino/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/blog/errores-comunes-tienda-online-argentina/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/blog/mejor-plataforma-tienda-online-argentina/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/blog/mercadopago-tienda-online/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/blog/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/blog/plataformas-ecommerce-argentina-2026/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/blog/que-necesito-para-vender-online-argentina/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/blog/que-productos-vender-online-argentina/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/blog/tienda-online-vs-redes-sociales-argentina/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/blog/vender-online-monotributista-argentina/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/blog/vender-online-sin-comisiones-argentina/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/blog/vender-sin-cuit-argentina/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/calculadora/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/categoria/[slug]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/checkout/confirmacion/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/checkout/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/comparar/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/contacto/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/cositas/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/devoluciones/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/diseno-ia/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/donde-abrir-tienda-online-argentina/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/empleos/[slug]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/empleos/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/especialista/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/faq/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/migrar/sistema/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/pagos/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/plan-a-medida/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/plan-cositas/dolar-peso/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/plan-cositas/lupa/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/plan-cositas/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/plan-gratis/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/plan-migrar/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/plan-socio/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/prensa/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/privacidad/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/producto/[slug]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/sobre-nosotros/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/terminos/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/testimonios/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/tienda-online/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/tienda/[subdomain]/admin/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/tienda/[subdomain]/admin2/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/tienda/[subdomain]/categoria/[slug]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/tienda/[subdomain]/checkout/confirmacion/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/tienda/[subdomain]/checkout/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/tienda/[subdomain]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/tienda/[subdomain]/producto/[slug]/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ],
+    "[project]/app/vender-online-argentina/page": [
+      "static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "static/media/797e433ab948586e-s.p.29207c2f.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pages": {},
+  "pagesUsingSizeAdjust": false
+}

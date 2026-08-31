@@ -19,6 +19,10 @@ export function PageTracker({ storeId }: PageTrackerProps) {
         localStorage.setItem("visitor_id", visitorId)
       }
 
+      // Solo trackear paginas publicas de la landing
+      const IGNORED = ["/admin", "/arielmobilia", "/tienda/", "/api/"]
+      if (IGNORED.some(p => pathname.startsWith(p))) return
+
       try {
         await fetch("/api/analytics/track", {
           method: "POST",

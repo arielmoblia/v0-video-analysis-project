@@ -1,12 +1,11 @@
 import { CheckCircle, Package, Mail, ArrowLeft, Clock, XCircle } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { createClient } from "@/lib/supabase/server"
 
 export default async function ConfirmacionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ 
+  searchParams: Promise<{
     order?: string
     status?: string
     payment_id?: string
@@ -14,41 +13,24 @@ export default async function ConfirmacionPage({
     external_reference?: string
   }>
 }) {
-  const { order, status, payment_id, collection_status, external_reference } = await searchParams
-  
-  const supabase = await createClient()
-  
+  const { order, status, collection_status, external_reference } = await searchParams
+
   // El orderId puede venir de "order" o "external_reference" (MercadoPago lo devuelve así)
   const orderId = order || external_reference
-  
-  // Determinar estado del pago
+
+  // Esto es solo para el mensaje visual. La confirmación real del pago (marcar
+  // "pagado", descontar stock y disparar la compra automática al proveedor) la
+  // hace exclusivamente el webhook server-to-server de Mercado Pago
+  // (/api/mercadopago/webhook), porque estos parámetros de URL los puede
+  // falsificar cualquiera sin haber pagado nada.
   let paymentStatus: "success" | "pending" | "failure" = "success"
-  
+
   if (collection_status === "approved" || status === "approved") {
     paymentStatus = "success"
   } else if (collection_status === "pending" || status === "pending") {
     paymentStatus = "pending"
   } else if (collection_status === "rejected" || status === "failure") {
     paymentStatus = "failure"
-  }
-  
-  // Actualizar el estado del pedido si tenemos orderId y payment_id
-  if (orderId && payment_id && paymentStatus === "success") {
-    await supabase
-      .from("orders")
-      .update({ 
-        status: "pagado",
-        payment_id: payment_id 
-      })
-      .eq("id", orderId)
-  } else if (orderId && payment_id && paymentStatus === "pending") {
-    await supabase
-      .from("orders")
-      .update({ 
-        status: "pendiente_pago",
-        payment_id: payment_id 
-      })
-      .eq("id", orderId)
   }
 
   const statusConfig = {

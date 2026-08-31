@@ -12,7 +12,7 @@ const PLANS = [
     name: "Plan Gratis",
     price: "$0",
     period: "",
-    features: ["100% gratis para siempre", "Hasta 20 productos", "Todo lo basico para vender"],
+    features: ["100% gratis para siempre", "Productos ilimitados", "Todo lo basico para vender"],
     href: "/plan-gratis",
     buttonStyle: "default",
     highlight: false,
@@ -22,7 +22,7 @@ const PLANS = [
     nameHtml: true,
     price: "Vos elegis",
     period: "",
-    features: ["Empezas gratis", "Sumas funciones cuando quieras", "Pagas solo lo que usas"],
+    features: ["Empezás gratis", "Sumás funciones cuando querés", "Pagás solo lo que usás"],
     href: "/plan-cositas",
     buttonStyle: "default",
     highlight: false,
@@ -55,7 +55,7 @@ export function PlansSection({ fullPlans = false, basePath = "" }: PlansSectionP
     <section className="py-12 bg-muted/30">
       <div className="container mx-auto px-4">
         <h2 className="text-2xl font-bold text-center mb-8">
-          {fullPlans ? "Nuestros Planes" : "Empeza Gratis"}
+          {fullPlans ? "Nuestros Planes" : "Empezá Gratis"}
         </h2>
         
         <div className={`grid gap-6 max-w-5xl mx-auto ${fullPlans ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4" : "grid-cols-1 max-w-md"}`}>

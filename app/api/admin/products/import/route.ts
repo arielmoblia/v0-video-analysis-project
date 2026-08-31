@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       image_url: product.image_url || null,
       category_id: categoryId,
       sizes: sizes,
-      is_active: true,
+
     }
 
     // Si no tiene talles pero tiene stock, se podria agregar como info

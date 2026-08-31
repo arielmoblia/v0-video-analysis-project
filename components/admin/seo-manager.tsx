@@ -38,6 +38,8 @@ interface SEOManagerProps {
   storeId: string
   subdomain: string
   storeName: string
+  isUnlocked?: boolean
+  onActivate?: () => void
 }
 
 interface SEOData {
@@ -68,7 +70,7 @@ interface SEOAnalysis {
   suggestions: string[]
 }
 
-export function SEOManager({ storeId, subdomain, storeName }: SEOManagerProps) {
+export function SEOManager({ storeId, subdomain, storeName, isUnlocked = false, onActivate }: SEOManagerProps) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
@@ -302,6 +304,33 @@ export function SEOManager({ storeId, subdomain, storeName }: SEOManagerProps) {
   }
 
   return (
+    <div style={{ position: "relative" }}>
+      {!isUnlocked && (
+        <div style={{
+          position: "absolute", inset: 0, zIndex: 10,
+          background: "rgba(255,255,255,0.75)",
+          backdropFilter: "blur(3px)",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center", gap: "16px",
+          borderRadius: "12px",
+        }}>
+          <div style={{ fontSize: "32px" }}>🔍</div>
+          <p style={{ fontSize: "16px", fontWeight: 500, color: "#1a1a1a", margin: 0, textAlign: "center" }}>
+            El SEO Profesional es parte del Plan Cositas
+          </p>
+          <p style={{ fontSize: "13px", color: "#666", margin: 0, textAlign: "center", maxWidth: "280px" }}>
+            Tu tienda es gratis. El SEO avanzado se activa por separado.
+          </p>
+          <button onClick={onActivate} style={{
+            marginTop: "8px", padding: "12px 32px",
+            background: "#f97316", color: "#fff",
+            border: "none", borderRadius: "8px",
+            fontSize: "15px", fontWeight: 600, cursor: "pointer",
+          }}>
+            ACTIVAR SEO PROFESIONAL
+          </button>
+        </div>
+      )}
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -1023,5 +1052,7 @@ export function SEOManager({ storeId, subdomain, storeName }: SEOManagerProps) {
         </TabsContent>
       </Tabs>
     </div>
+  )
+  </div>
   )
 }

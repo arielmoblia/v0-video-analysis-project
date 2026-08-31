@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
     await resend.emails.send({
       from: `tol.ar - Contacto <ventas@tiendaonline.com.ar>`,
-      to: "info@tiendaonline.com.ar",
+      to: "soporte@tiendaonline.com.ar",
       subject: `[tol.ar] Nuevo mensaje: ${subject}`,
       html: `
         <!DOCTYPE html>

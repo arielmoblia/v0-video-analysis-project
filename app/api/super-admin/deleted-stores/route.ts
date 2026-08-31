@@ -7,7 +7,7 @@ export async function GET() {
     const cookieStore = await cookies()
     const adminCookie = cookieStore.get("super_admin")
     if (!adminCookie || adminCookie.value !== "true") {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+      return NextResponse.json({ error: "No autorizado" }, { status: 401, headers: { "Cache-Control": "no-store" } })
     }
 
     const supabase = createClient(
@@ -22,7 +22,7 @@ export async function GET() {
       .order("updated_at", { ascending: false })
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: error.message }, { status: 500, headers: { "Cache-Control": "no-store" } })
     }
 
     const mapped = (stores || []).map((s) => ({
@@ -31,8 +31,8 @@ export async function GET() {
       reason: "inactividad",
     }))
 
-    return NextResponse.json({ stores: mapped })
+    return NextResponse.json({ stores: mapped }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
-    return NextResponse.json({ error: "Error interno" }, { status: 500 })
+    return NextResponse.json({ error: "Error interno" }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }

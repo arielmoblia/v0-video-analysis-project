@@ -1,6 +1,7 @@
 import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import { getStoreBySubdomain, getStoreCategories, getProductsByCategory } from "@/lib/store-context"
+import { hasStoreFeature } from "@/lib/services/stores"
 import { StoreHeader } from "@/components/store/store-header"
 import { StoreFooter } from "@/components/store/store-footer"
 import { CartProvider } from "@/components/store/cart-provider"
@@ -33,13 +34,16 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
     notFound()
   }
 
-  const products = await getProductsByCategory(store.id, category.id)
+  const [products, hasMayoristaMinorista] = await Promise.all([
+    getProductsByCategory(store.id, category.id),
+    hasStoreFeature(store.id, "mayorista_minorista"),
+  ])
 
   return (
     <CartProvider>
       <PageTracker storeId={store.id} />
       <div className="min-h-screen flex flex-col bg-white">
-        <StoreHeader store={store} categories={categories} />
+        <StoreHeader store={store} categories={categories} hasMayoristaMinorista={hasMayoristaMinorista} />
         <main className="flex-1">
           <section className="py-20 px-6">
             <div className="container mx-auto">

@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import type { Store } from "@/lib/store-context"
-import { Instagram, Facebook, Youtube } from "lucide-react"
+import { Instagram, Facebook, Youtube, MapPin, Phone } from "lucide-react"
 import Link from "next/link"
 import { ContactModal } from "./contact-modal"
+import { ArrepentimientoModal } from "./arrepentimiento-modal"
 
 function TikTokIcon({ className }: { className?: string }) {
   return (
@@ -28,6 +29,7 @@ interface StoreFooterProps {
 
 export function StoreFooter({ store }: StoreFooterProps) {
   const [contactOpen, setContactOpen] = useState(false)
+  const [arrepentimientoOpen, setArrepentimientoOpen] = useState(false)
 
   const hasSocialLinks =
     store.social_instagram ||
@@ -66,18 +68,28 @@ export function StoreFooter({ store }: StoreFooterProps) {
 
       {/* Footer Content */}
       <div className="container mx-auto px-6 py-12">
-        <div className="grid md:grid-cols-3 gap-10 mb-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* Brand */}
           <div>
             <h4 className="font-light text-xl tracking-[0.2em] uppercase mb-4">{store.site_title}</h4>
             <p className="text-neutral-400 text-sm leading-relaxed">
               {store.footer_subtitle || "Tu destino para encontrar los mejores productos con estilo y calidad."}
             </p>
-            {store.address && (
-              <p className="text-white text-xs mt-2">{store.address}</p>
-            )}
-            {store.phone && (
-              <p className="text-white text-xs mt-1">{store.phone}</p>
+            {(store.address || store.phone) && (
+              <div className="mt-3 space-y-1.5">
+                {store.address && (
+                  <p className="text-neutral-400 text-xs flex items-start gap-1.5">
+                    <MapPin className="h-3 w-3 mt-0.5 shrink-0" />
+                    {store.address}
+                  </p>
+                )}
+                {store.phone && (
+                  <p className="text-neutral-400 text-xs flex items-center gap-1.5">
+                    <Phone className="h-3 w-3 shrink-0" />
+                    {store.phone}
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
@@ -99,6 +111,36 @@ export function StoreFooter({ store }: StoreFooterProps) {
                 <button onClick={() => setContactOpen(true)} className="hover:text-white transition-colors">
                   Contacto
                 </button>
+              </li>
+            </ul>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <h5 className="text-xs tracking-[0.2em] uppercase mb-4 text-neutral-300">Legal</h5>
+            <ul className="space-y-3 text-sm text-neutral-400">
+              <li>
+                <button
+                  onClick={() => setArrepentimientoOpen(true)}
+                  className="text-white font-medium hover:text-neutral-300 transition-colors underline underline-offset-4"
+                >
+                  Botón de Arrepentimiento
+                </button>
+              </li>
+              <li>
+                <Link href="/terminos" className="hover:text-white transition-colors">
+                  Términos y Condiciones
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacidad" className="hover:text-white transition-colors">
+                  Política de Privacidad
+                </Link>
+              </li>
+              <li>
+                <Link href="/devoluciones" className="hover:text-white transition-colors">
+                  Política de Devoluciones
+                </Link>
               </li>
             </ul>
           </div>
@@ -197,6 +239,7 @@ export function StoreFooter({ store }: StoreFooterProps) {
       </div>
 
       <ContactModal store={store} open={contactOpen} onOpenChange={setContactOpen} />
+      <ArrepentimientoModal store={store} open={arrepentimientoOpen} onOpenChange={setArrepentimientoOpen} />
     </footer>
   )
 }

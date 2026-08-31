@@ -1,0 +1,983 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { ShippingOptions } from "./shipping-options"
+import { EnviameloPointsPicker } from "./enviamelo-points-picker"
+import { useCart } from "./cart-provider"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { ArrowLeft, CreditCard, Banknote, Building2, Smartphone, Wallet, Truck, CheckCircle, Loader2 } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
+
+interface CheckoutStore {
+  id: string
+  site_title: string
+  subdomain: string
+}
+
+export function CheckoutForm({ store }: { store: CheckoutStore }) {
+  const { items, total, clearCart, isLoaded } = useCart()
+  const [step, setStep] = useState<"info" | "payment" | "shipping" | "confirm" | "success">("info")
+  const [loading, setLoading] = useState(false)
+  const [orderId, setOrderId] = useState<string | null>(null)
+  const [shippingCost, setShippingCost] = useState<number | null>(null)
+  const [selectedShippingOption, setSelectedShippingOption] = useState<any>(null)
+  const [showEnviameloPoints, setShowEnviameloPoints] = useState(false)
+  const [selectedEnviameloPoint, setSelectedEnviameloPoint] = useState<any>(null)
+  const [shippingLoading, setShippingLoading] = useState(false)
+  const [shippingError, setShippingError] = useState<string | null>(null)
+  const [orderData, setOrderData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    postalCode: "",
+    notes: "",
+    paymentMethod: "",
+    shippingMethod: "pickup",
+    shippingLabel: "Retiro en local",
+  })
+  const [paymentSettings, setPaymentSettings] = useState<{
+    cash_enabled?: boolean
+    cash_instructions?: string
+    transfer_enabled?: boolean
+    transfer_cbu?: string
+    transfer_alias?: string
+    transfer_bank_name?: string
+    transfer_account_holder?: string
+    card_enabled?: boolean
+    card_instructions?: string
+    mercadopago_enabled?: boolean
+    modo_enabled?: boolean
+    modo_phone?: string
+    uala_enabled?: boolean
+    uala_link?: string
+    mobbex_enabled?: boolean
+    rapipago_enabled?: boolean
+    rapipago_instructions?: string
+  } | null>(null)
+  const [loadingPayments, setLoadingPayments] = useState(true)
+
+  // Cargar configuracion de pagos de la tienda
+  useEffect(() => {
+    const loadPaymentSettings = async () => {
+      try {
+        const res = await fetch(`/api/admin/payments?storeId=${store.id}`)
+        const data = await res.json()
+        // Normalizar los valores booleanos (por si vienen como 1/0 de la DB)
+        const normalizedData = data ? {
+          ...data,
+          cash_enabled: data.cash_enabled === true || data.cash_enabled === 1,
+          cash_instructions: data.cash_instructions || "",
+          transfer_enabled: data.transfer_enabled === true || data.transfer_enabled === 1,
+          transfer_cbu: data.transfer_cbu || "",
+          transfer_alias: data.transfer_alias || "",
+          transfer_bank_name: data.transfer_bank_name || "",
+          transfer_account_holder: data.transfer_account_holder || "",
+          card_enabled: data.card_enabled === true || data.card_enabled === 1,
+          card_instructions: data.card_instructions || "",
+          mercadopago_enabled: data.mercadopago_enabled === true || data.mercadopago_enabled === 1,
+          modo_enabled: data.modo_enabled === true || data.modo_enabled === 1,
+          modo_phone: data.modo_phone || "",
+          uala_enabled: data.uala_enabled === true || data.uala_enabled === 1,
+          uala_link: data.uala_link || "",
+          mobbex_enabled: data.mobbex_enabled === true || data.mobbex_enabled === 1,
+          rapipago_enabled: data.rapipago_enabled === true || data.rapipago_enabled === 1,
+          rapipago_instructions: data.rapipago_instructions || "",
+        } : null
+        
+        setPaymentSettings(normalizedData)
+        
+        // Seleccionar el primer metodo habilitado por defecto
+        if (normalizedData) {
+          if (normalizedData.mercadopago_enabled) setOrderData(prev => ({ ...prev, paymentMethod: "mercadopago" }))
+          else if (normalizedData.mobbex_enabled) setOrderData(prev => ({ ...prev, paymentMethod: "mobbex" }))
+          else if (normalizedData.transfer_enabled) setOrderData(prev => ({ ...prev, paymentMethod: "transfer" }))
+          else if (normalizedData.cash_enabled) setOrderData(prev => ({ ...prev, paymentMethod: "cash" }))
+          else if (normalizedData.card_enabled) setOrderData(prev => ({ ...prev, paymentMethod: "card" }))
+          else if (normalizedData.modo_enabled) setOrderData(prev => ({ ...prev, paymentMethod: "modo" }))
+          else if (normalizedData.uala_enabled) setOrderData(prev => ({ ...prev, paymentMethod: "uala" }))
+          else if (normalizedData.rapipago_enabled) setOrderData(prev => ({ ...prev, paymentMethod: "rapipago" }))
+          else setOrderData(prev => ({ ...prev, paymentMethod: "" }))
+        } else {
+          setOrderData(prev => ({ ...prev, paymentMethod: "" }))
+        }
+      } catch (error) {
+        console.error("Error cargando metodos de pago:", error)
+        setOrderData(prev => ({ ...prev, paymentMethod: "cash" }))
+      } finally {
+        setLoadingPayments(false)
+      }
+    }
+    loadPaymentSettings()
+  }, [store.id])
+
+  // Limpiar carrito si vuelve de MercadoPago
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const pendingClear = sessionStorage.getItem("mp_pending_clear")
+      if (pendingClear) {
+        sessionStorage.removeItem("mp_pending_clear")
+        clearCart()
+      }
+    }
+  }, [clearCart])
+
+  const formatPrice = (price: number) => {
+    return `$${price.toLocaleString('es-AR')}`
+  }
+  // Precio del envío derivado directo del option seleccionado
+  const envioPrice = selectedShippingOption && selectedShippingOption.price > 0
+    ? (selectedShippingOption.type === "pickup" ? 0 : selectedShippingOption.price)
+    : (selectedShippingOption?.type === "pickup" ? 0 : null)
+
+  // Cotizar envío con Andreani cuando cambia el código postal
+  const fetchShippingQuote = async (postalCode: string) => {
+    if (!postalCode || postalCode.length < 4) {
+      setShippingCost(null)
+      return
+    }
+
+    setShippingLoading(true)
+    setShippingError(null)
+
+    try {
+      const response = await fetch("/api/shipping/andreani/quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          storeId: store.id,
+          cpDestino: postalCode,
+          pesoTotal: items.reduce((acc, item) => acc + (item.quantity * 500), 0), // Estimado 500g por producto
+          valorDeclarado: total,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setShippingCost(data.quote.priceWithTax || data.quote.priceWithoutTax)
+      } else {
+        // Si no hay Andreani configurado, no mostrar error, solo dejar "A calcular"
+        setShippingCost(null)
+        if (data.error && !data.error.includes("no configuradas")) {
+          setShippingError(data.error)
+        }
+      }
+    } catch (error) {
+      console.error("[v0] Error cotizando envío:", error)
+      setShippingCost(null)
+    } finally {
+      setShippingLoading(false)
+    }
+  }
+
+  // Efecto para cotizar con Andreani cuando cambia el CP
+  useEffect(() => {
+    const type = selectedShippingOption?.type
+    // Solo correr para Andreani explícitamente
+    if (type !== "andreani") return
+    if (orderData.shippingMethod === "delivery" && orderData.postalCode) {
+      const timer = setTimeout(() => {
+        fetchShippingQuote(orderData.postalCode)
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [orderData.postalCode, orderData.shippingMethod, selectedShippingOption])
+
+  const getItemKey = (item: (typeof items)[0]) => {
+    return `${item.product.id}-${item.product.selectedSize || "no-size"}`
+  }
+
+  const getStoreUrl = () => {
+    if (typeof window !== "undefined") {
+      const hostname = window.location.hostname
+      const isSubdomain = hostname.includes(".tol.ar") && !hostname.startsWith("www.") && hostname !== "tol.ar"
+      if (isSubdomain) {
+        return "/"
+      }
+    }
+    return `/tienda/${store.subdomain}`
+  }
+
+  const handleSubmit = async () => {
+    setLoading(true)
+
+    try {
+      // Primero crear el pedido
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          storeId: store.id,
+          items: items.map((item) => ({
+            productId: item.product.id,
+            name: item.product.name,
+            price: Number(item.product.price),
+            quantity: item.quantity,
+            size: item.product.selectedSize || null,
+            image_url: item.product.image_url || null,
+          })),
+          total,
+          customer: {
+            name: orderData.name,
+            email: orderData.email,
+            phone: orderData.phone,
+          },
+          shipping: {
+            method: selectedShippingOption?.type || orderData.shippingMethod,
+            label: orderData.shippingLabel || (orderData.shippingMethod === "pickup" ? "Retiro en local" : "Envío a domicilio"),
+            address: selectedShippingOption?.type === "enviamelo_retiro" && selectedEnviameloPoint
+              ? `${selectedEnviameloPoint.address}, ${selectedEnviameloPoint.location}`
+              : orderData.address,
+            city: selectedShippingOption?.type === "enviamelo_retiro" && selectedEnviameloPoint
+              ? selectedEnviameloPoint.province
+              : orderData.city,
+            postalCode: selectedShippingOption?.type === "enviamelo_retiro" && selectedEnviameloPoint
+              ? selectedEnviameloPoint.postalCode
+              : orderData.postalCode,
+            notes: orderData.notes,
+            shippingCost: shippingCost || 0,
+          },
+          total: total + (shippingCost || 0),
+          paymentMethod: orderData.paymentMethod,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Si eligió Mobbex, redirigir al checkout de Mobbex
+        if (orderData.paymentMethod === "mobbex") {
+          try {
+            const mobbexResponse = await fetch("/api/payments/mobbex/create-checkout", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                storeId: store.id,
+                orderId: data.orderId,
+                items: items.map((item) => ({
+                  name: item.product.name,
+                  price: Number(item.product.price),
+                  quantity: item.quantity,
+                })),
+                customer: {
+                  name: orderData.name,
+                  email: orderData.email,
+                  phone: orderData.phone,
+                },
+              }),
+            })
+            const mobbexData = await mobbexResponse.json()
+            if (mobbexResponse.ok && mobbexData.checkoutUrl) {
+              window.location.href = mobbexData.checkoutUrl
+              return
+            } else {
+              alert("Error al conectar con Mobbex: " + (mobbexData.error || "Error desconocido") + ". El pedido fue creado, te contactaremos para coordinar el pago.")
+            }
+          } catch (mobbexError) {
+            console.error("Error al crear checkout Mobbex:", mobbexError)
+            alert("Error al conectar con Mobbex. El pedido fue creado, te contactaremos para coordinar el pago.")
+          }
+        }
+
+        // Si eligió MercadoPago, redirigir al checkout de MP
+        if (orderData.paymentMethod === "mercadopago") {
+          try {
+            const mpResponse = await fetch("/api/mercadopago/create-preference", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                storeId: store.id,
+                orderId: data.orderId,
+                customerEmail: orderData.email,
+                items: items.map((item) => ({
+                  name: item.product.name,
+                  price: Number(item.product.price),
+                  quantity: item.quantity,
+                  size: item.product.selectedSize || null,
+                })),
+              }),
+            })
+
+            const mpData = await mpResponse.json()
+
+            if (mpResponse.ok && mpData.initPoint) {
+              // Guardamos en sessionStorage para limpiar cuando vuelva
+              sessionStorage.setItem("mp_pending_clear", "true")
+              
+              // Verificar si usar modal o redirect
+              if (mpData.checkoutType === "modal") {
+                // Abrir en popup/ventana nueva centrada
+                const width = 600
+                const height = 700
+                const left = (window.screen.width - width) / 2
+                const top = (window.screen.height - height) / 2
+                const popup = window.open(
+                  mpData.initPoint,
+                  "MercadoPago",
+                  `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+                )
+                
+                // Verificar si el popup fue bloqueado
+                if (!popup || popup.closed || typeof popup.closed === "undefined") {
+                  // Si el popup fue bloqueado, hacer redirect normal
+                  window.location.href = mpData.initPoint
+                }
+                return
+              } else {
+                // Redirect normal
+                window.location.href = mpData.initPoint
+                return
+              }
+            } else {
+              console.error("[v0] Error MP Response:", mpData)
+              const errorMsg = mpData.details || mpData.error || "Error desconocido"
+              alert(`Error al conectar con MercadoPago: ${errorMsg}. El pedido fue creado, te contactaremos para coordinar el pago.`)
+            }
+          } catch (mpError) {
+            console.error("Error al crear preferencia MP:", mpError)
+            alert("Error al conectar con MercadoPago. El pedido fue creado, te contactaremos para coordinar el pago.")
+          }
+        }
+        
+        setOrderId(data.orderId)
+        clearCart()
+        setStep("success")
+      }
+    } catch (error) {
+      console.error("Error al crear pedido:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-neutral-400" />
+          <p className="text-neutral-500">Cargando carrito...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (items.length === 0 && step !== "success") {
+    return (
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-light mb-4">Tu carrito está vacío</h1>
+          <Link href={getStoreUrl()}>
+            <Button variant="outline">Volver a la tienda</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (step === "success") {
+    return (
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-sm max-w-md w-full text-center">
+          <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-light mb-2">¡Pedido confirmado!</h1>
+          {orderId && <p className="text-sm text-neutral-500 mb-2">Orden #{orderId.slice(0, 8).toUpperCase()}</p>}
+          <p className="text-sm text-neutral-500 mb-4">Te enviamos un email con todos los datos de tu compra.</p>
+          {/* Instrucciones de pago según el método */}
+          {orderData.paymentMethod === "transfer" && paymentSettings?.transfer_cbu && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-left">
+              <p className="font-medium text-blue-800 mb-2">Datos para la transferencia</p>
+              {paymentSettings.transfer_bank_name && <p className="text-sm text-blue-700">Banco: <strong>{paymentSettings.transfer_bank_name}</strong></p>}
+              {paymentSettings.transfer_account_holder && <p className="text-sm text-blue-700">Titular: <strong>{paymentSettings.transfer_account_holder}</strong></p>}
+              <p className="text-sm text-blue-700">CBU: <strong>{paymentSettings.transfer_cbu}</strong></p>
+              {paymentSettings.transfer_alias && <p className="text-sm text-blue-700">Alias: <strong>{paymentSettings.transfer_alias}</strong></p>}
+              <p className="text-xs text-blue-600 mt-2">Una vez realizada la transferencia el vendedor confirmará tu pedido.</p>
+            </div>
+          )}
+
+          {orderData.paymentMethod === "cash" && paymentSettings?.cash_instructions && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4 text-left">
+              <p className="font-medium text-green-800 mb-2">Instrucciones para el pago en efectivo</p>
+              <p className="text-sm text-green-700">{paymentSettings.cash_instructions}</p>
+            </div>
+          )}
+
+          {orderData.paymentMethod === "modo" && paymentSettings?.modo_phone && (
+            <div className="bg-violet-50 border border-violet-200 rounded-lg p-4 mb-4 text-left">
+              <p className="font-medium text-violet-800 mb-2">Pagá con MODO</p>
+              <p className="text-sm text-violet-700">Buscá al vendedor en MODO con el número:</p>
+              <p className="text-lg font-bold text-violet-800 mt-1">{paymentSettings.modo_phone}</p>
+              <p className="text-xs text-violet-600 mt-2">Sin comisión · El dinero llega directo a la cuenta del vendedor.</p>
+            </div>
+          )}
+
+          {orderData.paymentMethod === "uala" && paymentSettings?.uala_link && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 text-left">
+              <p className="font-medium text-red-800 mb-2">Pagá con Ualá Bis</p>
+              <p className="text-sm text-red-700 mb-2">Hacé click en el link para completar tu pago:</p>
+              <a href={paymentSettings.uala_link} target="_blank" rel="noopener noreferrer" className="inline-block bg-red-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-red-700">
+                Pagar con Ualá Bis
+              </a>
+            </div>
+          )}
+
+          {orderData.paymentMethod === "rapipago" && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4 text-left">
+              <p className="font-medium text-orange-800 mb-2">Rapipago / Pago Fácil</p>
+              {paymentSettings?.rapipago_instructions
+                ? <p className="text-sm text-orange-700">{paymentSettings.rapipago_instructions}</p>
+                : <p className="text-sm text-orange-700">El vendedor te enviará el código de pago por email.</p>
+              }
+            </div>
+          )}
+
+          {orderData.paymentMethod === "card" && paymentSettings?.card_instructions && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-left">
+              <p className="font-medium text-blue-800 mb-2">Pago con tarjeta</p>
+              <p className="text-sm text-blue-700">{paymentSettings.card_instructions}</p>
+            </div>
+          )}
+
+          {!["transfer","cash","modo","uala","rapipago","card","mercadopago","mobbex"].includes(orderData.paymentMethod) && (
+            <p className="text-neutral-600 mb-4">
+            Recibimos tu pedido. En breve te contactaremos para coordinar.
+            </p>
+          )}
+
+          <Link href={getStoreUrl()}>
+            <Button className="w-full">Volver a la tienda</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-neutral-50">
+      {/* Header */}
+      <header className="bg-white border-b">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href={getStoreUrl()} className="flex items-center gap-2 text-sm text-neutral-600 hover:text-black">
+            <ArrowLeft className="h-4 w-4" />
+            Volver a la tienda
+          </Link>
+          <h1 className="text-lg font-medium">{store.site_title}</h1>
+          <div className="w-24" />
+        </div>
+      </header>
+
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Formulario */}
+          <div className="space-y-6">
+            {/* Pasos */}
+            <div className="flex gap-2 mb-8">
+              {["info", "shipping", "payment", "confirm"].map((s, i) => (
+                <div
+                  key={s}
+                  className={`flex-1 h-1 rounded ${
+                    ["info", "shipping", "payment", "confirm"].indexOf(step) >= i ? "bg-black" : "bg-neutral-200"
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Paso 1: Información */}
+            {step === "info" && (
+              <div className="bg-white p-6 rounded-lg shadow-sm space-y-4">
+                <h2 className="text-lg font-medium mb-4">Información de contacto</h2>
+
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nombre completo *</Label>
+                  <Input
+                    id="name"
+                    value={orderData.name}
+                    onChange={(e) => setOrderData({ ...orderData, name: e.target.value })}
+                    placeholder="Tu nombre"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={orderData.email}
+                    onChange={(e) => setOrderData({ ...orderData, email: e.target.value })}
+                    placeholder="tu@email.com"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Teléfono *</Label>
+                  <Input
+                    id="phone"
+                    value={orderData.phone}
+                    onChange={(e) => setOrderData({ ...orderData, phone: e.target.value })}
+                    placeholder="+54 11 1234-5678"
+                  />
+                </div>
+
+                <h2 className="text-lg font-medium mb-4 mt-6 pt-6 border-t">Lugar de entrega</h2>
+
+                <div className="space-y-2">
+                  <Label htmlFor="address">Dirección *</Label>
+                  <Input
+                    id="address"
+                    value={orderData.address}
+                    onChange={(e) => setOrderData({ ...orderData, address: e.target.value })}
+                    placeholder="Calle y número"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="city">Ciudad *</Label>
+                    <Input
+                      id="city"
+                      value={orderData.city}
+                      onChange={(e) => setOrderData({ ...orderData, city: e.target.value })}
+                      placeholder="Ciudad"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="postalCode">Código postal *</Label>
+                    <Input
+                      id="postalCode"
+                      value={orderData.postalCode}
+                      onChange={(e) => setOrderData({ ...orderData, postalCode: e.target.value })}
+                      placeholder="1234"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  className="w-full mt-4"
+                  onClick={() => setStep("shipping")}
+                  disabled={!orderData.name || !orderData.email || !orderData.phone || !orderData.address || !orderData.city || !orderData.postalCode}
+                >
+                  Continuar
+                </Button>
+              </div>
+            )}
+
+            {/* Paso 2: Envío */}
+            {step === "shipping" && (
+              <div className="bg-white p-6 rounded-lg shadow-sm space-y-4">
+                <h2 className="text-lg font-medium mb-4">Método de envío</h2>
+
+                <ShippingOptions
+                  storeId={store.id}
+                  postalCode={orderData.postalCode || "1000"}
+                  city={orderData.city}
+                  cartTotal={total}
+                  onSelect={(option) => {
+                    if (option) {
+                      setSelectedShippingOption(option)
+                      setShippingCost(option.price)
+                      const method = option.type === "pickup" ? "pickup" : "delivery"
+                      setOrderData({ ...orderData, shippingMethod: method, shippingLabel: option.name })
+                      if (option.type === "enviamelo_retiro") {
+                        setShowEnviameloPoints(true)
+                      }
+                    }
+                  }}
+                  selectedOption={selectedShippingOption}
+                />
+
+                {selectedEnviameloPoint && selectedShippingOption?.type === "enviamelo_retiro" && (
+                  <div className="mt-2 p-3 bg-neutral-50 border border-neutral-200 rounded-lg flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-xs font-medium text-neutral-700">{selectedEnviameloPoint.name}</p>
+                      <p className="text-xs text-neutral-500">{selectedEnviameloPoint.address} — {selectedEnviameloPoint.location}</p>
+                    </div>
+                    <button
+                      onClick={() => setShowEnviameloPoints(true)}
+                      className="text-xs text-blue-600 underline shrink-0"
+                    >Cambiar</button>
+                  </div>
+                )}
+
+                {selectedShippingOption && selectedShippingOption.type !== "pickup" && selectedShippingOption.type !== "enviamelo_retiro" && (
+                  <div className="space-y-4 mt-4 pt-4 border-t">
+                    {/* Bloque de costo de envío removido - ya se muestra en el resumen de la derecha */}
+                  </div>
+                )}
+
+                {showEnviameloPoints && (
+                  <EnviameloPointsPicker
+                    storeId={store.id}
+                    postalCode={orderData.postalCode || "1000"}
+                    selectedPoint={selectedEnviameloPoint}
+                    onSelect={(point) => {
+                      setSelectedEnviameloPoint(point)
+                      setOrderData({ ...orderData, 
+                        shippingLabel: `Enviamelo — Retiro en ${point.address}, ${point.location}` 
+                      })
+                    }}
+                    onClose={() => setShowEnviameloPoints(false)}
+                  />
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notas adicionales</Label>
+                  <Textarea
+                    id="notes"
+                    value={orderData.notes}
+                    onChange={(e) => setOrderData({ ...orderData, notes: e.target.value })}
+                    placeholder="Instrucciones especiales para la entrega..."
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={() => setStep("info")}>
+                    Atrás
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    onClick={() => setStep("payment")}
+                    disabled={(orderData.shippingMethod === "delivery" && selectedShippingOption?.type !== "enviamelo_retiro") && (!orderData.address || !orderData.city)}
+                  >
+                    Continuar
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Paso 3: Pago */}
+            {step === "payment" && (
+              <div className="bg-white p-6 rounded-lg shadow-sm space-y-4">
+                <h2 className="text-lg font-medium mb-4">Método de pago</h2>
+
+                {loadingPayments ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
+                  </div>
+                ) : (
+                  <div>
+                    <RadioGroup
+                      value={orderData.paymentMethod}
+                      onValueChange={(value) => setOrderData({ ...orderData, paymentMethod: value })}
+                      className="space-y-3"
+                    >
+                      {/* Efectivo - mostrar solo si esta habilitado */}
+                      {paymentSettings?.cash_enabled && (
+                        <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:border-black">
+                          <RadioGroupItem value="cash" id="cash" />
+                          <Label htmlFor="cash" className="flex items-center gap-3 cursor-pointer flex-1">
+                            <Banknote className="h-5 w-5" />
+                            <div>
+                              <p className="font-medium">Efectivo</p>
+                              <p className="text-sm text-neutral-500">Pago al recibir o retirar</p>
+                            </div>
+                          </Label>
+                        </div>
+                      )}
+                      
+                      {/* Transferencia - mostrar solo si esta habilitado */}
+                      {paymentSettings?.transfer_enabled && (
+                        <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:border-black">
+                          <RadioGroupItem value="transfer" id="transfer" />
+                          <Label htmlFor="transfer" className="flex items-center gap-3 cursor-pointer flex-1">
+                            <Building2 className="h-5 w-5" />
+                            <div>
+                              <p className="font-medium">Transferencia bancaria</p>
+                              <p className="text-sm text-neutral-500">Te enviamos los datos</p>
+                            </div>
+                          </Label>
+                        </div>
+                      )}
+                      
+                      {/* Tarjeta - mostrar solo si esta habilitado */}
+                      {paymentSettings?.card_enabled && (
+                        <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:border-black">
+                          <RadioGroupItem value="card" id="card" />
+                          <Label htmlFor="card" className="flex items-center gap-3 cursor-pointer flex-1">
+                            <CreditCard className="h-5 w-5" />
+                            <div>
+                              <p className="font-medium">Tarjeta</p>
+                              <p className="text-sm text-neutral-500">Crédito o débito</p>
+                            </div>
+                          </Label>
+                        </div>
+                      )}
+                      
+                      {/* MercadoPago - mostrar solo si esta habilitado */}
+                      {paymentSettings?.mercadopago_enabled && (
+                        <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:border-black">
+                          <RadioGroupItem value="mercadopago" id="mercadopago" />
+                          <Label htmlFor="mercadopago" className="flex items-center gap-3 cursor-pointer flex-1">
+                            <Smartphone className="h-5 w-5" />
+                            <div>
+                              <p className="font-medium">Mercado Pago</p>
+                              <p className="text-sm text-neutral-500">Todas las formas de pago</p>
+                            </div>
+                          </Label>
+                        </div>
+                      )}
+                      
+                      {/* Mobbex */}
+                      {paymentSettings?.mobbex_enabled && (
+                        <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:border-black">
+                          <RadioGroupItem value="mobbex" id="mobbex" />
+                          <Label htmlFor="mobbex" className="flex items-center gap-3 cursor-pointer flex-1">
+                            <CreditCard className="h-5 w-5" />
+                            <div>
+                              <p className="font-medium">Mobbex</p>
+                              <p className="text-sm text-neutral-500">Todas las tarjetas y billeteras</p>
+                            </div>
+                          </Label>
+                        </div>
+                      )}
+
+                      {/* MODO */}
+                      {paymentSettings?.modo_enabled && (
+                        <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:border-black">
+                          <RadioGroupItem value="modo" id="modo" />
+                          <Label htmlFor="modo" className="flex items-center gap-3 cursor-pointer flex-1">
+                            <Smartphone className="h-5 w-5" />
+                            <div>
+                              <p className="font-medium">MODO</p>
+                              <p className="text-sm text-neutral-500">Pagá con QR desde tu banco · Sin comisión</p>
+                            </div>
+                          </Label>
+                        </div>
+                      )}
+
+                      {/* Ualá Bis */}
+                      {paymentSettings?.uala_enabled && (
+                        <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:border-black">
+                          <RadioGroupItem value="uala" id="uala" />
+                          <Label htmlFor="uala" className="flex items-center gap-3 cursor-pointer flex-1">
+                            <Wallet className="h-5 w-5" />
+                            <div>
+                              <p className="font-medium">Ualá Bis</p>
+                              <p className="text-sm text-neutral-500">Link de pago Ualá</p>
+                            </div>
+                          </Label>
+                        </div>
+                      )}
+
+                      {/* Rapipago */}
+                      {paymentSettings?.rapipago_enabled && (
+                        <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:border-black">
+                          <RadioGroupItem value="rapipago" id="rapipago" />
+                          <Label htmlFor="rapipago" className="flex items-center gap-3 cursor-pointer flex-1">
+                            <Building2 className="h-5 w-5" />
+                            <div>
+                              <p className="font-medium">Rapipago / Pago Fácil</p>
+                              <p className="text-sm text-neutral-500">Pagá en efectivo en puntos de cobranza</p>
+                            </div>
+                          </Label>
+                        </div>
+                      )}
+
+                      {/* Si no hay ningún método habilitado, mostrar mensaje */}
+                      {!paymentSettings?.cash_enabled && !paymentSettings?.transfer_enabled && !paymentSettings?.card_enabled && !paymentSettings?.mercadopago_enabled && !paymentSettings?.mobbex_enabled && !paymentSettings?.modo_enabled && !paymentSettings?.uala_enabled && !paymentSettings?.rapipago_enabled && (
+                        <div className="text-center py-4 text-neutral-500">
+                          <p>No hay métodos de pago configurados.</p>
+                          <p className="text-sm">Contacta al vendedor para coordinar el pago.</p>
+                        </div>
+                      )}
+                    </RadioGroup>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={() => setStep("shipping")}>
+                    Atrás
+                  </Button>
+                  <Button className="flex-1" onClick={() => setStep("confirm")}>
+                    Continuar
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Paso 4: Confirmar */}
+            {step === "confirm" && (
+              <div className="bg-white p-6 rounded-lg shadow-sm space-y-4">
+                <h2 className="text-lg font-medium mb-4">Confirmar pedido</h2>
+
+                <div className="space-y-4 text-sm">
+                  <div className="pb-4 border-b">
+                    <p className="text-neutral-500 mb-1">Contacto</p>
+                    <p className="font-medium">{orderData.name}</p>
+                    <p>{orderData.email}</p>
+                    <p>{orderData.phone}</p>
+                  </div>
+
+                  <div className="pb-4 border-b">
+                    <p className="text-neutral-500 mb-1">Envío</p>
+                    <p className="font-medium">
+                      {orderData.shippingLabel || (orderData.shippingMethod === "pickup" ? "Retiro en local" : "Envío a domicilio")}
+                    </p>
+                    {selectedEnviameloPoint && selectedShippingOption?.type === "enviamelo_retiro" && (
+                      <p className="text-sm text-neutral-600">
+                        {selectedEnviameloPoint.address} — {selectedEnviameloPoint.location}, {selectedEnviameloPoint.province}
+                      </p>
+                    )}
+                    {orderData.shippingMethod === "delivery" && selectedShippingOption?.type !== "enviamelo_retiro" && orderData.address && (
+                      <p className="text-sm text-neutral-600">
+                        {orderData.address}, {orderData.city} {orderData.postalCode}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-neutral-500 mb-1">Pago</p>
+                    {orderData.paymentMethod === "cash" && (
+                      <div>
+                        <p className="font-medium">Efectivo</p>
+                        {paymentSettings?.cash_instructions && (
+                          <p className="text-sm text-neutral-600 mt-1">{paymentSettings.cash_instructions}</p>
+                        )}
+                      </div>
+                    )}
+                    {orderData.paymentMethod === "transfer" && (
+                      <div>
+                        <p className="font-medium">Transferencia bancaria</p>
+                        <div className="mt-2 space-y-1 text-sm text-neutral-600 bg-blue-50 p-3 rounded-lg">
+                          {paymentSettings?.transfer_bank_name && <p>Banco: <span className="font-medium">{paymentSettings.transfer_bank_name}</span></p>}
+                          {paymentSettings?.transfer_account_holder && <p>Titular: <span className="font-medium">{paymentSettings.transfer_account_holder}</span></p>}
+                          {paymentSettings?.transfer_cbu && <p>CBU: <span className="font-medium">{paymentSettings.transfer_cbu}</span></p>}
+                          {paymentSettings?.transfer_alias && <p>Alias: <span className="font-medium">{paymentSettings.transfer_alias}</span></p>}
+                        </div>
+                      </div>
+                    )}
+                    {orderData.paymentMethod === "card" && (
+                      <div>
+                        <p className="font-medium">Tarjeta presencial</p>
+                        {paymentSettings?.card_instructions && (
+                          <p className="text-sm text-neutral-600 mt-1">{paymentSettings.card_instructions}</p>
+                        )}
+                      </div>
+                    )}
+                    {orderData.paymentMethod === "mercadopago" && (
+                      <div>
+                        <p className="font-medium">Mercado Pago</p>
+                        <p className="text-sm text-neutral-600 mt-1">Serás redirigido a Mercado Pago para completar el pago.</p>
+                      </div>
+                    )}
+                    {orderData.paymentMethod === "mobbex" && (
+                      <div>
+                        <p className="font-medium">Mobbex</p>
+                        <p className="text-sm text-neutral-600 mt-1">Serás redirigido a Mobbex para completar el pago.</p>
+                      </div>
+                    )}
+                    {orderData.paymentMethod === "modo" && (
+                      <div>
+                        <p className="font-medium">MODO</p>
+                        {paymentSettings?.modo_phone && (
+                          <p className="text-sm text-neutral-600 mt-1">Transferí al número: <span className="font-medium">{paymentSettings.modo_phone}</span></p>
+                        )}
+                      </div>
+                    )}
+                    {orderData.paymentMethod === "uala" && (
+                      <div>
+                        <p className="font-medium">Ualá Bis</p>
+                        {paymentSettings?.uala_link && (
+                          <p className="text-sm text-neutral-600 mt-1">Link de pago: <span className="font-medium">{paymentSettings.uala_link}</span></p>
+                        )}
+                      </div>
+                    )}
+                    {orderData.paymentMethod === "rapipago" && (
+                      <div>
+                        <p className="font-medium">Rapipago / Pago Fácil</p>
+                        <p className="text-sm text-neutral-600 mt-1">Presentate en cualquier sucursal con el número de pedido.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button variant="outline" onClick={() => setStep("payment")}>
+                    Atrás
+                  </Button>
+                  <Button className="flex-1" onClick={handleSubmit} disabled={loading}>
+                    {loading ? "Procesando..." : 
+                      orderData.paymentMethod === "mercadopago" ? "Pagar con Mercado Pago" :
+                      orderData.paymentMethod === "mobbex" ? "Pagar con Mobbex" :
+                      orderData.paymentMethod === "transfer" ? "Confirmar y ver datos de transferencia" :
+                      orderData.paymentMethod === "cash" ? "Confirmar pedido" :
+                      orderData.paymentMethod === "card" ? "Confirmar pedido" :
+                      orderData.paymentMethod === "modo" ? "Confirmar y pagar con MODO" :
+                      orderData.paymentMethod === "uala" ? "Confirmar y pagar con Ualá" :
+                      orderData.paymentMethod === "rapipago" ? "Confirmar pedido" :
+                      "Confirmar pedido"
+                    }
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Resumen del pedido */}
+          <div className="lg:sticky lg:top-8 h-fit">
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <h2 className="text-lg font-medium mb-4">Resumen del pedido</h2>
+
+              <div className="space-y-4 mb-6">
+                {items.map((item) => (
+                  <div key={getItemKey(item)} className="flex gap-4">
+                    <div className="relative h-16 w-16 bg-neutral-100 rounded flex-shrink-0">
+                      {item.product.image_url ? (
+                        <Image
+                          src={item.product.image_url || "/images/placeholders/placeholder.svg"}
+                          alt={item.product.name}
+                          fill
+                          className="object-cover rounded"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-neutral-300">
+                          <span className="text-xs">Sin img</span>
+                        </div>
+                      )}
+                      <span className="absolute -top-2 -right-2 bg-black text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                        {item.quantity}
+                      </span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{item.product.name}</p>
+                      {item.product.selectedSize && (
+                        <p className="text-xs text-neutral-500">Talla: {item.product.selectedSize}</p>
+                      )}
+                      <p className="text-sm text-neutral-500">{formatPrice(Number(item.product.price))}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t pt-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-neutral-500">Subtotal</span>
+                  <span>{formatPrice(total)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-neutral-500">Envío</span>
+                  <span>
+                    {!selectedShippingOption
+                      ? "A calcular"
+                      : selectedShippingOption.price === 0
+                        ? "Gratis"
+                        : formatPrice(selectedShippingOption.price)
+                  }</span>
+                </div>
+                <div className="flex justify-between text-lg font-medium pt-2 border-t">
+                  <span>Total</span>
+                  <span>{formatPrice(total + (selectedShippingOption?.price || 0))}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

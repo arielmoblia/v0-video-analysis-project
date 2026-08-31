@@ -23,12 +23,22 @@ export interface Store {
   social_twitter?: string | null
   social_tiktok?: string | null
   social_whatsapp?: string | null
+  whatsapp_marketing_consent?: boolean
   social_youtube?: string | null
   footer_subtitle?: string | null
   address?: string | null
   phone?: string | null
+  custom_domain?: string | null
+  linked_store_url?: string | null
+  linked_store_label?: string | null
   created_at?: string
   last_login?: string
+  dolar_tipo?: string
+  dolar_valor?: number
+  // Campos de dropshipping
+  source_url?: string | null
+  markup_percent?: number
+  is_dropship?: boolean
 }
 
 // ----- PRODUCTOS -----
@@ -90,6 +100,7 @@ export interface OrderItem {
   quantity: number
   size?: string | null
   image_url?: string | null
+  source_url?: string | null  // URL del producto en la tienda madre (para dropshipping)
 }
 
 export type OrderStatus = 
@@ -164,6 +175,7 @@ export interface PlanLimits {
 }
 
 // ----- ANALYTICS -----
+
 export interface StoreAnalytics {
   store_id: string
   total_visits: number

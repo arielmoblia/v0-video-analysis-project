@@ -85,25 +85,7 @@ export function ChatFlotante() {
         const isPunct = ['.', ',', '!', '?', ')', '(', ';'].includes(char)
         const isWordBreak = i % 4 === 0
 
-        // Ocasionalmente borra y reescribe (5% de chances, solo en medio de palabras)
-        const shouldMistake = !isPunct && Math.random() < 0.01 && i > 4 && i < fullText.length - 8 && !typewriterRefs.current[message.id + '_mistook']
-        if (shouldMistake) {
-          const backtrack = Math.floor(2 + Math.random() * 3)
-          typewriterRefs.current[message.id + '_mistook'] = true as any
-          const deleteBack = () => {
-            if (i > Math.max(1, i - backtrack)) {
-              i--
-              setDisplayedTexts(prev => ({ ...prev, [message.id]: fullText.slice(0, i) }))
-              typewriterRefs.current[message.id] = setTimeout(deleteBack, 60 + Math.random() * 40)
-            } else {
-              typewriterRefs.current[message.id] = setTimeout(type, 120)
-            }
-          }
-          typewriterRefs.current[message.id] = setTimeout(deleteBack, 80)
-          return
-        }
-
-        const delay = isPunct ? 180 + Math.random() * 120 
+        const delay = isPunct ? 180 + Math.random() * 120
                     : isWordBreak ? 80 + Math.random() * 60
                     : 30 + Math.random() * 25
         typewriterRefs.current[message.id] = setTimeout(type, delay)

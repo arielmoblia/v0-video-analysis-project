@@ -3,10 +3,11 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
+import { SeoExtraBlock } from "@/components/seo-extra-block"
 import { MapPin, Clock, Briefcase } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Puestos de Trabajo | tol.ar",
+  title: "Puestos de Trabajo",
   description: "Sumate al equipo de tol.ar. Buscamos personas apasionadas por el comercio electrónico y la tecnología en Argentina y Latinoamérica.",
 }
 
@@ -65,6 +66,7 @@ export default function EmpleosPage() {
           </div>
         </div>
       </main>
+      <SeoExtraBlock page="empleos" />
       <Footer />
     </>
   )

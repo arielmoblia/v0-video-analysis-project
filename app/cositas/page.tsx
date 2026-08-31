@@ -1,4 +1,4 @@
-import { Images, MessageCircle, Palette, BarChart3, Video, Bot, Globe, Package, HeadphonesIcon, DollarSign, ShoppingBag, Megaphone, Check, FileSpreadsheet, Layers, Wand2, EyeOff } from "lucide-react"
+import { Images, MessageCircle, Palette, BarChart3, Video, Bot, Globe, Package, HeadphonesIcon, DollarSign, ShoppingBag, Megaphone, Check, FileSpreadsheet, Layers, Wand2, EyeOff, Truck } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
@@ -58,6 +58,20 @@ const FEATURES_ACTIVAS = [
       "Formato CSV o Excel",
       "Plantilla descargable",
       "Ideal para migraciones"
+    ]
+  },
+  {
+    code: "dropshipping",
+    name: "Dropshipping",
+    description: "Tu tienda importa productos, precios y stock automaticamente de una tienda madre.",
+    icon: Truck,
+    price: 1,
+    pago: "mes",
+    benefits: [
+      "Productos importados automaticamente",
+      "Precios y stock actualizados solos",
+      "Sin cargar productos a mano",
+      "Ideal para arrancar rapido"
     ]
   },
 ]
@@ -183,7 +197,7 @@ export default function CositasPage() {
           {FEATURES_ACTIVAS.map((feature) => {
             const Icon = feature.icon
             return (
-              <Card key={feature.code} className="overflow-hidden border-2 border-orange-200 hover:border-orange-400 transition-colors">
+              <Card id={feature.code} key={feature.code} className="overflow-hidden border-2 border-orange-200 hover:border-orange-400 transition-colors scroll-mt-24">
                 <div className="bg-gradient-to-r from-orange-500 to-red-500 p-4 text-white">
                   <div className="flex items-center justify-between">
                     <Icon className="h-8 w-8" />
@@ -222,7 +236,7 @@ export default function CositasPage() {
           {FEATURES_PROXIMAMENTE.map((feature) => {
             const Icon = feature.icon
             return (
-              <Card key={feature.code} className="bg-slate-50 border-slate-200 hover:border-slate-300 transition-colors">
+              <Card id={feature.code} key={feature.code} className="bg-slate-50 border-slate-200 hover:border-slate-300 transition-colors scroll-mt-24">
                 <CardContent className="p-4 flex items-start gap-3">
                   <div className="p-2 rounded-lg bg-slate-200 shrink-0">
                     <Icon className="h-5 w-5 text-slate-500" />

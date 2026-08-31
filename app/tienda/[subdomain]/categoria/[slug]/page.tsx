@@ -1,4 +1,5 @@
 import { getStoreBySubdomain, getStoreCategories, getStoreProducts } from "@/lib/store-context"
+import { hasStoreFeature } from "@/lib/services/stores"
 import { StoreHeader } from "@/components/store/store-header"
 import { StoreFooter } from "@/components/store/store-footer"
 import { ProductGrid } from "@/components/store/product-grid"
@@ -18,8 +19,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     redirect("/")
   }
 
-  const categories = await getStoreCategories(store.id)
-  const allProducts = await getStoreProducts(store.id)
+  const [categories, allProducts, hasMayoristaMinorista] = await Promise.all([
+    getStoreCategories(store.id),
+    getStoreProducts(store.id),
+    hasStoreFeature(store.id, "mayorista_minorista"),
+  ])
 
   // Encontrar la categoría actual
   const currentCategory = categories.find((cat) => cat.slug === slug)
@@ -33,7 +37,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <StoreHeader store={store} categories={categories} />
+      <StoreHeader store={store} categories={categories} hasMayoristaMinorista={hasMayoristaMinorista} />
 
       <main className="flex-1">
         <div className="container mx-auto px-6 py-12">

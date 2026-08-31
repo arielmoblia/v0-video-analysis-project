@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { SEOAlerts } from "./seo-alerts"
 import { SeoAiTab } from "./seo-ai-tab"
 import { SeoContenidoTab } from "./seo-contenido-tab"
+import { GeoIaTab } from "./geo-ia-tab"
 import { 
   Brain,
   Search, 
@@ -622,7 +623,7 @@ export function SeoModule() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-7 w-full max-w-4xl">
+        <TabsList className="grid grid-cols-10 w-full max-w-5xl">
           <TabsTrigger value="dashboard" className="flex items-center gap-1">
             <BarChart3 className="w-4 h-4" />
             Dashboard
@@ -650,6 +651,18 @@ export function SeoModule() {
           <TabsTrigger value="seocontenido" className="flex items-center gap-1">
             <FileText className="w-4 h-4" />
             SEO Contenido
+          </TabsTrigger>
+          <TabsTrigger value="geoIA" className="flex items-center gap-1">
+            <Globe className="w-4 h-4" />
+            Geo IA
+          </TabsTrigger>
+          <TabsTrigger value="seo-local" className="flex items-center gap-1">
+            <Target className="w-4 h-4" />
+            SEO Local
+          </TabsTrigger>
+          <TabsTrigger value="competidores" className="flex items-center gap-1">
+            <TrendingUp className="w-4 h-4" />
+            Competidores
           </TabsTrigger>
         </TabsList>
 
@@ -1226,7 +1239,40 @@ export function SeoModule() {
           <SeoContenidoTab />
         </TabsContent>
 
+        {/* Geo IA */}
+        <TabsContent value="geoIA">
+          <GeoIaTab />
+        </TabsContent>
+
         {/* Velocidad */}
+        <TabsContent value="seo-local" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="w-5 h-5" />
+                SEO Local
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Esta sección está en desarrollo.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="competidores" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Competidores
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Esta sección está en desarrollo.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="speed" className="space-y-4">
           <Card>
             <CardHeader>

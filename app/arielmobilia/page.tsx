@@ -3,7 +3,6 @@ import { Hero } from "@/components/landing/hero"
 import { HowItWorks } from "@/components/landing/how-it-works"
 import { Benefits } from "@/components/landing/benefits"
 import { PlansSection } from "@/components/landing/plans-section"
-import { Testimonials } from "@/components/landing/testimonials"
 import { FAQSection } from "@/components/landing/faq-section"
 import { Footer } from "@/components/landing/footer"
 
@@ -20,7 +19,6 @@ export default function ArielmobiliaPage() {
       <HowItWorks />
       <Benefits />
       <PlansSection fullPlans={true} basePath="/arielmobilia" />
-      <Testimonials />
       <FAQSection />
       <Footer />
     </main>

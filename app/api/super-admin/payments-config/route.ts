@@ -45,7 +45,7 @@ export async function GET() {
     return NextResponse.json({
       config: decryptedConfig,
       stats,
-    })
+    }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
     console.error("Error fetching payments config:", error)
     return NextResponse.json({
@@ -66,7 +66,7 @@ export async function GET() {
         monthly_revenue_usd: 0,
         canceled_this_month: 0,
       },
-    })
+    }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   }
 }
 
@@ -91,9 +91,9 @@ export async function POST(request: Request) {
 
     if (error) throw error
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
     console.error("Error saving payments config:", error)
-    return NextResponse.json({ error: "Error al guardar" }, { status: 500 })
+    return NextResponse.json({ error: "Error al guardar" }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }

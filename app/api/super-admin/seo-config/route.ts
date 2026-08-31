@@ -20,7 +20,7 @@ export async function GET() {
 
     if (error && error.code !== "PGRST116") {
       console.error("Error fetching SEO config:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: error.message }, { status: 500, headers: { "Cache-Control": "no-store" } })
     }
 
     // Si no hay datos, devolver valores por defecto
@@ -36,13 +36,13 @@ export async function GET() {
         bing_verification: null,
         bing_verified: false,
         sitemap_submitted: false
-      })
+      }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
     }
 
-    return NextResponse.json(data)
+    return NextResponse.json(data, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
     console.error("Error in GET SEO config:", error)
-    return NextResponse.json({ error: "Error fetching SEO config" }, { status: 500 })
+    return NextResponse.json({ error: "Error fetching SEO config" }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }
 
@@ -81,12 +81,12 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("Error saving SEO config:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: error.message }, { status: 500, headers: { "Cache-Control": "no-store" } })
     }
 
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json({ success: true, data }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
     console.error("Error in POST SEO config:", error)
-    return NextResponse.json({ error: "Error saving SEO config" }, { status: 500 })
+    return NextResponse.json({ error: "Error saving SEO config" }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }

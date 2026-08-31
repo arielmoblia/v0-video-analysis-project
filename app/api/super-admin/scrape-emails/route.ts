@@ -17,13 +17,13 @@ export async function POST(request: Request) {
     } else if (action === "status") {
       const res = await fetch(`${VPS_SCRAPER_URL}/api/status`)
       const data = await res.json()
-      return NextResponse.json(data)
+      return NextResponse.json(data, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
     } else if (action === "cache") {
       const res = await fetch(`${VPS_SCRAPER_URL}/api/cache`, {
         headers: { Authorization: `Bearer ${SCRAPER_SECRET}` }
       })
       const data = await res.json()
-      return NextResponse.json(data)
+      return NextResponse.json(data, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
     }
 
     const res = await fetch(`${VPS_SCRAPER_URL}${endpoint}`, {
@@ -38,15 +38,15 @@ export async function POST(request: Request) {
     const data = await res.json()
 
     if (!res.ok) {
-      return NextResponse.json({ error: data.error || "Error del scraper" }, { status: res.status })
+      return NextResponse.json({ error: data.error || "Error del scraper" }, { status: res.status }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
     }
 
-    return NextResponse.json(data)
+    return NextResponse.json(data, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error: any) {
     console.error("Error conectando con VPS scraper:", error)
     return NextResponse.json(
       { error: "No se pudo conectar con el scraper. Verifica que el VPS este corriendo." },
       { status: 503 }
-    )
+    , { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   }
 }

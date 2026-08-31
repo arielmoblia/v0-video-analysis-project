@@ -1,0 +1,18 @@
+{
+  "status": 307,
+  "headers": {
+    "location": "/contacto",
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/arielmobilia/layout,_N_T_/arielmobilia/contacto/layout,_N_T_/arielmobilia/contacto/page,_N_T_/arielmobilia/contacto"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/arielmobilia/contacto/__PAGE__",
+    "/arielmobilia/contacto",
+    "/arielmobilia",
+    "/_index",
+    "/_head"
+  ]
+}

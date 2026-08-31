@@ -1,21 +1,21 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { GeoPreguntas } from "./geo-preguntas"
 import { GeoMatriz } from "./geo-matriz"
+import { GerencialIABlock } from "./gerencial-ia-block"
+import { MencionesIABlock } from "./menciones-ia-block"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { RefreshCw, Brain, FileText, Plus, ExternalLink, X, ChevronRight, ChevronLeft } from "lucide-react"
+import { RefreshCw, Brain, FileText, Plus, ExternalLink, X, ChevronRight, ChevronLeft, Check } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 const TOUR_PASOS = [
-  { titulo: "📊 Cómo figuramos en cada IA", texto: "Las 4 tarjetas muestran qué porcentaje de las respuestas de cada IA menciona a tol.ar vs la competencia. La barra verde tiene que crecer. Abajo ves cuántas personas llegaron a tol.ar desde cada IA — ese es el número real." },
-  { titulo: "📋 La tabla de preguntas", texto: "Le hacemos 10 preguntas a cada IA y registramos si tol.ar aparece o no. Verde = nos conocen, Rojo = no saben que existimos. Apretá 'Correr análisis' para actualizar." },
-  { titulo: "✏️ Las preguntas que monitoreamos", texto: "Podés editar, agregar o pausar las preguntas que le hacemos a las IAs. Son conversaciones reales que la gente tendría — no keywords de Google." },
-  { titulo: "🔍 Puntos débiles de la competencia", texto: "Lo que las IAs dicen malo de Tiendanube y Empretienda es tu munición. Si una IA dice 'Tiendanube cobra comisión', creás contenido que destaque que tol.ar no cobra nada." },
-  { titulo: "✍️ El redactor automático", texto: "Escribís el tema y Claude escribe la página completa lista para publicar. Una buena página sube en Google Y hace que las IAs te citen." },
-  { titulo: "📡 Radar de menciones", texto: "Cuantas más veces nos mencionan en internet, más nos conocen las IAs. Podés agregar menciones propias como el lanzamiento de tol.ar." },
-  { titulo: "📈 Evolución y oportunidades", texto: "El gráfico muestra cómo evolucionan tus posiciones en Google. Las oportunidades son keywords donde estás cerca de la primera página — con una página bien escrita podés llegar." },
+  { titulo: "📊 Cómo figuramos en cada IA", texto: "Las 4 tarjetas muestran qué porcentaje de las respuestas de cada IA menciona a tol.ar vs la competencia. La barra verde tiene que crecer." },
+  { titulo: "📋 La tabla de preguntas", texto: "Le hacemos 10 preguntas a cada IA y registramos si tol.ar aparece o no. Verde = nos conocen, Rojo = no saben que existimos." },
+  { titulo: "🔍 Puntos débiles de la competencia", texto: "Lo que las IAs dicen malo de Tiendanube y Empretienda es tu munición para crear contenido." },
+  { titulo: "✍️ El redactor automático", texto: "Escribís el tema y Claude escribe la página completa lista para publicar." },
+  { titulo: "📡 Radar de menciones", texto: "Cuantas más veces nos mencionan en internet, más nos conocen las IAs." },
+  { titulo: "📈 Evolución y oportunidades", texto: "El gráfico muestra cómo evolucionan tus posiciones en Google." },
 ]
 
 const DEBILIDADES = [
@@ -23,13 +23,6 @@ const DEBILIDADES = [
   { comp: "Tiendanube", ia: "Claude", quote: '"El plan gratuito de Tiendanube tiene limitaciones en cantidad de productos"', opp: "Oportunidad: plan gratis sin límites" },
   { comp: "Empretienda", ia: "Perplexity", quote: '"Empretienda tiene menos integraciones de pago que otras plataformas"', opp: "Oportunidad: MP + Mobbex + MODO + Ualá" },
   { comp: "Tiendanube", ia: "Gemini", quote: '"Para pequeños emprendedores los costos de Tiendanube pueden ser elevados"', opp: "Oportunidad: precio fijo, sin sorpresas" },
-]
-
-const OPORTUNIDADES = [
-  { kw: "plataformas de venta online argentina gratis", pos: 47, vol: 880, pct: 78, color: "#E24B4A", accion: "Crear página" },
-  { kw: "alternativas tiendanube argentina", pos: 23, vol: 390, pct: 55, color: "#EF9F27", accion: "Crear página" },
-  { kw: "tienda online sin comisiones argentina", pos: 18, vol: 260, pct: 45, color: "#EF9F27", accion: "Optimizar" },
-  { kw: "crear tienda online gratis argentina", pos: 11, vol: 720, pct: 30, color: "#639922", accion: "Optimizar" },
 ]
 
 const MENCIONES_INICIALES = [
@@ -40,8 +33,8 @@ const MENCIONES_INICIALES = [
 
 const IA_STATIC = [
   { engine: "ChatGPT", bars: [{ name: "Tiendanube", pct: 75, color: "#E24B4A" }, { name: "Empretienda", pct: 20, color: "#EF9F27" }, { name: "tol.ar", pct: 5, color: "#1D9E75" }] },
-  { engine: "Gemini",  bars: [{ name: "Tiendanube", pct: 80, color: "#E24B4A" }, { name: "Empretienda", pct: 18, color: "#EF9F27" }, { name: "tol.ar", pct: 2, color: "#1D9E75" }] },
-  { engine: "Claude",  bars: [{ name: "tol.ar", pct: 45, color: "#1D9E75" }, { name: "Tiendanube", pct: 40, color: "#E24B4A" }, { name: "Empretienda", pct: 15, color: "#EF9F27" }] },
+  { engine: "Gemini", bars: [{ name: "Tiendanube", pct: 80, color: "#E24B4A" }, { name: "Empretienda", pct: 18, color: "#EF9F27" }, { name: "tol.ar", pct: 2, color: "#1D9E75" }] },
+  { engine: "Claude", bars: [{ name: "tol.ar", pct: 45, color: "#1D9E75" }, { name: "Tiendanube", pct: 40, color: "#E24B4A" }, { name: "Empretienda", pct: 15, color: "#EF9F27" }] },
   { engine: "Perplexity", bars: [{ name: "Tiendanube", pct: 50, color: "#E24B4A" }, { name: "tol.ar", pct: 30, color: "#1D9E75" }, { name: "Empretienda", pct: 20, color: "#EF9F27" }] },
 ]
 
@@ -100,8 +93,175 @@ function TourOverlay({ paso, total, onNext, onPrev, onClose }: { paso: number; t
   )
 }
 
-function IaBarras() {
+const CYCLE: Record<string, string> = { pendiente: "aprobado", aprobado: "hecho", hecho: "pendiente" }
+const CHIP_LABEL: Record<string, string> = { pendiente: "pendiente", aprobado: "aprobado", hecho: "ejecutado" }
+const CHIP_CLASS: Record<string, string> = { pendiente: "bg-amber-100 text-amber-800", aprobado: "bg-blue-100 text-blue-800", hecho: "bg-green-100 text-green-800" }
+const CHECK_CLASS: Record<string, string> = { pendiente: "border-2 border-dashed border-amber-400 bg-transparent", aprobado: "bg-blue-600 border-2 border-blue-600", hecho: "bg-green-700 border-2 border-green-700" }
+
+const PASOS = ["Leer", "Pensar", "Estrategia", "Propuesta", "Ejecutar", "Medir"]
+// Que paso esta activo segun el estado de la tarea
+const ESTADO_A_PASO: Record<string, number> = { pendiente: 3, aprobado: 4, hecho: 5 }
+const PASO_COLOR: Record<number, string> = {
+  0: "bg-purple-100 text-purple-800",
+  1: "bg-purple-100 text-purple-800",
+  2: "bg-teal-100 text-teal-800",
+  3: "bg-amber-100 text-amber-800",
+  4: "bg-blue-100 text-blue-800",
+  5: "bg-green-100 text-green-800",
+}
+
+function PasosIndicador({ state }: { state: string }) {
+  const activo = ESTADO_A_PASO[state] ?? 0
+  return (
+    <div className="flex items-center flex-wrap gap-0 px-3 py-2 bg-slate-50 border-t border-slate-100">
+      {PASOS.map((paso, i) => (
+        <div key={paso} className="flex items-center">
+          <span className={`text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap ${i === activo ? PASO_COLOR[i] + " font-medium" : i < activo ? "text-slate-500" : "text-slate-300"}`}>{paso}</span>
+          {i < PASOS.length - 1 && <span className="text-[11px] text-slate-300 mx-0.5">→</span>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+interface Tarea { id: number; text: string; date: string; state: string; detalle: string; comentario: string; expandOpen: boolean; chatOpen: boolean; msgs: { who: string; text: string }[] }
+
+function ChatInput({ onSend }: { onSend: (msg: string) => void }) {
+  const [val, setVal] = useState("")
+  return (
+    <div className="flex gap-2 px-3 py-2 border-t border-slate-100 bg-white">
+      <input value={val} onChange={e => setVal(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSend(val); setVal("") } }} placeholder="Preguntale al Jefe..." className="flex-1 text-xs px-2 py-1.5 rounded border border-slate-200 bg-slate-50 focus:outline-none" />
+      <button onClick={() => { onSend(val); setVal("") }} className="text-xs px-3 py-1.5 rounded bg-blue-600 text-white">enviar</button>
+    </div>
+  )
+}
+
+function PlanAccionBlock() {
+  const { toast } = useToast()
+  const [situacion, setSituacion] = useState("tol.ar no aparece en resultados de IA. Tiendanube tiene 130 menciones activas.")
+  const [tareas, setTareas] = useState<Tarea[]>([
+    { id: 1, text: "Actualizar llms.txt con contexto de marca", date: "2 jun", state: "hecho", detalle: "El archivo llms.txt le dice a los modelos de IA quién sos. Sin él, Google AI y ChatGPT no tienen contexto para mencionarte.", comentario: "", expandOpen: false, chatOpen: false, msgs: [{ who: "jefe", text: "Completado. El llms.txt incluye descripción completa de tol.ar." }] },
+    { id: 2, text: "Crear página comparación vs Tiendanube", date: "10 jun", state: "aprobado", detalle: "Las páginas de comparación son la fuente principal que usan los LLMs para recomendar alternativas.", comentario: "", expandOpen: false, chatOpen: false, msgs: [{ who: "jefe", text: "Borrador listo. ¿Querés revisarla antes de publicar?" }] },
+    { id: 3, text: "Agregar FAQ estructurada en la home", date: "15 jun", state: "pendiente", detalle: "Los LLMs extraen respuestas de FAQs para responder preguntas directas sobre tol.ar.", comentario: "", expandOpen: false, chatOpen: false, msgs: [] },
+    { id: 4, text: "Publicar 3 artículos de blog con keywords IA", date: "20 jun", state: "pendiente", detalle: "Artículos con keywords como 'crear tienda online argentina gratis' son el contenido que los LLMs rastrean.", comentario: "", expandOpen: false, chatOpen: false, msgs: [] },
+    { id: 5, text: "Crear página comparación vs Empretienda", date: "25 jun", state: "pendiente", detalle: "Mismo principio que Tiendanube pero para Empretienda, segundo competidor más mencionado.", comentario: "", expandOpen: false, chatOpen: false, msgs: [] },
+  ])
+
+  useEffect(() => {
+    fetch("/api/super-admin/seo-plan-accion").then(r => r.json()).then(d => { if (d.situacion) setSituacion(d.situacion) }).catch(() => {})
+  }, [])
+
+  const advance = (id: number) => setTareas(prev => prev.map(t => t.id === id ? { ...t, state: CYCLE[t.state] } : t))
+  const toggleExpand = (id: number) => setTareas(prev => prev.map(t => t.id === id ? { ...t, expandOpen: !t.expandOpen, chatOpen: false } : t))
+  const toggleChat = (id: number) => setTareas(prev => prev.map(t => {
+    if (t.id !== id) return t
+    const opening = !t.chatOpen
+    const msgs = opening && t.msgs.length === 0 ? [{ who: "jefe", text: "Hola, te puedo explicar más o ajustar el plan. ¿Qué necesitás?" }] : t.msgs
+    return { ...t, chatOpen: opening, expandOpen: false, msgs }
+  }))
+  const sendMsg = async (id: number, text: string) => {
+    if (!text.trim()) return
+    setTareas(prev => prev.map(t => t.id === id ? { ...t, msgs: [...t.msgs, { who: "user", text }] } : t))
+    setTareas(prev => prev.map(t => t.id === id ? { ...t, msgs: [...t.msgs, { who: "jefe", text: "..." }] } : t))
+    try {
+      const r = await fetch("/api/seo-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, conversationId: `seo-tarea-${id}` }),
+      })
+      const d = await r.json()
+      const reply = d.reply || d.error || "Sin respuesta del Jefe."
+      setTareas(prev => prev.map(t => {
+        if (t.id !== id) return t
+        const msgs = [...t.msgs]
+        const lastIdx = msgs.map(m => m.text).lastIndexOf("...")
+        if (lastIdx >= 0) msgs[lastIdx] = { who: "jefe", text: reply }
+        else msgs.push({ who: "jefe", text: reply })
+        return { ...t, msgs }
+      }))
+    } catch {
+      setTareas(prev => prev.map(t => {
+        if (t.id !== id) return t
+        const msgs = [...t.msgs]
+        const lastIdx = msgs.map(m => m.text).lastIndexOf("...")
+        if (lastIdx >= 0) msgs[lastIdx] = { who: "jefe", text: "Error de conexión con el Jefe." }
+        return { ...t, msgs }
+      }))
+    }
+  }
+  const saveComentario = (id: number, val: string) => { setTareas(prev => prev.map(t => t.id === id ? { ...t, comentario: val } : t)); toast({ title: "Comentario guardado" }) }
+  const done = tareas.filter(t => t.state === "hecho").length
+  const pct = Math.round(done / tareas.length * 100)
+
+  return (
+    <div className="rounded-xl border border-yellow-300 bg-yellow-50 p-5">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs font-semibold text-yellow-800 uppercase tracking-wide">Plan de acción</span>
+        <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800">✦ generado por Jefe</span>
+      </div>
+      <p className="text-sm text-slate-600 mb-4 p-3 bg-white rounded-lg border-l-4 border-yellow-300 leading-relaxed">{situacion}</p>
+      <div className="flex gap-4 mb-3 flex-wrap">
+        {([["border-2 border-dashed border-amber-400","pendiente"],["bg-blue-600","aprobado"],["bg-green-700","ejecutado"]] as [string,string][]).map(([cls,lbl]) => (
+          <div key={lbl} className="flex items-center gap-1.5 text-xs text-slate-500"><div className={`w-3 h-3 rounded-sm ${cls}`} />{lbl}</div>
+        ))}
+      </div>
+      <div className="space-y-2">
+        {tareas.map(t => (
+          <div key={t.id} className="rounded-lg border border-slate-200 overflow-hidden">
+            <div className={`flex items-center gap-2 px-3 py-2.5 bg-white ${t.state === "hecho" ? "opacity-60" : ""}`}>
+              <button onClick={() => advance(t.id)} className={`w-5 h-5 rounded flex-shrink-0 flex items-center justify-center transition-all ${CHECK_CLASS[t.state]}`}>
+                {t.state !== "pendiente" && <Check className="w-3 h-3 text-white" />}
+              </button>
+              <span className={`flex-1 text-sm ${t.state === "hecho" ? "line-through text-slate-400" : "text-slate-800"}`}>{t.text}</span>
+              <span className="text-xs text-slate-400 flex-shrink-0">{t.date}</span>
+              <button onClick={() => toggleExpand(t.id)} className="text-[11px] px-2 py-1 rounded border border-slate-200 text-slate-500 hover:bg-slate-50 flex-shrink-0">{t.expandOpen ? "▲ cerrar" : "▼ leer más"}</button>
+              <button onClick={() => toggleChat(t.id)} className="text-[11px] px-2 py-1 rounded border border-blue-200 text-blue-600 hover:bg-blue-50 flex-shrink-0">{t.chatOpen ? "cerrar" : "💬 Jefe"}</button>
+              <span onClick={() => advance(t.id)} className={`text-[11px] px-2 py-0.5 rounded-full cursor-pointer flex-shrink-0 ${CHIP_CLASS[t.state]}`}>{CHIP_LABEL[t.state]}</span>
+            </div>
+              <PasosIndicador state={t.state} />
+            {t.expandOpen && (
+              <div className="px-3 py-3 bg-slate-50 border-t border-slate-100 space-y-2">
+                <p className="text-xs text-slate-600 leading-relaxed">{t.detalle}</p>
+                <textarea defaultValue={t.comentario} placeholder="Agregá un comentario para el Jefe..." className="w-full text-xs p-2 rounded border border-slate-200 bg-white resize-none h-14 focus:outline-none" onBlur={e => saveComentario(t.id, e.target.value)} />
+                <p className="text-[11px] text-slate-400">el comentario se enviará al Jefe al ejecutar</p>
+              </div>
+            )}
+            {t.chatOpen && (
+              <div className="border-t border-slate-100">
+                <div className="px-3 py-2 bg-blue-50 flex justify-between items-center">
+                  <span className="text-xs font-medium text-blue-700">Chat con el Jefe</span>
+                  <button onClick={() => toggleChat(t.id)} className="text-xs text-blue-400 hover:text-blue-600">✕</button>
+                </div>
+                <div className="px-3 py-2 flex flex-col gap-2 max-h-[480px] min-h-[300px] overflow-y-auto bg-white">
+                  {t.msgs.map((m, i) => (
+                    <div key={i} className={`text-xs px-3 py-2 rounded-lg max-w-[85%] leading-relaxed ${m.who === "jefe" ? "bg-blue-50 text-blue-900 self-start" : "bg-green-50 text-green-900 self-end"}`}>{m.text}</div>
+                  ))}
+                </div>
+                <ChatInput onSend={msg => sendMsg(t.id, msg)} />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center justify-between mt-4 pt-3 border-t border-yellow-200">
+        <div className="flex items-center gap-2">
+          <div className="w-32 h-1.5 bg-yellow-100 rounded-full overflow-hidden"><div className="h-1.5 bg-green-600 rounded-full" style={{ width: `${pct}%` }} /></div>
+          <span className="text-xs text-slate-500">{done} de {tareas.length} ejecutadas</span>
+        </div>
+        <button onClick={() => { const text = prompt("Descripción:"); if (!text) return; const date = prompt("Fecha:") || "—"; setTareas(prev => [...prev, { id: Date.now(), text, date, state: "pendiente", detalle: "", comentario: "", expandOpen: false, chatOpen: false, msgs: [] }]) }} className="text-xs px-3 py-1.5 rounded border border-slate-200 text-slate-500 hover:bg-slate-50">+ agregar tarea</button>
+      </div>
+    </div>
+  )
+}
+
+
+const IA_NAMES = ["ChatGPT", "Gemini", "Claude", "Perplexity"]
+const IA_KEY_MAP: Record<string, string> = { ChatGPT: "chatgpt", Gemini: "gemini", Claude: "claude", Perplexity: "perplexity" }
+
+function IaBarras({ refreshKey }: { refreshKey: number }) {
   const [entraron, setEntraron] = useState<Record<string, number>>({})
+  const [competencia, setCompetencia] = useState<Record<string, { pct: number; name: string; color: string }[]>>({})
+
   useEffect(() => {
     fetch("/api/super-admin/geo-tracker?periodo=anio")
       .then(r => r.json())
@@ -112,32 +272,50 @@ function IaBarras() {
           setEntraron(map)
         }
       }).catch(() => {})
-  }, [])
+
+    fetch("/api/super-admin/geo-competencia")
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          const map: Record<string, { pct: number; name: string; color: string }[]> = {}
+          d.data.forEach((item: { ia: string; bars: { name: string; pct: number; color: string }[] }) => {
+            map[item.ia] = item.bars
+          })
+          setCompetencia(map)
+        }
+      }).catch(() => {})
+  }, [refreshKey])
 
   return (
     <div className="grid grid-cols-4 gap-3">
-      {IA_STATIC.map(e => (
-        <div key={e.engine} className="border border-slate-200 rounded-xl overflow-hidden">
-          <div className="flex items-center justify-between px-3 py-2.5 bg-slate-50 border-b border-slate-100">
-            <span className="text-sm font-semibold">{e.engine}</span>
-            <div className="text-right">
-              <div className="text-base font-semibold text-green-600">{e.engine in entraron ? entraron[e.engine] : "..."}</div>
-              <div className="text-[10px] text-slate-400">llegaron a tol.ar</div>
+      {IA_NAMES.map(engine => {
+        const key = IA_KEY_MAP[engine]
+        const bars = competencia[key] || []
+        return (
+          <div key={engine} className="border border-slate-200 rounded-xl overflow-hidden">
+            <div className="flex items-center justify-between px-3 py-2.5 bg-slate-50 border-b border-slate-100">
+              <span className="text-sm font-semibold">{engine}</span>
+              <div className="text-right">
+                <div className="text-base font-semibold text-green-600">{engine in entraron ? entraron[engine] : "0"}</div>
+                <div className="text-[10px] text-slate-400">llegaron a tol.ar</div>
+              </div>
+            </div>
+            <div className="px-3 py-2.5 space-y-2 min-h-[80px]">
+              {bars.length === 0 ? (
+                <p className="text-[11px] text-slate-400 italic pt-2">Sin datos — corré el análisis</p>
+              ) : bars.map(b => (
+                <div key={b.name} className="flex items-center gap-2">
+                  <span className="text-[11px] text-slate-500 w-20 flex-shrink-0">{b.name}</span>
+                  <div className="flex-1 h-1.5 bg-slate-100 rounded-full">
+                    <div className="h-1.5 rounded-full" style={{ width: `${b.pct}%`, background: b.color }} />
+                  </div>
+                  <span className="text-[11px] font-medium w-7 text-right" style={{ color: b.color }}>{b.pct}%</span>
+                </div>
+              ))}
             </div>
           </div>
-          <div className="px-3 py-2.5 space-y-2">
-            {e.bars.map(b => (
-              <div key={b.name} className="flex items-center gap-2">
-                <span className="text-[11px] text-slate-500 w-20 flex-shrink-0">{b.name}</span>
-                <div className="flex-1 h-1.5 bg-slate-100 rounded-full">
-                  <div className="h-1.5 rounded-full" style={{ width: `${b.pct}%`, background: b.color }} />
-                </div>
-                <span className="text-[11px] font-medium w-7 text-right" style={{ color: b.color }}>{b.pct}%</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -146,6 +324,7 @@ export function SeoAiTab() {
   const { toast } = useToast()
   const [corriendo, setCorriendo] = useState(false)
   const [ultimoAnalisis, setUltimoAnalisis] = useState("hace 3 horas")
+  const [refreshKey, setRefreshKey] = useState(0)
   const [kwInput, setKwInput] = useState("")
   const [tipoContenido, setTipoContenido] = useState("Página comparativa")
   const [genOutput, setGenOutput] = useState<{ title: string; intro: string; items: string[]; faqQ: string; faqA: string } | null>(null)
@@ -155,10 +334,25 @@ export function SeoAiTab() {
   const [newMencion, setNewMencion] = useState({ source: "", url: "", text: "" })
   const [tourActivo, setTourActivo] = useState(false)
   const [tourPaso, setTourPaso] = useState(0)
+  const [tabActiva, setTabActiva] = useState<"estadisticas" | "ai">("estadisticas")
 
-  const handleCorrer = () => {
+  const handleCorrer = async () => {
     setCorriendo(true)
-    setTimeout(() => { setCorriendo(false); setUltimoAnalisis("hace unos segundos"); toast({ title: "Análisis completado" }) }, 3000)
+    try {
+      const r = await fetch("/api/super-admin/geo-scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) })
+      const d = await r.json()
+      if (d.success) {
+        setUltimoAnalisis("hace unos segundos")
+        setRefreshKey(k => k + 1)
+        toast({ title: "Análisis completado", description: `${d.resultados?.length ?? 0} respuestas recolectadas` })
+      } else {
+        toast({ title: "Error en el análisis", description: d.error || "Intentá de nuevo" })
+      }
+    } catch {
+      toast({ title: "Error de conexión", description: "No se pudo correr el análisis" })
+    } finally {
+      setCorriendo(false)
+    }
   }
 
   const handleGenerar = async () => {
@@ -191,12 +385,24 @@ export function SeoAiTab() {
 
       {tourActivo && <TourOverlay paso={tourPaso} total={TOUR_PASOS.length} onNext={() => setTourPaso(p => p + 1)} onPrev={() => setTourPaso(p => p - 1)} onClose={() => setTourActivo(false)} />}
 
-      {/* Header */}
+      <div className="flex gap-2 border-b border-slate-200">
+        <button onClick={() => setTabActiva("estadisticas")} className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${tabActiva === "estadisticas" ? "border-purple-500 text-purple-700" : "border-transparent text-slate-400 hover:text-slate-600"}`}>Estadísticas</button>
+        <button onClick={() => setTabActiva("ai")} className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${tabActiva === "ai" ? "border-purple-500 text-purple-700" : "border-transparent text-slate-400 hover:text-slate-600"}`}>AI</button>
+      </div>
+
+      {tabActiva === "ai" && (
+        <div className="space-y-6">
+          <PlanAccionBlock />
+        </div>
+      )}
+
+      {tabActiva === "estadisticas" && (
+      <div className="space-y-6">
+      <GerencialIABlock />
+      <MencionesIABlock />
       <div className="flex items-center justify-between border-b border-slate-100 pb-4">
         <div>
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-500" />SEO AI
-          </h3>
+          <h3 className="text-lg font-semibold flex items-center gap-2"><Brain className="w-5 h-5 text-purple-500" />SEO AI</h3>
           <p className="text-sm text-slate-500">Visibilidad en motores de IA y búsqueda</p>
         </div>
         <div className="flex items-center gap-2">
@@ -212,21 +418,16 @@ export function SeoAiTab() {
         </div>
       </div>
 
-      {/* 1. Barras por IA — lo más importante */}
       <div>
-        <SectionHeader label="¿Cómo figuramos vs la competencia?" badge="Datos reales" badgeColor="green" tooltip="Porcentaje de respuestas de cada IA que menciona a tol.ar vs competidores. El número verde es cuántas personas llegaron a tol.ar desde esa IA." />
-        <IaBarras />
+        <SectionHeader label="¿Cómo figuramos vs la competencia?" badge="Datos reales" badgeColor="green" tooltip="Porcentaje de respuestas de cada IA que menciona a tol.ar vs competidores." />
+        <IaBarras refreshKey={refreshKey} />
       </div>
 
-      {/* 2. Tabla de preguntas */}
       <div>
-        <SectionHeader label="Apariciones por pregunta" badge="Actualizable" badgeColor="amber" tooltip="Le hacemos estas preguntas a cada IA y registramos si tol.ar aparece en la respuesta. Apretá 'Correr análisis' para actualizar." />
+        <SectionHeader label="Apariciones por pregunta" badge="Actualizable" badgeColor="amber" tooltip="Le hacemos estas preguntas a cada IA y registramos si tol.ar aparece en la respuesta." />
         <GeoMatriz />
       </div>
 
-
-
-      {/* 4. Puntos débiles competencia */}
       <div>
         <SectionHeader label="Puntos débiles de la competencia" badge="Tu munición" badgeColor="green" tooltip="Lo que las IAs dicen malo de Tiendanube y Empretienda. Cada debilidad es una oportunidad de contenido para tol.ar." />
         <div className="border border-slate-200 rounded-xl overflow-hidden">
@@ -239,9 +440,8 @@ export function SeoAiTab() {
         </div>
       </div>
 
-      {/* 5. Generador de contenido */}
       <div>
-        <SectionHeader label="Generador de contenido con IA" badge="Powered by Claude" badgeColor="purple" tooltip="Escribís el tema y Claude escribe la página lista para publicar. Una buena página sube en Google Y hace que las IAs te citen." />
+        <SectionHeader label="Generador de contenido con IA" badge="Powered by Claude" badgeColor="purple" tooltip="Escribís el tema y Claude escribe la página lista para publicar." />
         <div className="border border-slate-200 rounded-xl p-4">
           <div className="inline-flex items-center gap-1.5 text-[11px] text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full mb-3">
             <span className="w-1.5 h-1.5 rounded-full bg-purple-500 inline-block" />Claude genera el borrador listo para publicar
@@ -274,7 +474,6 @@ export function SeoAiTab() {
         </div>
       </div>
 
-      {/* 6. Radar de menciones */}
       <div>
         <SectionHeader label="Radar de menciones web" badge={`${menciones.length} este mes`} badgeColor="green" tooltip="Cuantas más veces nos mencionan en internet, más nos conocen las IAs." right={
           <Button size="sm" variant="outline" onClick={() => setShowAddMencion(!showAddMencion)} className="flex items-center gap-1 text-xs"><Plus className="w-3 h-3" /> Agregar mención</Button>
@@ -305,7 +504,6 @@ export function SeoAiTab() {
         </div>
       </div>
 
-      {/* 7. Evolución de posiciones */}
       <div>
         <SectionHeader label="Evolución de posiciones en Google" badge="Últimos 6 meses" badgeColor="gray" tooltip="Historial de posición en Google. El número tiene que bajar — más abajo = mejor posición." />
         <div className="border border-slate-200 rounded-xl p-4">
@@ -328,22 +526,8 @@ export function SeoAiTab() {
         </div>
       </div>
 
-      {/* 8. Content opportunities */}
-      <div>
-        <SectionHeader label="Content opportunities" badge="12 en zona de oportunidad" badgeColor="red" tooltip="Keywords donde estás cerca de la primera página en Google. Con una página bien escrita podés llegar." />
-        <div className="space-y-2">
-          {OPORTUNIDADES.map((o, i) => (
-            <div key={i} className="border border-slate-200 rounded-lg px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors">
-              <span className="text-sm text-slate-800 flex-1">{o.kw}</span>
-              <div className="flex items-center gap-2 w-32"><div className="flex-1 h-1 bg-slate-100 rounded"><div className="h-1 rounded" style={{ width: `${o.pct}%`, background: o.color }} /></div></div>
-              <span className="text-xs text-slate-500 w-16">Pos. #{o.pos}</span>
-              <span className="text-xs text-slate-400 w-14 text-right">{o.vol}/mes</span>
-              <span className="text-xs text-blue-600 cursor-pointer whitespace-nowrap">{o.accion} →</span>
-            </div>
-          ))}
-        </div>
       </div>
-
+      )}
     </div>
   )
 }

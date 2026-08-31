@@ -11,5 +11,81 @@ Disallow: /api/
 Disallow: /_next/
 Disallow: /scripts/
 
+# ==============================
+# CRAWLERS DE IA — EXPLICITAMENTE PERMITIDOS
+# ==============================
+
+# OpenAI / ChatGPT
+User-agent: GPTBot
+Allow: /
+
+# OpenAI SearchGPT
+User-agent: OAI-SearchBot
+Allow: /
+
+# Anthropic / Claude
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+# Google AI (Gemini, AI Overviews)
+User-agent: Google-Extended
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+
+# Meta AI
+User-agent: FacebookBot
+Allow: /
+
+# Microsoft / Copilot (Bing AI)
+User-agent: Bingbot
+Allow: /
+
+User-agent: msnbot
+Allow: /
+
+# Apple
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Common Crawl (datos de entrenamiento de muchos modelos)
+User-agent: CCBot
+Allow: /
+
+# DeepSeek
+User-agent: DeepSeekBot
+Allow: /
+
+# xAI / Grok
+User-agent: Grokbot
+Allow: /
+
+# Cohere AI
+User-agent: cohere-ai
+Allow: /
+
+# AI2 / Allen Institute
+User-agent: AI2Bot
+Allow: /
+
+# Diffbot
+User-agent: Diffbot
+Allow: /
+
 # Sitemap
 Sitemap: https://tol.ar/sitemap.xml
+
+# Contexto estructurado para modelos de IA
+# Spec: https://llmstxt.org
+Link: <https://tol.ar/llms.txt>; rel="llms"

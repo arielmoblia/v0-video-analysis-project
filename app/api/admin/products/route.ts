@@ -162,6 +162,7 @@ export async function PUT(request: NextRequest) {
       .update({
         slug,
         ...productData,
+        is_template: false,
       })
       .eq("id", id)
       .select()

@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 import { type NextRequest, NextResponse } from "next/server"
+import { forwardOrderToSupplierIfConnected } from "@/lib/services/order-forwarding"
+import { decryptFields } from "@/lib/crypto"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
@@ -33,7 +35,13 @@ export async function POST(request: NextRequest) {
         .select("store_id, mercadopago_access_token, mercadopago_test_mode, mercadopago_test_token")
         .eq("mercadopago_enabled", true)
 
-      for (const pm of paymentMethods || []) {
+      for (const rawPm of paymentMethods || []) {
+        let pm: typeof rawPm
+        try {
+          pm = decryptFields(rawPm, ["mercadopago_access_token", "mercadopago_test_token"])
+        } catch (e) {
+          continue // token cifrado con una ENCRYPTION_KEY vieja / corrupto, saltar esta tienda
+        }
         const token = pm.mercadopago_test_mode ? pm.mercadopago_test_token : pm.mercadopago_access_token
         if (!token) continue
 
@@ -63,7 +71,7 @@ export async function POST(request: NextRequest) {
 
               // Verificar estado del pago
               if (payment.status === "approved") {
-                await confirmOrder(foundOrder.id, foundOrder.items)
+                await confirmOrder(foundOrder.id, foundOrder.store_id, foundOrder.items)
               } else if (payment.status === "pending") {
                 await supabase
                   .from("orders")
@@ -79,7 +87,7 @@ export async function POST(request: NextRequest) {
       }
     } else if (order.status !== "pagado") {
       // Si encontramos el pedido por payment_id, confirmar
-      await confirmOrder(order.id, order.items)
+      await confirmOrder(order.id, order.store_id, order.items)
     }
 
     return NextResponse.json({ received: true })
@@ -89,7 +97,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function confirmOrder(orderId: string, items: any[]) {
+async function confirmOrder(orderId: string, storeId: string, items: any[]) {
   // Marcar pedido como pagado
   await supabase
     .from("orders")
@@ -125,4 +133,10 @@ async function confirmOrder(orderId: string, items: any[]) {
   }
 
   console.log(`[MP Webhook] Pedido ${orderId} confirmado y stock actualizado`)
+
+  // Recién acá el pago está confirmado de verdad por MP, así que es seguro reenviar
+  // el pedido a la tienda de origen si esta tienda está "conectada" (ver order-forwarding.ts).
+  forwardOrderToSupplierIfConnected(storeId, orderId, items).catch((e) =>
+    console.error("[order-forwarding] Error reenviando pedido tras confirmación de MP:", e)
+  )
 }

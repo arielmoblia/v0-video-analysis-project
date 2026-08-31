@@ -21,7 +21,7 @@ export async function GET(req: Request) {
     .gte("created_at", since.toISOString())
     .not("referral_source", "is", null)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: error.message }, { status: 500, headers: { "Cache-Control": "no-store" } })
 
   const filtered = (data || []).filter(r => !EXCLUDED_IPS.includes(r.creator_ip))
   const counts: Record<string, number> = {}
@@ -35,5 +35,5 @@ export async function GET(req: Request) {
     .map(([id, count]) => ({ id, count, pct: total ? Math.round(count / total * 100) : 0 }))
     .sort((a, b) => b.count - a.count)
 
-  return NextResponse.json({ total, items })
+  return NextResponse.json({ total, items }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
 }

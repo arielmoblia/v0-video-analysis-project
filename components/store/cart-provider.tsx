@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react"
 
 interface Product {
   id: string
@@ -25,6 +25,8 @@ interface CartContextType {
   cartOpen: boolean
   setCartOpen: (open: boolean) => void
   isLoaded: boolean
+  showPriceAlert: boolean
+  dismissPriceAlert: () => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -55,6 +57,9 @@ export function CartProvider({ children, storeId }: { children: ReactNode; store
   const [cartOpen, setCartOpen] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [cartKey, setCartKey] = useState<string>("")
+  const [showPriceAlert, setShowPriceAlert] = useState(false)
+  const itemsRef = useRef<CartItem[]>([])
+  itemsRef.current = items
 
   useEffect(() => {
     const subdomain = getSubdomainFromUrl()
@@ -117,6 +122,48 @@ export function CartProvider({ children, storeId }: { children: ReactNode; store
 
   const clearCart = () => setItems([])
 
+  // Al abrir el carrito, comparamos el precio guardado en localStorage (puede quedar
+  // cacheado en el navegador del cliente) contra el precio real de la base de datos.
+  useEffect(() => {
+    if (!cartOpen || !isLoaded) return
+
+    const checkPrices = async () => {
+      try {
+        const currentItems = itemsRef.current
+        if (currentItems.length === 0) return
+
+        const res = await fetch("/api/cart/check-prices", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: currentItems.map((item) => ({ productId: item.product.id, size: item.product.selectedSize })),
+          }),
+        })
+        const data = await res.json()
+
+        let changed = false
+        setItems((prev) =>
+          prev.map((item) => {
+            const key = `${item.product.id}-${item.product.selectedSize || "no-size"}`
+            const realPrice = data.prices?.[key]
+            if (typeof realPrice === "number" && realPrice !== Number(item.product.price)) {
+              changed = true
+              return { ...item, product: { ...item.product, price: realPrice } }
+            }
+            return item
+          }),
+        )
+        if (changed) setShowPriceAlert(true)
+      } catch (e) {
+        console.error("Error verificando precios del carrito:", e)
+      }
+    }
+
+    checkPrices()
+  }, [cartOpen, isLoaded])
+
+  const dismissPriceAlert = () => setShowPriceAlert(false)
+
   const total = items.reduce((acc, item) => acc + Number(item.product.price) * item.quantity, 0)
 
   return (
@@ -131,6 +178,8 @@ export function CartProvider({ children, storeId }: { children: ReactNode; store
         cartOpen,
         setCartOpen,
         isLoaded,
+        showPriceAlert,
+        dismissPriceAlert,
       }}
     >
       {children}

@@ -1,0 +1,3 @@
+{
+  "/api/super-admin/send-promo-mail/route": "app/api/super-admin/send-promo-mail/route.js"
+}

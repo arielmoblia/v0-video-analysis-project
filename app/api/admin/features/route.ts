@@ -31,20 +31,21 @@ export async function GET(request: NextRequest) {
     // Obtener features compradas por la tienda
     const { data: purchasedData, error: purchasedError } = await supabase
       .from("store_purchased_features")
-      .select("feature_code")
+      .select("feature_code, is_trial, trial_ends_at")
       .eq("store_id", storeId)
       .eq("is_active", true)
 
     if (purchasedError) throw purchasedError
 
     const purchasedFeatures = purchasedData?.map((f) => f.feature_code) || []
+    const purchasedDetails = purchasedData || []
 
     // Si se pide incluir las features disponibles (activas en la plataforma)
     if (includeAvailable) {
       const { data: availableData, error: availableError } = await supabase
         .from("store_features")
         .select("*")
-        .eq("is_active", true)
+        .order("is_active", { ascending: false })
         .order("created_at", { ascending: true })
 
       if (availableError) throw availableError
@@ -53,6 +54,7 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({
         features: purchasedFeatures,
+        purchasedDetails,
         availableFeatures: availableData || [],
         exchangeRate,
       })

@@ -4,7 +4,7 @@ import { Footer } from "@/components/landing/footer"
 import { MigracionContent } from "@/components/landing/migracion-content"
 
 export const metadata: Metadata = {
-  title: "Migraciones | Alternativa a Mercado Shops y Tiendanube",
+  title: "Migraciones | Migrá tu tienda a tol.ar",
   description:
     "Te quedaste sin plataforma? Migra tu tienda a Tol.ar. Sin comisiones por venta, dominio propio y soporte humano.",
 }

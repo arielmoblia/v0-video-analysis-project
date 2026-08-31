@@ -1,5 +1,8 @@
+import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { getStoreBySubdomain, getStoreProducts, getStoreCategories, getFeaturedProducts } from "@/lib/store-context"
+import { hasStoreFeature } from "@/lib/services/stores"
+import { seoClean } from "@/lib/utils"
 import { StoreHeader } from "@/components/store/store-header"
 import { StoreHero } from "@/components/store/store-hero"
 import { ProductGrid } from "@/components/store/product-grid"
@@ -9,6 +12,55 @@ export const revalidate = 0
 
 interface StorePageProps {
   params: Promise<{ subdomain: string }>
+}
+
+// Texto genérico por rubro cuando la tienda no escribió su propio subtítulo de banner
+const DEFAULT_BANNER_SUBTITLE = "Descubre nuestra colección exclusiva"
+const rubroDescTemplates: Record<string, string> = {
+  zapatos: "calzado",
+  footwear: "calzado",
+  ropa: "ropa y accesorios",
+  clothing: "ropa y accesorios",
+  perfumes: "perfumes originales",
+  fragrances: "perfumes originales",
+  cosmetics: "cosmética y maquillaje",
+  electronicos: "tecnología y electrónica",
+  electronics: "tecnología y electrónica",
+  deportes: "artículos deportivos",
+  fitness: "equipamiento fitness",
+  crossfit: "equipamiento crossfit",
+}
+
+export async function generateMetadata({ params }: StorePageProps): Promise<Metadata> {
+  const { subdomain } = await params
+  if (subdomain.startsWith("preview-")) return {}
+
+  const store = await getStoreBySubdomain(subdomain)
+  if (!store) return {}
+
+  const storeName = seoClean(store.site_title || subdomain)
+  const title = `${storeName} — Tienda online en Argentina`
+
+  const rubro = rubroDescTemplates[store.template]
+  const hasCustomSubtitle = store.banner_subtitle && store.banner_subtitle !== DEFAULT_BANNER_SUBTITLE
+  const description = hasCustomSubtitle
+    ? seoClean(`${storeName}: ${store.banner_subtitle}. Envíos a todo Argentina.`).slice(0, 155)
+    : rubro
+      ? `${storeName} — tienda online de ${rubro} en Argentina. Envíos a todo el país, pagá en cuotas.`
+      : `${storeName} — tienda online en Argentina. Envíos a todo el país, pagá en cuotas. Creada con tol.ar.`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      ...(store.banner_image ? { images: [store.banner_image] } : {}),
+    },
+    alternates: {
+      canonical: `https://tol.ar/tienda/${subdomain}`,
+    },
+  }
 }
 
 export default async function StorePage({ params }: StorePageProps) {
@@ -24,15 +76,19 @@ export default async function StorePage({ params }: StorePageProps) {
     notFound()
   }
 
-  const [products, categories, featuredProducts] = await Promise.all([
+  const hasDolarPeso = await hasStoreFeature(store.id, 'dolar_peso')
+  const exchangeRate = hasDolarPeso ? (store.dolar_valor || 0) : 0
+
+  const [products, categories, featuredProducts, hasMayoristaMinorista] = await Promise.all([
     getStoreProducts(store.id),
     getStoreCategories(store.id),
     getFeaturedProducts(store.id),
+    hasStoreFeature(store.id, 'mayorista_minorista'),
   ])
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <StoreHeader store={store} categories={categories} />
+      <StoreHeader store={store} categories={categories} hasMayoristaMinorista={hasMayoristaMinorista} />
       <main className="flex-1">
         <StoreHero store={store} />
 
@@ -43,7 +99,7 @@ export default async function StorePage({ params }: StorePageProps) {
                 <p className="text-xs tracking-[0.3em] uppercase text-neutral-500 mb-3">Lo mejor</p>
                 <h2 className="text-3xl font-light tracking-wide">Productos Destacados</h2>
               </div>
-              <ProductGrid products={featuredProducts} subdomain={subdomain} />
+              <ProductGrid products={featuredProducts} subdomain={subdomain} exchangeRate={exchangeRate} />
             </div>
           </section>
         )}
@@ -55,7 +111,7 @@ export default async function StorePage({ params }: StorePageProps) {
               <h2 className="text-3xl font-light tracking-wide">Todos los Productos</h2>
             </div>
             {products.length > 0 ? (
-              <ProductGrid products={products} subdomain={subdomain} />
+              <ProductGrid products={products} subdomain={subdomain} exchangeRate={exchangeRate} />
             ) : (
               <div className="text-center py-20">
                 <p className="text-neutral-500 text-lg font-light">Esta tienda aún no tiene productos.</p>

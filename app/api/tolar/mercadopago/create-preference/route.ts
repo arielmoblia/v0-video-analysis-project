@@ -1,5 +1,6 @@
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js"
 import { type NextRequest, NextResponse } from "next/server"
+import { getPaymentsConfig } from "@/lib/payments-config"
 
 // Esta API crea preferencias de pago para que los clientes paguen a TOL.AR
 // (cositas, planes, etc.)
@@ -25,14 +26,13 @@ export async function POST(request: NextRequest) {
     const user = { id: store.id, email: store.email || "merchant@tol.ar" }
 
     // Access Token de TOL.AR (tu cuenta de MercadoPago)
-    // Leer keys de Supabase
-    const { data: paymentConfig } = await supabase
-      .from("platform_settings")
-      .select("value")
-      .eq("key", "payments_config")
-      .maybeSingle()
-
-    const accessToken = paymentConfig?.value?.mp_access_token || process.env.MP_ACCESS_TOKEN
+    let storedAccessToken: string | undefined
+    try {
+      storedAccessToken = (await getPaymentsConfig()).mp_access_token
+    } catch (e) {
+      console.error("[v0] No se pudo leer/descifrar payments_config:", e)
+    }
+    const accessToken = process.env.MP_ACCESS_TOKEN || storedAccessToken
 
     if (!accessToken) {
       console.error("[v0] MP_ACCESS_TOKEN no configurado")
@@ -50,7 +50,6 @@ export async function POST(request: NextRequest) {
       .from("feature_purchases")
       .insert({
         store_id: storeId,
-        user_id: user.id,
         features: features,
         amount_ars: totalARS,
         external_reference: externalReference,

@@ -1,0 +1,17 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/arielmobilia/layout,_N_T_/arielmobilia/migrar/layout,_N_T_/arielmobilia/migrar/sistema/layout,_N_T_/arielmobilia/migrar/sistema/page,_N_T_/arielmobilia/migrar/sistema"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/arielmobilia/migrar/sistema/__PAGE__",
+    "/arielmobilia/migrar/sistema",
+    "/arielmobilia/migrar",
+    "/arielmobilia",
+    "/_index",
+    "/_head"
+  ]
+}

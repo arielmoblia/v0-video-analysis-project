@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 40, "column": 0}, "map": {"version":3,"sources":["file:///var/www/tol.ar-dev/app/api/super-admin/check-auth/route.ts"],"sourcesContent":["import { NextResponse } from \"next/server\"\nimport { cookies } from \"next/headers\"\n\nexport async function GET() {\n  const cookieStore = await cookies()\n  const authenticated = cookieStore.get(\"super_admin\")?.value === \"true\"\n  return NextResponse.json({ authenticated }, { headers: { \"Cache-Control\": \"no-store, no-cache, must-revalidate\" } })\n}\n"],"names":[],"mappings":";;;;AAAA;AACA;;;AAEO,eAAe;IACpB,MAAM,cAAc,MAAM,IAAA,4IAAO;IACjC,MAAM,gBAAgB,YAAY,GAAG,CAAC,gBAAgB,UAAU;IAChE,OAAO,gJAAY,CAAC,IAAI,CAAC;QAAE;IAAc,GAAG;QAAE,SAAS;YAAE,iBAAiB;QAAsC;IAAE;AACpH"}}]
+}

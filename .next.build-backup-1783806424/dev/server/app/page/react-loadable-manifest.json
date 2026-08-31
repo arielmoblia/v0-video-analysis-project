@@ -1,0 +1,9 @@
+{
+  "[project]/components/landing/video-popup.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/components/landing/video-popup.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/components_landing_video-popup_tsx_f0a1bbd3._.js",
+      "static/chunks/components_landing_video-popup_tsx_53a0b621._.js"
+    ]
+  }
+}

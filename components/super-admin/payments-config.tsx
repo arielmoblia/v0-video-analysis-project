@@ -454,7 +454,7 @@ export function PaymentsConfig() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Pagos</h2>
+          <h2 className="text-2xl font-bold text-slate-800">Cobros</h2>
           <p className="text-slate-500 text-sm">Clientes pagan en ARS → Vos recibís en USD (Wells Fargo)</p>
         </div>
         <div className="flex items-center gap-2 bg-orange-50 border border-orange-100 rounded-lg px-3 py-1.5 text-xs text-orange-700">
@@ -487,10 +487,10 @@ export function PaymentsConfig() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {[
-              { label: "Stripe", val: "$0", sub: "0 pagos", color: "text-orange-600", border: "border-orange-100" },
-              { label: "MercadoPago", val: "$0", sub: "0 pagos", color: "text-orange-600", border: "border-orange-100" },
-              { label: "PayPal", val: "$0", sub: "0 pagos", color: "text-amber-600", border: "border-amber-100" },
-              { label: "Mobbex", val: "$0", sub: "0 pagos", color: "text-green-600", border: "border-green-100" },
+              { label: "Stripe", val: "$0", sub: "0 cobros", color: "text-orange-600", border: "border-orange-100" },
+              { label: "MercadoPago", val: "$0", sub: "0 cobros", color: "text-orange-600", border: "border-orange-100" },
+              { label: "PayPal", val: "$0", sub: "0 cobros", color: "text-amber-600", border: "border-amber-100" },
+              { label: "Mobbex", val: "$0", sub: "0 cobros", color: "text-green-600", border: "border-green-100" },
               { label: "Total del mes", val: "$0 USD", sub: "0 suscriptores activos", color: "text-orange-600", border: "border-orange-500/20", highlight: true },
             ].map((m: any) => (
               <div key={m.label} className={`bg-white border rounded-xl p-4 ${m.border} ${m.highlight ? "shadow-sm" : ""}`}>

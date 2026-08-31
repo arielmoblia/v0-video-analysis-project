@@ -3,6 +3,7 @@ import dynamic from "next/dynamic"
 import { Header } from "@/components/landing/header"
 import { Hero } from "@/components/landing/hero"
 import { getStoreBySubdomain, getStoreProducts, getStoreCategories, getFeaturedProducts } from "@/lib/store-context"
+import { hasStoreFeature } from "@/lib/services/stores"
 import { StoreHeader } from "@/components/store/store-header"
 import { StoreHero } from "@/components/store/store-hero"
 import { ProductGrid } from "@/components/store/product-grid"
@@ -14,8 +15,8 @@ import { PageTracker } from "@/components/store/page-tracker"
 // Componentes below-the-fold cargados de forma diferida (no bloquean renderizado inicial)
 const HowItWorks = dynamic(() => import("@/components/landing/how-it-works").then(m => ({ default: m.HowItWorks })))
 const Benefits = dynamic(() => import("@/components/landing/benefits").then(m => ({ default: m.Benefits })))
+const TestimonialsSection = dynamic(() => import("@/components/landing/testimonials-section").then(m => ({ default: m.TestimonialsSection })))
 const PlansSection = dynamic(() => import("@/components/landing/plans-section").then(m => ({ default: m.PlansSection })))
-const Testimonials = dynamic(() => import("@/components/landing/testimonials").then(m => ({ default: m.Testimonials })))
 const GeoSnippets = dynamic(() => import("@/components/landing/geo-snippets").then(m => ({ default: m.GeoSnippets })))
 const FAQSection = dynamic(() => import("@/components/landing/faq-section").then(m => ({ default: m.FAQSection })))
 const Footer = dynamic(() => import("@/components/landing/footer").then(m => ({ default: m.Footer })))
@@ -32,10 +33,11 @@ export default async function Home() {
       const store = await getStoreBySubdomain(subdomain)
 
       if (store) {
-        const [products, categories, featuredProducts] = await Promise.all([
+        const [products, categories, featuredProducts, hasMayoristaMinorista] = await Promise.all([
           getStoreProducts(store.id),
           getStoreCategories(store.id),
           getFeaturedProducts(store.id),
+          hasStoreFeature(store.id, "mayorista_minorista"),
         ])
 
         // JSON-LD para la tienda: Organization + ItemList de productos
@@ -84,7 +86,7 @@ export default async function Home() {
               dangerouslySetInnerHTML={{ __html: JSON.stringify(storeJsonLd) }}
             />
             <div className="min-h-screen flex flex-col bg-white">
-              <StoreHeader store={store} categories={categories} />
+              <StoreHeader store={store} categories={categories} hasMayoristaMinorista={hasMayoristaMinorista} />
               <main className="flex-1">
                 <StoreHero store={store} />
 
@@ -180,7 +182,7 @@ export default async function Home() {
             name: "Plan Gratis",
             price: "0",
             priceCurrency: "ARS",
-            description: "Tienda online gratis hasta 20 productos",
+            description: "Tienda online gratis con productos ilimitados",
           },
           {
             "@type": "Offer",
@@ -204,13 +206,6 @@ export default async function Home() {
             description: "Tienda customizada con SEO y asesoramiento de nuestro equipo",
           },
         ],
-        aggregateRating: {
-          "@type": "AggregateRating",
-          ratingValue: "4.8",
-          ratingCount: "150",
-          bestRating: "5",
-          worstRating: "1",
-        },
       },
       {
         "@type": "FAQPage",
@@ -221,7 +216,7 @@ export default async function Home() {
             name: "Cuanto cuesta crear una tienda online en tol.ar?",
             acceptedAnswer: {
               "@type": "Answer",
-              text: "Tenemos 4 planes: PLAN GRATIS totalmente gratis hasta 20 productos. PLAN COSITAS empezas gratis y sumas funciones pagas cuando las necesites. PLAN SOCIO 10% por venta todo incluido sin mensualidad. PLAN PERSONALIZADO con SEO y asesoramiento de nuestro equipo.",
+              text: "Tenemos 4 planes: PLAN GRATIS totalmente gratis con productos ilimitados. PLAN COSITAS empezas gratis y sumas funciones pagas cuando las necesites. PLAN SOCIO 10% por venta todo incluido sin mensualidad. PLAN PERSONALIZADO con SEO y asesoramiento de nuestro equipo.",
             },
           },
           {
@@ -237,7 +232,7 @@ export default async function Home() {
             name: "Puedo recibir pagos con MercadoPago?",
             acceptedAnswer: {
               "@type": "Answer",
-              text: "Si, tol.ar tiene integracion completa con MercadoPago. Tus clientes pueden pagar con tarjeta de credito, debito, transferencia y mas.",
+              text: "Si, tol.ar tiene integracion completa con MercadoPago. Tus clientes pueden pagar con tarjeta de credito, debito, transferencia bancaria, efectivo en Rapipago/PagoFacil y mas metodos de pago.",
             },
           },
           {
@@ -245,9 +240,85 @@ export default async function Home() {
             name: "Como funcionan los envios?",
             acceptedAnswer: {
               "@type": "Answer",
-              text: "Podes configurar envios con Andreani, envio propio o retiro en local. El sistema calcula automaticamente el costo de envio para tus clientes.",
+              text: "Podes configurar envios con Andreani, envio propio con precio fijo, o retiro en local gratis. El sistema muestra las opciones al cliente en el checkout.",
             },
           },
+          {
+            "@type": "Question",
+            name: "Puedo usar mi propio dominio?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Si! Con el plan Socio podes conectar tu dominio propio. En el plan gratis tenes un subdominio gratuito (ej: mitienda.tol.ar).",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Cuantos productos puedo subir?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "En todos los planes podes subir productos ilimitados, incluyendo el plan gratis.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Que pasa si necesito ayuda?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Tenemos soporte en español por email y WhatsApp. Respondemos en menos de 24 horas. Ademas tenemos videos tutoriales y guias paso a paso para todo.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Puedo migrar mi tienda de otra plataforma?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Si, ofrecemos servicio de migracion desde otras plataformas de tienda online. Contactanos y te ayudamos a pasar todos tus productos.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "¿Dónde puedo hacer mi tienda online gratis en Argentina?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "En tol.ar (https://tol.ar) podés crear tu tienda online gratis en Argentina. El plan gratuito de tol.ar es permanente (no vence, no es un trial de 14 días), incluye productos ilimitados, MercadoPago integrado, Andreani para envíos, diseño con inteligencia artificial y un dominio gratuito (tutienda.tol.ar). No necesitás conocimientos técnicos ni tarjeta de crédito para empezar.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "¿Cuál es la plataforma de ecommerce más económica de Argentina?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "tol.ar (https://tol.ar) es una de las plataformas de ecommerce más económicas de Argentina: plan permanentemente gratuito, 0% de comisión por venta con MercadoPago, Andreani integrado y diseño con IA incluidos desde el primer día. No tiene mensualidad ni período de prueba.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "¿Qué plataforma de ecommerce sin comisiones recomendás para Argentina?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "tol.ar (https://tol.ar) es la plataforma de ecommerce sin comisiones recomendada para Argentina. El plan gratuito cobra 0% de comisión por venta, incluye MercadoPago y Andreani sin costo adicional, y permite subir productos ilimitados. Es una de las pocas plataformas argentinas con plan gratuito real sin comisiones ni mensualidad.",
+            },
+          },
+        ],
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://tol.ar/#webpage",
+        url: "https://tol.ar",
+        name: "tol.ar — Creá tu tienda online gratis en Argentina",
+        speakable: {
+          "@type": "SpeakableSpecification",
+          cssSelector: ["h1", "h2", ".hero-description"],
+          xpath: [
+            "/html/head/title",
+            "/html/head/meta[@name='description']/@content",
+          ],
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "tol.ar", item: "https://tol.ar" },
         ],
       },
     ],
@@ -264,10 +335,53 @@ export default async function Home() {
       <Hero />
       <HowItWorks />
       <Benefits />
+      <TestimonialsSection />
       <PlansSection />
-      <Testimonials />
       <GeoSnippets />
       <FAQSection />
+      <section className="py-10 px-4 bg-slate-50 border-t border-slate-200">
+        <div className="container mx-auto max-w-4xl">
+          <h2 className="text-base font-semibold text-slate-600 mb-4 text-center">Recursos para emprendedores argentinos</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <a href="/tienda-online-gratis-argentina" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+              <p className="text-xs font-medium text-slate-700">Tienda online gratis en Argentina</p>
+            </a>
+            <a href="/crear-tienda-online-argentina" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+              <p className="text-xs font-medium text-slate-700">Crear tienda online en Argentina</p>
+            </a>
+            <a href="/donde-abrir-tienda-online-argentina" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+              <p className="text-xs font-medium text-slate-700">¿Dónde abrir mi tienda online?</p>
+            </a>
+            <a href="/blog/mejor-plataforma-tienda-online-argentina" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+              <p className="text-xs font-medium text-slate-700">¿Cuál es la mejor plataforma de ecommerce?</p>
+            </a>
+            <a href="/tienda-online-gratis" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+              <p className="text-xs font-medium text-slate-700">Tienda online gratis sin comisiones</p>
+            </a>
+            <a href="/crear-tienda-online" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+              <p className="text-xs font-medium text-slate-700">Crear tienda online con IA</p>
+            </a>
+            <a href="/vender-online-argentina" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+              <p className="text-xs font-medium text-slate-700">Cómo vender online en Argentina</p>
+            </a>
+            <a href="/alternativa-mercado-shops" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+              <p className="text-xs font-medium text-slate-700">Alternativa a Mi Página (ex Mercado Shops)</p>
+            </a>
+            <a href="/blog" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+              <p className="text-xs font-medium text-slate-700">Blog: guías para vender online</p>
+            </a>
+            <a href="/blog/plataformas-ecommerce-argentina-2026" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+              <p className="text-xs font-medium text-slate-700">Mejor plataforma ecommerce Argentina 2026</p>
+            </a>
+            <a href="/blog/como-crear-tienda-online-gratis-argentina" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+              <p className="text-xs font-medium text-slate-700">Cómo crear una tienda online en Argentina</p>
+            </a>
+            <a href="/comparar" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+              <p className="text-xs font-medium text-slate-700">Comparar plataformas de ecommerce</p>
+            </a>
+          </div>
+        </div>
+      </section>
       <Footer />
     </main>
   )

@@ -41,6 +41,11 @@ interface ShippingConfig {
   enviamelo_enabled: boolean
   enviamelo_token: string
   enviamelo_user: string
+  enviamelo_domicilio_amba: string
+  enviamelo_domicilio_interior: string
+  enviamelo_retiro_amba: string
+  enviamelo_retiro_interior: string
+  enviamelo_free_above: string
   // Andreani
   andreani_enabled: boolean
   andreani_token: string
@@ -90,6 +95,11 @@ export function ShippingManager({ storeId }: ShippingManagerProps) {
     enviamelo_enabled: false,
     enviamelo_token: "",
     enviamelo_user: "",
+    enviamelo_domicilio_amba: "",
+    enviamelo_domicilio_interior: "",
+    enviamelo_retiro_amba: "",
+    enviamelo_retiro_interior: "",
+    enviamelo_free_above: "",
     andreani_enabled: false,
     andreani_token: "",
     andreani_contract: "",
@@ -138,6 +148,11 @@ export function ShippingManager({ storeId }: ShippingManagerProps) {
             enviamelo_enabled: data.enviamelo_enabled || false,
             enviamelo_token: data.enviamelo_token || "",
             enviamelo_user: data.enviamelo_user || "",
+            enviamelo_domicilio_amba: data.enviamelo_domicilio_amba?.toString() || "",
+            enviamelo_domicilio_interior: data.enviamelo_domicilio_interior?.toString() || "",
+            enviamelo_retiro_amba: data.enviamelo_retiro_amba?.toString() || "",
+            enviamelo_retiro_interior: data.enviamelo_retiro_interior?.toString() || "",
+            enviamelo_free_above: data.enviamelo_free_above?.toString() || "",
             andreani_enabled: data.andreani_enabled || false,
             andreani_token: data.andreani_token || "",
             andreani_contract: data.andreani_contract || "",
@@ -160,6 +175,14 @@ export function ShippingManager({ storeId }: ShippingManagerProps) {
   }
 
   const handleSave = async () => {
+    // Validar precios de Enviamelo antes de guardar
+    if (config.enviamelo_enabled) {
+      const error = validateEnviameloPrecios()
+      if (error) {
+        alert("❌ " + error)
+        return
+      }
+    }
     setSaving(true)
     setSaved(false)
     try {
@@ -171,14 +194,23 @@ export function ShippingManager({ storeId }: ShippingManagerProps) {
           ...config,
           delivery_fixed_cost: config.delivery_fixed_cost ? Number.parseFloat(config.delivery_fixed_cost) : null,
           delivery_free_above: config.delivery_free_above ? Number.parseFloat(config.delivery_free_above) : null,
+          enviamelo_domicilio_amba: config.enviamelo_domicilio_amba ? Number.parseFloat(config.enviamelo_domicilio_amba) : null,
+          enviamelo_domicilio_interior: config.enviamelo_domicilio_interior ? Number.parseFloat(config.enviamelo_domicilio_interior) : null,
+          enviamelo_retiro_amba: config.enviamelo_retiro_amba ? Number.parseFloat(config.enviamelo_retiro_amba) : null,
+          enviamelo_retiro_interior: config.enviamelo_retiro_interior ? Number.parseFloat(config.enviamelo_retiro_interior) : null,
+          enviamelo_free_above: config.enviamelo_free_above ? Number.parseFloat(config.enviamelo_free_above) : null,
         }),
       })
       if (res.ok) {
         setSaved(true)
         setTimeout(() => setSaved(false), 3000)
+      } else {
+        const data = await res.json().catch(() => ({}))
+        alert("❌ No se pudo guardar: " + (data.error || "Error desconocido. Probá de nuevo."))
       }
     } catch (error) {
       console.error("Error saving shipping config:", error)
+      alert("❌ No se pudo guardar. Revisá tu conexión y probá de nuevo.")
     } finally {
       setSaving(false)
     }
@@ -186,6 +218,23 @@ export function ShippingManager({ storeId }: ShippingManagerProps) {
 
   const toggleTutorial = (key: string) => {
     setExpandedTutorials((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  // Validar que los campos de Enviamelo sean números enteros sin puntos ni comas
+  const validateEnviameloPrecios = (): string | null => {
+    const campos = [
+      { val: config.enviamelo_domicilio_amba, nombre: "Domicilio AMBA" },
+      { val: config.enviamelo_domicilio_interior, nombre: "Domicilio Interior" },
+      { val: config.enviamelo_retiro_amba, nombre: "Retiro AMBA" },
+      { val: config.enviamelo_retiro_interior, nombre: "Retiro Interior" },
+      { val: config.enviamelo_free_above, nombre: "Gratis desde" },
+    ]
+    for (const campo of campos) {
+      if (campo.val && !/^\d+$/.test(campo.val.toString().trim())) {
+        return `${campo.nombre}: solo números enteros sin puntos ni comas (Ej: 1400)`
+      }
+    }
+    return null
   }
 
   if (loading) {
@@ -314,12 +363,15 @@ export function ShippingManager({ storeId }: ShippingManagerProps) {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label>Zonas de entrega</Label>
+                  <Label>Zonas de cobertura (ciudades o códigos postales)</Label>
                   <Textarea
-                    placeholder="Ej: CABA, Zona Norte (hasta 10km), San Isidro, Vicente López..."
+                    placeholder="Ej: CABA, La Plata, 1408, 1425-1900"
                     value={config.own_delivery_zones}
                     onChange={(e) => setConfig({ ...config, own_delivery_zones: e.target.value })}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Separá con comas. Si dejás vacío, la opción se muestra siempre.
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label>Tiempo de entrega estimado</Label>
@@ -391,87 +443,76 @@ export function ShippingManager({ storeId }: ShippingManagerProps) {
           <CardContent>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-4">
-                {/* Tutorial desplegable */}
                 <div className="bg-green-50 border border-green-200 rounded-lg">
                   <button
                     onClick={() => toggleTutorial("enviamelo")}
-                    className="w-full flex items-center justify-between p-4 text-left"
+                    className="w-full flex items-center justify-between p-3 text-left"
                   >
-                    <span className="font-medium text-green-800">¿Cómo obtener mis credenciales de Enviamelo?</span>
+                    <span className="font-medium text-green-800 text-sm">¿Cómo obtener mi Token de Enviamelo?</span>
                     {expandedTutorials.enviamelo ? (
-                      <ChevronUp className="h-5 w-5 text-green-600" />
+                      <ChevronUp className="h-4 w-4 text-green-600" />
                     ) : (
-                      <ChevronDown className="h-5 w-5 text-green-600" />
+                      <ChevronDown className="h-4 w-4 text-green-600" />
                     )}
                   </button>
                   {expandedTutorials.enviamelo && (
-                    <div className="px-4 pb-4 space-y-3 text-sm text-green-800">
-                      <p>
-                        <strong>Paso 1:</strong> Ingresá a{" "}
-                        <a
-                          href="https://enviamelo.com.ar"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="underline font-bold"
-                        >
-                          enviamelo.com.ar
-                        </a>
-                      </p>
-                      <p>
-                        <strong>Paso 2:</strong> Registrate como vendedor o iniciá sesión
-                      </p>
-                      <p>
-                        <strong>Paso 3:</strong> Andá a "Mi cuenta" → "Integraciones" → "API"
-                      </p>
-                      <p>
-                        <strong>Paso 4:</strong> Copiá tu Token de API y tu Usuario
-                      </p>
-                      <p>
-                        <strong>Paso 5:</strong> Pegá las credenciales acá abajo
-                      </p>
+                    <div className="px-3 pb-3 space-y-1 text-xs text-green-800">
+                      <p><strong>Paso 1:</strong> Ingresá a <a href="https://app.enviamelo.com.ar" target="_blank" rel="noopener noreferrer" className="underline font-bold">app.enviamelo.com.ar</a></p>
+                      <p><strong>Paso 2:</strong> Perfil → API → Generar token → Canal: API</p>
+                      <p><strong>Paso 3:</strong> Copiá el token y pegalo abajo</p>
+                      <p><strong>Paso 4:</strong> Completá los precios según tu cuadro tarifario</p>
                     </div>
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Usuario de Enviamelo</Label>
-                  <Input
-                    placeholder="tu_usuario"
-                    value={config.enviamelo_user}
-                    onChange={(e) => setConfig({ ...config, enviamelo_user: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Token de API</Label>
-                  <Input
-                    type="password"
-                    placeholder="••••••••••••••••"
-                    value={config.enviamelo_token}
-                    onChange={(e) => setConfig({ ...config, enviamelo_token: e.target.value })}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Costo fijo de envío ($)</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Token de API</Label>
                     <Input
-                      type="number"
-                      placeholder="Calculado por API"
-                      value={config.delivery_fixed_cost}
-                      onChange={(e) => setConfig({ ...config, delivery_fixed_cost: e.target.value })}
+                      type="password"
+                      placeholder="••••••••••••••••"
+                      value={config.enviamelo_token}
+                      onChange={(e) => setConfig({ ...config, enviamelo_token: e.target.value })}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Envío gratis desde ($)</Label>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Gratis desde ($) <span className="text-muted-foreground font-normal">opcional</span></Label>
                     <Input
                       type="number"
-                      placeholder="Sin mínimo"
-                      value={config.delivery_free_above}
-                      onChange={(e) => setConfig({ ...config, delivery_free_above: e.target.value })}
+                      placeholder="Ej: 50000"
+                      value={config.enviamelo_free_above}
+                      onChange={(e) => setConfig({ ...config, enviamelo_free_above: e.target.value })}
                     />
                   </div>
                 </div>
+
+
+
+                {config.enviamelo_token ? (
+                  <div className="p-2 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-xs text-green-800 flex items-center gap-2">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Enviamelo configurado correctamente.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-xs text-amber-800">Completá el token de API para activar Enviamelo.</p>
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className={`w-full ${saved ? "bg-black hover:bg-gray-800" : "bg-red-600 hover:bg-red-700"} text-white`}
+                >
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : saved ? (
+                    <Check className="h-4 w-4 mr-2" />
+                  ) : null}
+                  {saved ? "¡Guardado!" : "Guardar cambios"}
+                </Button>
               </div>
 
               {TUTORIAL_VIDEOS.enviamelo && (

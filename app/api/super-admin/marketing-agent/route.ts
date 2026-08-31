@@ -1,6 +1,29 @@
 import { NextRequest, NextResponse } from "next/server"
-import Anthropic from "@anthropic-ai/sdk"
 import { createClient } from "@supabase/supabase-js"
+
+async function preguntarleAClaudeCode(mensaje: string, puerto: number): Promise<string> {
+  const res = await fetch(`http://localhost:${puerto}/api/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: mensaje, projectPath: "/var/www/tol.ar-dev", allowedTools: [] }),
+  })
+  const raw = await res.text()
+  let fullText = ""
+  for (const line of raw.split("\n")) {
+    if (!line.trim()) continue
+    try {
+      const evt = JSON.parse(line)
+      if (evt.type !== "claude_json") continue
+      const d = evt.data
+      if (d.type === "assistant" && d.message?.content) {
+        const txt = d.message.content.filter((b: any) => b.type === "text").map((b: any) => b.text).join("")
+        if (txt) fullText = txt
+      }
+      if (d.type === "result" && d.result && !fullText) fullText = d.result
+    } catch {}
+  }
+  return fullText
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,25 +80,30 @@ export async function POST(request: NextRequest) {
       youtube: "Guion de YouTube Short de 30-60 segundos. Formato [tiempo] accion. Hook, problema, solucion, CTA. Optimizado para SEO."
     }
 
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+    const promptCompleto = `Sos el agente de marketing de tol.ar, plataforma de e-commerce argentina con 0% de comision por venta. Diferencial: plan gratis, 0% comision, facil de usar. Slogan: Claros donde otros son confusos a proposito. Generás contenido concreto listo para publicar basado en datos reales. Respondés SIEMPRE en español argentino informal. IMPORTANTE: nunca menciones a la competencia por nombre (Tiendanube, Empretienda, Jumpseller, etc.) en ningun titulo ni contenido, ni siquiera para compararla; si necesitas referirte a ella usa "otras plataformas". Generás exactamente 2 borradores para ${red.toUpperCase()}. Respondés SOLO en JSON valido, sin texto antes ni después, sin bloques de markdown: {"sugerencias": [{"titulo": "...", "tipo": "...", "motivo": "...", "contenido": "..."}, {"titulo": "...", "tipo": "...", "motivo": "...", "contenido": "..."}]}
 
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1000,
-      system: `Sos el agente de marketing de tol.ar, plataforma de e-commerce argentina con 0% de comision por venta. Competimos con Tiendanube. Diferencial: plan gratis, 0% comision, facil de usar. Slogan: Claros donde otros son confusos a proposito. Generás contenido concreto listo para publicar basado en datos reales. Respondés SIEMPRE en español argentino informal. Generás exactamente 2 borradores para ${red.toUpperCase()}. Respondés SOLO en JSON valido: {"sugerencias": [{"titulo": "...", "tipo": "...", "motivo": "...", "contenido": "..."}, {"titulo": "...", "tipo": "...", "motivo": "...", "contenido": "..."}]}`,
-      messages: [{
-        role: "user",
-        content: "Datos reales de tol.ar hoy:\n- Tiendas nuevas (7 dias): " + contexto.tiendasNuevas7d + "\n- Tiendas inactivas (30+ dias): " + contexto.tiendasInactivas30d + "\n- Visitas desde " + red + " hoy: " + contexto.visitasDesde + "\n- Keyword sin comisiones en Google: posicion 18\n\nInstrucciones para " + red + ": " + redInstrucciones[red] + "\n\n" + (brief ? "Brief del operador: \"" + brief + "\"" : "Genera las 2 mejores sugerencias basadas en los datos.") + "\n\nResponde SOLO con el JSON."
-      }]
-    })
+Datos reales de tol.ar hoy:
+- Tiendas nuevas (7 dias): ${contexto.tiendasNuevas7d}
+- Tiendas inactivas (30+ dias): ${contexto.tiendasInactivas30d}
+- Visitas desde ${red} hoy: ${contexto.visitasDesde}
+- Keyword sin comisiones en Google: posicion 18
 
-    const text = message.content[0].type === "text" ? message.content[0].text : ""
+Instrucciones para ${red}: ${redInstrucciones[red]}
+
+${brief ? `Brief del operador: "${brief}"` : "Genera las 2 mejores sugerencias basadas en los datos."}
+
+Responde SOLO con el JSON, nada más.`
+
+    let text = await preguntarleAClaudeCode(promptCompleto, 4001)
+    if (/usage limit|rate limit|rate_limit|session limit/i.test(text)) {
+      text = await preguntarleAClaudeCode(promptCompleto, 4002)
+    }
     const clean = text.replace(/```json|```/g, "").trim()
     const data = JSON.parse(clean)
 
-    return NextResponse.json({ ...data, contexto })
+    return NextResponse.json({ ...data, contexto }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
     console.error("marketing-agent error:", error)
-    return NextResponse.json({ error: "Error generando sugerencias" }, { status: 500 })
+    return NextResponse.json({ error: "Error generando sugerencias" }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }

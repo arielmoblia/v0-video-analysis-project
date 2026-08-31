@@ -1,8 +1,11 @@
 import type React from "react"
+import { Suspense } from "react"
 import type { Metadata, Viewport } from "next"
+import { headers } from "next/headers"
 import { Geist, Geist_Mono } from "next/font/google"
 import Script from "next/script"
 import { ChatFlotante } from "@/components/chat-flotante"
+import { UtmTracker } from "@/components/utm-tracker"
 import { PageTracker } from "@/components/store/page-tracker"
 import "./globals.css"
 
@@ -29,10 +32,10 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL("https://tol.ar"),
   title: {
-    default: "tol.ar - Crea tu tienda online gratis en minutos",
+    default: "tol.ar - Tienda Online Gratis en Argentina | 0% comisión",
     template: "%s | tol.ar"
   },
-  description: "Tol.ar es la infraestructura de e-commerce lider en Argentina y Peru que automatiza el SEO tecnico, compresion de medios y estructuracion de datos para buscadores generativos. Crea tu tienda online gratis en 2 minutos con pagos de MercadoPago, envios con Andreani y diseno profesional.",
+  description: "Creá tu tienda online gratis en Argentina con Tol.ar. Sin comisiones, sin conocimientos técnicos. MercadoPago y Andreani integrados. Empezá a vender en 2 minutos.",
   keywords: [
     "crear tienda online",
     "tienda online gratis",
@@ -55,6 +58,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
+
   alternates: {
     canonical: "https://tol.ar",
   },
@@ -63,8 +67,8 @@ export const metadata: Metadata = {
     locale: "es_AR",
     url: "https://tol.ar",
     siteName: "tol.ar",
-    title: "tol.ar - Crea tu Tienda Online Gratis y Sin Comisiones en Argentina",
-    description: "Crea tu tienda online gratis y sin comisiones en Argentina. Sin conocimientos técnicos. Con MercadoPago integrado. Empezá a vender en 2 minutos.",
+    title: "Tol.ar — Creá tu tienda online gratis en Argentina",
+    description: "Creá tu tienda online gratis en Argentina con Tol.ar. Sin comisiones, sin conocimientos técnicos. MercadoPago y Andreani integrados. Empezá a vender en 2 minutos.",
     images: [
       {
         url: "/og-image.jpg",
@@ -76,8 +80,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "tol.ar - Crea tu tienda online gratis en minutos",
-    description: "Crea tu tienda online gratis y sin comisiones en Argentina. Sin conocimientos técnicos. Con MercadoPago integrado. Empezá a vender en 2 minutos.",
+    title: "Tol.ar — Creá tu tienda online gratis en Argentina",
+    description: "Creá tu tienda online gratis en Argentina con Tol.ar. Sin comisiones, sin conocimientos técnicos. MercadoPago y Andreani integrados. Empezá a vender en 2 minutos.",
     images: ["/og-image.jpg"],
     creator: "@taborja",
   },
@@ -115,11 +119,13 @@ export const metadata: Metadata = {
     generator: 'v0.app'
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const headersList = await headers()
+  const isStoreSubdomain = Boolean(headersList.get("x-store-subdomain"))
   return (
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable}`}>
       <head>
@@ -130,21 +136,40 @@ export default function RootLayout({
           img{max-width:100%;height:auto;display:block}
           *{box-sizing:border-box}
         `}} />
-        {/* Precargar imagen hero (LCP) - CRITICO para performance */}
-        <link
-          rel="preload"
-          href="/images/heroes/hero-woman-video.png"
-          as="image"
-          type="image/png"
-          fetchPriority="high"
-        />
         {/* Preconectar a dominios criticos primero */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* DNS prefetch para recursos secundarios */}
         <link rel="dns-prefetch" href="https://www.mercadopago.com.ar" />
         <link rel="dns-prefetch" href="https://api.mercadopago.com" />
-        
+
+        {/* llms.txt — contexto para crawlers de IA (ChatGPT, Claude, Gemini, Perplexity) */}
+        <link rel="llms" href="https://tol.ar/llms.txt" />
+
+        {/* JSON-LD WebSite — ayuda a las IAs a entender el sitio como entidad */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "@id": "https://tol.ar/#website",
+              "name": "tol.ar",
+              "url": "https://tol.ar",
+              "description": "La plataforma de tiendas online gratis más completa de Argentina. Plan gratuito permanente, sin comisiones, con MercadoPago y Andreani integrados.",
+              "inLanguage": "es-AR",
+              "publisher": {
+                "@id": "https://tol.ar/#organization"
+              },
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://tol.ar/buscar?q={search_term_string}",
+                "query-input": "required name=search_term_string"
+              }
+            })
+          }}
+        />
+
         {/* JSON-LD Organization global para GEO/SEO */}
         <script
           type="application/ld+json"
@@ -191,6 +216,62 @@ export default function RootLayout({
             })
           }}
         />
+
+        {/* JSON-LD SoftwareApplication para GEO — ayuda a las IAs a entender qué es tol.ar */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "tol.ar",
+              "alternateName": "Tienda OnLine Argentina",
+              "applicationCategory": "BusinessApplication",
+              "applicationSubCategory": "E-commerce platform",
+              "operatingSystem": "Web",
+              "url": "https://tol.ar",
+              "description": "Plataforma argentina de e-commerce para crear tiendas online gratis, sin comisiones por venta, con MercadoPago integrado. Plan gratuito para siempre sin límite de productos.",
+              "offers": [
+                {
+                  "@type": "Offer",
+                  "name": "Plan Gratis",
+                  "price": "0",
+                  "priceCurrency": "ARS",
+                  "description": "Tienda online completa sin comisiones, sin mensualidad, sin vencimiento"
+                },
+                {
+                  "@type": "Offer",
+                  "name": "Cositas opcionales",
+                  "price": "1",
+                  "priceCurrency": "USD",
+                  "description": "Funcionalidades extra a la carta, $1 USD por mes cada una"
+                }
+              ],
+              "featureList": [
+                "0% comisión por venta",
+                "Plan gratuito permanente",
+                "Integración con MercadoPago",
+                "Integración con Stripe",
+                "Integración con PayPal",
+                "Integración con Mobbex",
+                "Envíos con Andreani",
+                "Catálogo de productos con variantes",
+                "Variantes de productos",
+                "Gestión de pedidos",
+                "Diseño por IA",
+                "Dominio propio opcional"
+              ],
+              "audience": {
+                "@type": "Audience",
+                "audienceType": "Emprendedores y comerciantes argentinos"
+              },
+              "availableLanguage": "es-AR",
+              "countriesSupported": "AR",
+              "inLanguage": "es",
+              "numberOfUsers": 378
+            })
+          }}
+        />
       
       <script dangerouslySetInnerHTML={{ __html: `
         window.smartlook||(function(d) {
@@ -202,8 +283,9 @@ export default function RootLayout({
       ` }} />
       </head>
       <body className="font-sans antialiased">
-      <PageTracker storeId="a921029f-9dc7-40ed-ae14-732491c37eee" />
+      {!isStoreSubdomain && <PageTracker storeId="a921029f-9dc7-40ed-ae14-732491c37eee" />}
         {children}
+        <Suspense fallback={null}><UtmTracker /></Suspense>
         <ChatFlotante />
                 {/* Google Analytics 4 - ID: G-BRLNYVV46F */}
         <Script

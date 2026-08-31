@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { ArrowRight, ArrowLeft, Upload, Sparkles, CheckCircle2, RefreshCw } from "lucide-react"
 
 const STEPS = [
@@ -235,13 +236,15 @@ export function MigrarSistema() {
                   </button>
                 ))}
               </div>
-              <div className="flex-1 rounded-xl overflow-hidden border border-border bg-muted min-h-[320px]">
+              <div className="relative flex-1 rounded-xl overflow-hidden border border-border bg-muted min-h-[320px]">
                 {TEMPLATES.filter(t => t.key === tmpl).map(t => (
-                  <img
+                  <Image
                     key={t.key}
                     src={t.img}
                     alt={t.name}
-                    className="w-full h-full object-cover object-top"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 480px"
+                    className="object-cover object-top"
                   />
                 ))}
               </div>
@@ -289,7 +292,7 @@ export function MigrarSistema() {
                   {PREVIEW.map(row => (
                     <tr key={row.name} className="border-t border-border">
                       <td className="p-2">
-                        <img src={row.img} alt={row.name} className="w-10 h-10 rounded-lg object-cover" />
+                        <Image src={row.img} alt={row.name} width={40} height={40} className="w-10 h-10 rounded-lg object-cover" />
                       </td>
                       <td className="p-2 text-foreground">{row.name}</td>
                       <td className="p-2 text-muted-foreground">{row.price}</td>

@@ -40,6 +40,8 @@ interface ProductsManagerProps {
   customVariants?: { name: string; options: string[] }[]
   hasCustomVariantsFeature?: boolean
   hasMultiImagesFeature?: boolean
+  hasUnlimitedProducts?: boolean
+  onActivatePlans?: () => void
   hasCsvImportFeature?: boolean
 }
 
@@ -108,7 +110,7 @@ interface SizeStock {
   price?: number // Para electronicos y cosmeticos que pueden tener precios diferentes
 }
 
-export function ProductsManager({ storeId, template = "default", customVariants, hasCustomVariantsFeature, hasMultiImagesFeature, hasCsvImportFeature }: ProductsManagerProps) {
+export function ProductsManager({ storeId, template = "default", customVariants, hasCustomVariantsFeature, hasMultiImagesFeature, hasCsvImportFeature, hasUnlimitedProducts = true, onActivatePlans }: ProductsManagerProps) {
   // Obtener configuracion de variantes segun el template
   const templateConfig = TEMPLATE_VARIANTS[template] || TEMPLATE_VARIANTS.default
   
@@ -141,6 +143,7 @@ export function ProductsManager({ storeId, template = "default", customVariants,
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [showLimitModal, setShowLimitModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [showCsvImporter, setShowCsvImporter] = useState(false)
   const [editableVariants, setEditableVariants] = useState<string[]>([])
@@ -421,16 +424,24 @@ export function ProductsManager({ storeId, template = "default", customVariants,
           <Dialog
             open={dialogOpen}
             onOpenChange={(open) => {
+              if (open && !hasUnlimitedProducts && products.length >= 20) {
+                setShowLimitModal(true)
+                return
+              }
               setDialogOpen(open)
               if (!open) resetForm()
             }}
           >
-            <DialogTrigger asChild>
-              <Button className="bg-black hover:bg-neutral-800">
-                <Plus className="w-4 h-4 mr-2" />
-                Nuevo Producto
-              </Button>
-            </DialogTrigger>
+            <Button className="bg-black hover:bg-neutral-800" onClick={() => {
+              if (!hasUnlimitedProducts && products.length >= 20) {
+                setShowLimitModal(true)
+              } else {
+                setDialogOpen(true)
+              }
+            }}>
+              <Plus className="w-4 h-4 mr-2" />
+              Nuevo Producto
+            </Button>
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingProduct ? "Editar Producto" : "Nuevo Producto"}</DialogTitle>
@@ -728,6 +739,18 @@ export function ProductsManager({ storeId, template = "default", customVariants,
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {showLimitModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowLimitModal(false)}>
+          <div style={{ background: "white", borderRadius: "12px", padding: "32px", textAlign: "center", maxWidth: "360px", margin: "16px" }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontSize: "40px", marginBottom: "12px" }}>📦</div>
+            <p style={{ fontSize: "18px", fontWeight: 600, margin: "0 0 8px" }}>Agregá más funciones a tu tienda</p>
+            <p style={{ fontSize: "13px", color: "#666", margin: "0 0 20px" }}>Por $1.500 por mes tenés productos ilimitados</p>
+            <button onClick={() => { setShowLimitModal(false); onActivatePlans?.() }} style={{ background: "#f97316", color: "white", borderRadius: "8px", padding: "12px 28px", fontSize: "15px", fontWeight: 600, border: "none", cursor: "pointer" }}>IR A COSITAS →</button>
+            <div style={{ marginTop: "12px" }}><button onClick={() => setShowLimitModal(false)} style={{ background: "none", border: "none", color: "#999", cursor: "pointer", fontSize: "13px" }}>Cerrar</button></div>
+          </div>
         </div>
       )}
     </div>

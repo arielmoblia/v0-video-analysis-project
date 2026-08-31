@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///var/www/tol.ar-dev/app/pagos/layout.tsx"],"sourcesContent":["import { createClient } from \"@supabase/supabase-js\"\n\nconst supabase = createClient(\n  process.env.NEXT_PUBLIC_SUPABASE_URL!,\n  process.env.SUPABASE_SERVICE_ROLE_KEY!\n)\n\nexport async function generateMetadata() {\n  const { data } = await supabase\n    .from(\"seo_pages\")\n    .select(\"noindex\")\n    .eq(\"id\", \"pagos\")\n    .single()\n\n  if (data?.noindex) {\n    return { robots: { index: false, follow: false } }\n  }\n  return {}\n}\n\nexport default function Layout({ children }: { children: React.ReactNode }) {\n  return <>{children}</>\n}\n"],"names":[],"mappings":";;;;;;;AAAA;;;AAEA,MAAM,WAAW,IAAA,8LAAY,gFAE3B,QAAQ,GAAG,CAAC,yBAAyB;AAGhC,eAAe;IACpB,MAAM,EAAE,IAAI,EAAE,GAAG,MAAM,SACpB,IAAI,CAAC,aACL,MAAM,CAAC,WACP,EAAE,CAAC,MAAM,SACT,MAAM;IAET,IAAI,MAAM,SAAS;QACjB,OAAO;YAAE,QAAQ;gBAAE,OAAO;gBAAO,QAAQ;YAAM;QAAE;IACnD;IACA,OAAO,CAAC;AACV;AAEe,SAAS,OAAO,EAAE,QAAQ,EAAiC;IACxE,qBAAO;kBAAG;;AACZ"}}]
+}

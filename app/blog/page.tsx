@@ -5,63 +5,30 @@ import { Footer } from "@/components/landing/footer"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Calendar } from "lucide-react"
+import { articulos } from "@/lib/blog-articulos"
 
 export const metadata: Metadata = {
-  title: "Blog de Ecommerce para Emprendedores Argentinos | tol.ar",
+  title: "Blog de Ecommerce para Emprendedores Argentinos",
   description: "Consejos, tutoriales y guias para vender por internet en Argentina. Aprende a usar MercadoPago, configurar envios, hacer marketing y mas.",
   keywords: "blog ecommerce argentina, como vender por internet, tutoriales mercadopago, guias tienda online",
 }
 
-// Articulos del blog (despues esto puede venir de Supabase)
-const articulos = [
+const faqItems = [
   {
-    slug: "como-vender-por-whatsapp-argentina",
-    titulo: "Como Vender por WhatsApp en Argentina: Guia Completa 2025",
-    descripcion: "Aprende a usar WhatsApp Business para vender tus productos. Catalogo, mensajes automaticos y tips para cerrar mas ventas.",
-    categoria: "Ventas",
-    fecha: "2025-01-20",
-    imagen: "/blog/whatsapp-ventas.jpg",
+    q: "¿Cómo empezar a vender por internet en Argentina?",
+    a: "Para vender por internet en Argentina necesitás una tienda online, un medio de cobro (MercadoPago es el más usado) y una forma de envío (Andreani o Correo Argentino). Con tol.ar podés tener todo eso configurado en menos de 2 minutos y sin costo.",
   },
   {
-    slug: "configurar-mercadopago-tienda-online",
-    titulo: "Como Configurar MercadoPago en tu Tienda Online",
-    descripcion: "Tutorial paso a paso para integrar MercadoPago y empezar a cobrar con tarjetas, transferencias y Mercado Credito.",
-    categoria: "Pagos",
-    fecha: "2025-01-18",
-    imagen: "/blog/mercadopago-config.jpg",
+    q: "¿Cuánto cuesta armar una tienda online en Argentina?",
+    a: "Con tol.ar, armar una tienda online es completamente gratis. Sin mensualidad, sin comisión por venta, sin límite de productos. Otras plataformas cobran hasta 2% extra con MercadoPago en el plan gratis, y algunas plataformas internacionales cuestan desde USD 29 por mes.",
   },
   {
-    slug: "envios-andreani-correo-argentino",
-    titulo: "Envios con Andreani y Correo Argentino: Cual Elegir?",
-    descripcion: "Comparamos precios, tiempos de entrega y cobertura de Andreani vs Correo Argentino para tu tienda online.",
-    categoria: "Envios",
-    fecha: "2025-01-15",
-    imagen: "/blog/envios-argentina.jpg",
+    q: "¿Necesito CUIT para vender por internet en Argentina?",
+    a: "No es obligatorio para empezar. Podés crear tu tienda y vender con tol.ar sin CUIT. Si luego querés emitir facturas o tener cuenta bancaria empresa, sí necesitarás inscribirte como monotributista o en IVA.",
   },
   {
-    slug: "fotos-productos-celular",
-    titulo: "Como Sacar Fotos Profesionales de Productos con el Celular",
-    descripcion: "Tips y trucos para fotografiar tus productos como un profesional usando solo tu smartphone.",
-    categoria: "Marketing",
-    fecha: "2025-01-12",
-    imagen: "/blog/fotos-productos.jpg",
-  },
-  {
-    slug: "tiendanube-vs-tolar-comparacion",
-    titulo: "tol.ar vs Tiendanube: Cual Elegir en 2025?",
-    descripcion: "Comparativa completa de precios, funciones y facilidad de uso entre las dos plataformas de ecommerce.",
-    categoria: "Comparativas",
-    fecha: "2025-01-10",
-    imagen: "/blog/comparativa.jpg",
-    link: "/comparar/tiendanube",
-  },
-  {
-    slug: "instagram-tienda-online",
-    titulo: "Como Vender en Instagram: Conecta tu Tienda Online",
-    descripcion: "Guia para integrar Instagram Shopping con tu tienda y convertir seguidores en clientes.",
-    categoria: "Redes Sociales",
-    fecha: "2025-01-08",
-    imagen: "/blog/instagram-shop.jpg",
+    q: "¿Cuál es la mejor plataforma para vender online en Argentina?",
+    a: "Depende del caso. Para emprendedores que empiezan, tol.ar es una buena opción: es gratis, en pesos, con MercadoPago y Andreani integrados. Para quienes ya venden mucho y necesitan integraciones globales, hay plataformas internacionales que pueden ser una opción, pero cuestan en dólares.",
   },
 ]
 
@@ -82,11 +49,25 @@ export default function BlogPage() {
     },
   }
 
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqItems.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
+    })),
+  }
+
   return (
     <main className="min-h-screen flex flex-col">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
       <Header />
       
@@ -121,6 +102,9 @@ export default function BlogPage() {
                       {articulo.categoria === "Marketing" && "📸"}
                       {articulo.categoria === "Comparativas" && "⚖️"}
                       {articulo.categoria === "Redes Sociales" && "📱"}
+                      {articulo.categoria === "Guías" && "📋"}
+                      {articulo.categoria === "Opinión" && "🔨"}
+                      {articulo.categoria === "Prensa" && "📰"}
                     </span>
                   </div>
                   <CardHeader>
@@ -150,6 +134,23 @@ export default function BlogPage() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section className="py-16 bg-slate-50">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
+            Preguntas frecuentes sobre vender online en Argentina
+          </h2>
+          <div className="space-y-4">
+            {faqItems.map((item, i) => (
+              <details key={i} className="bg-white rounded-lg border p-5">
+                <summary className="font-semibold cursor-pointer text-gray-900">{item.q}</summary>
+                <p className="mt-3 text-gray-600 text-sm leading-relaxed">{item.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-16 bg-green-600 text-white">
         <div className="container mx-auto px-4 text-center">
@@ -159,7 +160,7 @@ export default function BlogPage() {
           <p className="text-xl mb-8 opacity-90">
             Crea tu tienda gratis en 2 minutos y pone en practica lo que aprendiste.
           </p>
-          <Link 
+          <Link
             href="/#crear-tienda"
             className="inline-flex items-center gap-2 bg-white text-green-600 px-8 py-4 rounded-full font-semibold hover:bg-green-50 transition-colors"
           >

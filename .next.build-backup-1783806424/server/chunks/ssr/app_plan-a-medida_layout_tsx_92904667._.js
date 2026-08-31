@@ -1,0 +1,3 @@
+module.exports=[52472,a=>{"use strict";var b=a.i(7997);let c=(0,a.i(45618).createClient)("https://tuznlaqncbrsbokbbzhy.supabase.co",process.env.SUPABASE_SERVICE_ROLE_KEY);async function d(){let{data:a}=await c.from("seo_pages").select("noindex").eq("id","plan-a-medida").single();return a?.noindex?{robots:{index:!1,follow:!1}}:{}}function e({children:a}){return(0,b.jsx)(b.Fragment,{children:a})}a.s(["default",()=>e,"generateMetadata",()=>d])}];
+
+//# sourceMappingURL=app_plan-a-medida_layout_tsx_92904667._.js.map

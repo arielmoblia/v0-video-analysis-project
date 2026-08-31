@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Globe, Plus, Save, Trash2 } from "lucide-react"
 import { StoresMap } from "./stores-map"
+import { ResumenPersonas } from "./resumen-personas"
+import { PERIODOS_VISITAS, type PeriodoVisitas, type PersonasResumenData } from "./personas-resumen-types"
 import { useToast } from "@/hooks/use-toast"
 
 interface Dominio {
@@ -31,6 +33,18 @@ export function PaisDominio({ stores = [] }: { stores?: any[] }) {
     }
   ])
   const [editando, setEditando] = useState<string | null>(null)
+
+  const [periodoVisitas, setPeriodoVisitas] = useState<PeriodoVisitas>("siempre")
+  const [visitasData, setVisitasData] = useState<PersonasResumenData | null>(null)
+  const [visitasLoading, setVisitasLoading] = useState(true)
+
+  useEffect(() => {
+    setVisitasLoading(true)
+    fetch(`/api/super-admin/personas-resumen?periodo=${periodoVisitas}`)
+      .then((res) => res.json())
+      .then((d) => { if (typeof d.tolarTotal === "number") setVisitasData(d) })
+      .finally(() => setVisitasLoading(false))
+  }, [periodoVisitas])
 
   const agregar = () => {
     const nuevo: Dominio = {
@@ -59,7 +73,7 @@ export function PaisDominio({ stores = [] }: { stores?: any[] }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-[50px]">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
@@ -68,10 +82,17 @@ export function PaisDominio({ stores = [] }: { stores?: any[] }) {
           </h2>
           <p className="text-slate-500 text-sm mt-1">Configurá cada dominio activo de la plataforma</p>
         </div>
-        <Button onClick={agregar} className="flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          Agregar país
-        </Button>
+        <div className="flex items-center gap-2">
+          <a href="https://claude.ai/chat/0997613a-eb86-4e83-8a5f-c403ef9b0ef0" target="_blank" rel="noopener noreferrer">
+            <Button variant="outline" className="flex items-center gap-2 border-green-400 text-green-700 hover:bg-green-50">
+              💬 Hablar con Claudio
+            </Button>
+          </a>
+          <Button onClick={agregar} className="flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            Agregar país
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4">
@@ -130,7 +151,34 @@ export function PaisDominio({ stores = [] }: { stores?: any[] }) {
               </CardContent>
             )}
           <CardContent>
-            <StoresMap stores={stores} />
+            <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
+              {PERIODOS_VISITAS.map((p) => (
+                <button
+                  key={p.valor}
+                  onClick={() => setPeriodoVisitas(p.valor)}
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    padding: "3px 8px",
+                    borderRadius: 6,
+                    border: "1px solid #e2e8f0",
+                    background: periodoVisitas === p.valor ? "#1e293b" : "#f8fafc",
+                    color: periodoVisitas === p.valor ? "#fff" : "#64748b",
+                    cursor: "pointer",
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: "1.5rem", alignItems: "flex-start" }}>
+              <div style={{ width: 260, flexShrink: 0 }}>
+                <ResumenPersonas data={visitasData} loading={visitasLoading} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <StoresMap stores={stores} />
+              </div>
+            </div>
           </CardContent>
           </Card>
         ))}

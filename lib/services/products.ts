@@ -139,7 +139,18 @@ export async function getStoreCategories(storeId: string): Promise<Category[]> {
       .order("name", { ascending: true })
 
     if (error || !data) return []
-    return data as Category[]
+
+    // Oculta categorías sin productos activos (pueden quedar vacías tras un clonado por scraping)
+    const { data: productRows } = await supabase
+      .from("products")
+      .select("category_id")
+      .eq("store_id", storeId)
+      .eq("active", true)
+      .not("category_id", "is", null)
+
+    const categoryIdsWithProducts = new Set((productRows ?? []).map((p) => p.category_id))
+
+    return (data as Category[]).filter((cat) => categoryIdsWithProducts.has(cat.id))
   } catch (e) {
     console.error("[products] Error in getStoreCategories:", e)
     return []

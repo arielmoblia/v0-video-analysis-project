@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/blog/layout,_N_T_/blog/como-vender-ropa-online-argentina/layout,_N_T_/blog/como-vender-ropa-online-argentina/page,_N_T_/blog/como-vender-ropa-online-argentina"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/blog/como-vender-ropa-online-argentina/__PAGE__",
+    "/blog/como-vender-ropa-online-argentina",
+    "/blog",
+    "/_index",
+    "/_head"
+  ]
+}

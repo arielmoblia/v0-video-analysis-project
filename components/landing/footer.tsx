@@ -1,8 +1,26 @@
+"use client"
 import Link from "next/link"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Instagram, Facebook, Youtube, Twitter } from "lucide-react"
 
 export function Footer() {
+  const [paginasFooter, setPaginasFooter] = useState<{slug: string; nombreLink: string}[]>([])
+  const [seoPagesFooter, setSeoPagesFooter] = useState<{url: string; nav_label: string}[]>([])
+  useEffect(() => {
+    fetch("/api/super-admin/geo-publicar?tipo=footer")
+      .then(r => r.json())
+      .then(d => { if (d.paginas) setPaginasFooter(d.paginas) })
+      .catch(() => {})
+    fetch("/api/super-admin/seo-pages")
+      .then(r => r.json())
+      .then((data: any[]) => {
+        if (!Array.isArray(data)) return
+        const footerPages = data.filter(p => p.show_in_footer)
+        setSeoPagesFooter(footerPages.map(p => ({ url: p.url, nav_label: p.nav_label || p.url.replace("/", "") })))
+      })
+      .catch(() => {})
+  }, [])
   return (
     <footer className="bg-slate-900 text-white">
       <div className="container mx-auto px-4 py-12">
@@ -46,7 +64,9 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Planes</h4>
             <ul className="space-y-2 text-sm text-slate-300">
-              <li><Link href="/plan-gratis" className="hover:text-white transition-colors">Plan Gratis</Link></li>
+              {seoPagesFooter.filter(p => p.url.includes("plan")).map(p => (
+                <li key={p.url}><Link href={p.url} className="hover:text-white transition-colors">{p.nav_label}</Link></li>
+              ))}
             </ul>
           </div>
 
@@ -54,10 +74,12 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Recursos</h4>
             <ul className="space-y-2 text-sm text-slate-300">
-              <li><Link href="/templates" className="hover:text-white transition-colors">Templates</Link></li>
-              <li><Link href="/pagos" className="hover:text-white transition-colors">Métodos de Pago</Link></li>
-              <li><Link href="/contacto" className="hover:text-white transition-colors">Contacto</Link></li>
-              <li><Link href="/empleos" className="hover:text-white transition-colors">Puestos de trabajo</Link></li>
+              {paginasFooter.map(p => (
+                <li key={p.slug}><Link href={`/${p.slug}`} className="hover:text-white transition-colors">{p.nombreLink}</Link></li>
+              ))}
+              {seoPagesFooter.filter(p => !p.url.includes("plan")).map(p => (
+                <li key={p.url}><Link href={p.url} className="hover:text-white transition-colors">{p.nav_label}</Link></li>
+              ))}
             </ul>
           </div>
 
@@ -67,6 +89,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-slate-300">
               <li><Link href="/terminos" className="hover:text-white transition-colors">Términos y Condiciones</Link></li>
               <li><Link href="/privacidad" className="hover:text-white transition-colors">Política de Privacidad</Link></li>
+              <li><Link href="/devoluciones" className="hover:text-white transition-colors">Política de Devoluciones</Link></li>
             </ul>
           </div>
         </div>
@@ -77,6 +100,7 @@ export function Footer() {
           <div className="flex gap-4">
             <Link href="/terminos" className="hover:text-slate-300 transition-colors">Términos</Link>
             <Link href="/privacidad" className="hover:text-slate-300 transition-colors">Privacidad</Link>
+            <Link href="/devoluciones" className="hover:text-slate-300 transition-colors">Devoluciones</Link>
           </div>
         </div>
       </div>

@@ -7,7 +7,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 
 export function CartDrawer() {
-  const { items, cartOpen, setCartOpen, removeItem, updateQuantity, total, clearCart } = useCart()
+  const { items, cartOpen, setCartOpen, removeItem, updateQuantity, total, clearCart, showPriceAlert, dismissPriceAlert } = useCart()
   const router = useRouter()
 
   const formatPrice = (price: number) => {
@@ -48,9 +48,6 @@ export function CartDrawer() {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b">
           <h2 className="text-xs tracking-[0.2em] uppercase">Carrito</h2>
-          <button onClick={() => setCartOpen(false)} className="hover:opacity-60 transition-opacity">
-            <X className="h-5 w-5" />
-          </button>
         </div>
 
         {items.length === 0 ? (
@@ -61,6 +58,19 @@ export function CartDrawer() {
           </div>
         ) : (
           <>
+            {showPriceAlert && (
+              <div className="mx-6 mt-4 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                <p className="flex-1">
+                  Tu navegador guardó un precio anterior. El precio real y actualizado es el que ves ahora en el carrito.
+                </p>
+                <button
+                  onClick={dismissPriceAlert}
+                  className="text-amber-500 hover:text-amber-700 transition-colors flex-shrink-0"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
             {/* Items */}
             <div className="flex-1 overflow-y-auto">
               {items.map((item) => (

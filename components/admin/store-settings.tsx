@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { ImageUpload } from "./image-upload"
+import { MinorConsentStatus } from "./minor-consent-status"
 import { Instagram, Facebook, Youtube } from "lucide-react"
 import type { Store } from "@/lib/store-context"
 
@@ -15,7 +16,24 @@ interface StoreSettingsProps {
   store: Store
 }
 
+// Subdominios que usa la infraestructura de tol.ar y no se pueden pisar
+const RESERVED_SUBDOMAINS = [
+  "www", "admin", "api", "control", "scraping", "mail", "ftp", "smtp",
+  "staging", "dev", "test", "app", "cdn", "static", "assets", "blog",
+  "help", "soporte", "tienda", "traductor",
+]
+
 export function StoreSettings({ store }: StoreSettingsProps) {
+  // Información básica
+  const [storeName, setStoreName] = useState(store.site_title || "")
+  const [storeEmail, setStoreEmail] = useState(store.email || "")
+
+  // Subdominio (nombre.tol.ar)
+  const [subdomain, setSubdomain] = useState(store.subdomain || "")
+  const [subdomainStatus, setSubdomainStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">(
+    "idle",
+  )
+
   // Banner
   const [bannerImage, setBannerImage] = useState(store.banner_image || "")
   const [bannerTitle, setBannerTitle] = useState(store.banner_title || "Bienvenido a")
@@ -33,6 +51,7 @@ export function StoreSettings({ store }: StoreSettingsProps) {
   const [storeAddress, setStoreAddress] = useState(store.address || "")
   const [storePhone, setStorePhone] = useState(store.phone || "")
   const [socialWhatsapp, setSocialWhatsapp] = useState(store.social_whatsapp || "")
+  const [whatsappMarketingConsent, setWhatsappMarketingConsent] = useState(store.whatsapp_marketing_consent || false)
   const [socialYoutube, setSocialYoutube] = useState(store.social_youtube || "")
 
   // Pie de página
@@ -42,6 +61,39 @@ export function StoreSettings({ store }: StoreSettingsProps) {
 
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
+
+  // Verificar disponibilidad del subdominio en vivo, con debounce
+  useEffect(() => {
+    const normalized = subdomain.toLowerCase().trim()
+
+    if (normalized === (store.subdomain || "").toLowerCase()) {
+      setSubdomainStatus("idle")
+      return
+    }
+
+    if (normalized.length < 4 || !/^[a-z0-9]+$/.test(normalized)) {
+      setSubdomainStatus("invalid")
+      return
+    }
+
+    if (RESERVED_SUBDOMAINS.includes(normalized)) {
+      setSubdomainStatus("taken")
+      return
+    }
+
+    setSubdomainStatus("checking")
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/check-subdomain?subdomain=${normalized}`)
+        const data = await res.json()
+        setSubdomainStatus(data.available ? "available" : "taken")
+      } catch {
+        setSubdomainStatus("idle")
+      }
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [subdomain, store.subdomain])
 
   const handleSaveAll = async () => {
     setSaving(true)
@@ -53,12 +105,30 @@ export function StoreSettings({ store }: StoreSettingsProps) {
       return
     }
 
+    const normalizedSubdomain = subdomain.toLowerCase().trim()
+    const subdomainChanged = normalizedSubdomain !== (store.subdomain || "").toLowerCase()
+
+    if (subdomainChanged && (subdomainStatus === "invalid" || subdomainStatus === "taken")) {
+      setMessage("Error: revisá el subdominio, no se puede guardar así")
+      setSaving(false)
+      return
+    }
+
+    if (subdomainChanged && subdomainStatus === "checking") {
+      setMessage("Esperá que termine de verificar el subdominio")
+      setSaving(false)
+      return
+    }
+
     try {
       const response = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           storeId: store.id,
+          site_title: storeName,
+          subdomain: normalizedSubdomain,
+          email: storeEmail,
           banner_image: bannerImage,
           banner_title: bannerTitle,
           banner_subtitle: bannerSubtitle,
@@ -69,6 +139,7 @@ export function StoreSettings({ store }: StoreSettingsProps) {
           social_twitter: socialTwitter,
           social_tiktok: socialTiktok,
           social_whatsapp: socialWhatsapp,
+          whatsapp_marketing_consent: whatsappMarketingConsent,
           social_youtube: socialYoutube,
           footer_subtitle: footerSubtitle,
           address: storeAddress,
@@ -79,7 +150,12 @@ export function StoreSettings({ store }: StoreSettingsProps) {
       const data = await response.json()
 
       if (response.ok) {
-        setMessage("Ajustes guardados correctamente")
+        if (subdomainChanged) {
+          setMessage(`Ajustes guardados. Redirigiendo a ${normalizedSubdomain}.tol.ar/admin...`)
+          window.location.href = `https://${normalizedSubdomain}.tol.ar/admin`
+        } else {
+          setMessage("Ajustes guardados correctamente")
+        }
       } else {
         setMessage(`Error: ${data.error || "desconocido"}`)
       }
@@ -94,7 +170,10 @@ export function StoreSettings({ store }: StoreSettingsProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-light tracking-wide">Ajustes</h2>
-        <Button onClick={handleSaveAll} disabled={saving}>
+        <Button
+          onClick={handleSaveAll}
+          disabled={saving || subdomainStatus === "checking" || subdomainStatus === "invalid" || subdomainStatus === "taken"}
+        >
           {saving ? "Guardando..." : "Guardar todos los cambios"}
         </Button>
       </div>
@@ -112,19 +191,53 @@ export function StoreSettings({ store }: StoreSettingsProps) {
         <CardContent className="space-y-4">
           <div>
             <Label>Nombre de la tienda</Label>
-            <Input value={store.site_title} disabled />
+            <Input
+              value={storeName}
+              onChange={(e) => setStoreName(e.target.value)}
+              placeholder="Nombre de tu tienda"
+            />
           </div>
           <div>
             <Label>Subdominio</Label>
-            <Input value={store.subdomain} disabled />
+            <div className="flex items-center gap-2">
+              <Input
+                value={subdomain}
+                onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ""))}
+                placeholder="nombretienda"
+              />
+              <span className="text-sm text-neutral-500 whitespace-nowrap">.tol.ar</span>
+            </div>
+            {subdomainStatus === "checking" && (
+              <p className="text-xs text-neutral-500 mt-1">Verificando disponibilidad...</p>
+            )}
+            {subdomainStatus === "available" && (
+              <p className="text-xs text-green-600 mt-1">Disponible</p>
+            )}
+            {subdomainStatus === "taken" && (
+              <p className="text-xs text-red-500 mt-1">Ese nombre ya está en uso, elegí otro</p>
+            )}
+            {subdomainStatus === "invalid" && (
+              <p className="text-xs text-red-500 mt-1">
+                Mínimo 4 caracteres, solo letras y números, sin espacios ni símbolos
+              </p>
+            )}
+            {subdomain.toLowerCase().trim() !== (store.subdomain || "").toLowerCase() &&
+              subdomainStatus !== "invalid" &&
+              subdomainStatus !== "taken" && (
+                <p className="text-xs text-amber-600 mt-1">
+                  Ojo: al guardar, tu tienda pasa a {subdomain}.tol.ar y el link viejo ({store.subdomain}.tol.ar)
+                  deja de funcionar.
+                </p>
+              )}
           </div>
           <div>
-            <Label>Email</Label>
-            <Input value={store.email} disabled />
-          </div>
-          <div>
-            <Label>Estado</Label>
-            <Input value={store.status} disabled />
+            <Label>Correo electrónico</Label>
+            <Input
+              value={storeEmail}
+              onChange={(e) => setStoreEmail(e.target.value)}
+              placeholder="tu@email.com"
+              type="email"
+            />
           </div>
           <div>
             <Label>Dirección</Label>
@@ -142,7 +255,6 @@ export function StoreSettings({ store }: StoreSettingsProps) {
               placeholder="Ej: +54 11 1234-5678"
             />
           </div>
-          <p className="text-sm text-neutral-500">Para modificar nombre, subdominio o email, contactá a soporte.</p>
         </CardContent>
       </Card>
 
@@ -282,6 +394,23 @@ export function StoreSettings({ store }: StoreSettingsProps) {
               <p className="text-xs text-neutral-500 mt-1">
                 Ingresá el número completo con código de país, sin + ni espacios
               </p>
+              <div className="flex items-start gap-2 mt-3">
+                <input
+                  type="checkbox"
+                  id="whatsappMarketingConsent"
+                  checked={whatsappMarketingConsent}
+                  onChange={(e) => setWhatsappMarketingConsent(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary"
+                />
+                <div>
+                  <Label htmlFor="whatsappMarketingConsent" className="text-sm font-normal text-neutral-600 cursor-pointer">
+                    Quiero recibir mis <strong className="font-bold">VENTAS</strong> y novedades por WhatsApp
+                  </Label>
+                  <p className="text-xs text-neutral-500 mt-0.5">
+                    Podés darte de baja cuando quieras respondiendo "BAJA" al mensaje.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -306,6 +435,8 @@ export function StoreSettings({ store }: StoreSettingsProps) {
           </div>
         </CardContent>
       </Card>
+
+      <MinorConsentStatus subdomain={store.subdomain || ""} />
     </div>
   )
 }

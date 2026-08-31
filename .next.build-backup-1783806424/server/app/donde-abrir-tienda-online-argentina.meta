@@ -1,0 +1,15 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/donde-abrir-tienda-online-argentina/layout,_N_T_/donde-abrir-tienda-online-argentina/page,_N_T_/donde-abrir-tienda-online-argentina"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/donde-abrir-tienda-online-argentina/__PAGE__",
+    "/donde-abrir-tienda-online-argentina",
+    "/_index",
+    "/_head"
+  ]
+}

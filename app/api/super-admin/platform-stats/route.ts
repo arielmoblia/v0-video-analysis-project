@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies()
     const isAuthenticated = cookieStore.get("super_admin")?.value === "true"
-    if (!isAuthenticated) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+    if (!isAuthenticated) return NextResponse.json({ error: "No autorizado" }, { status: 401, headers: { "Cache-Control": "no-store" } })
     const now = new Date()
     const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const thirtyDaysAgo = new Date()
@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
       if (planDistribution[plan] !== undefined) planDistribution[plan]++
       else planDistribution[plan] = (planDistribution[plan] || 0) + 1
     })
-    return NextResponse.json({ totalStores, newStoresThisMonth, storesWithNoVisits, planDistribution })
+    return NextResponse.json({ totalStores, newStoresThisMonth, storesWithNoVisits, planDistribution }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
-    return NextResponse.json({ error: "Error" }, { status: 500 })
+    return NextResponse.json({ error: "Error" }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }

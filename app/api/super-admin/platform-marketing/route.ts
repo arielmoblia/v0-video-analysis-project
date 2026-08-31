@@ -27,10 +27,10 @@ export async function GET() {
     }
 
     console.log("[v0] Returning result:", result)
-    return NextResponse.json(result)
+    return NextResponse.json(result, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
     console.error("Error fetching platform marketing:", error)
-    return NextResponse.json({ error: "Error fetching settings" }, { status: 500 })
+    return NextResponse.json({ error: "Error fetching settings" }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }
 
@@ -80,13 +80,13 @@ export async function POST(request: Request) {
 
     if (upsertError) {
       console.error("[v0] Upsert error:", upsertError)
-      return NextResponse.json({ error: upsertError.message }, { status: 500 })
+      return NextResponse.json({ error: upsertError.message }, { status: 500, headers: { "Cache-Control": "no-store" } })
     }
 
     console.log("[v0] Saved successfully!")
-    return NextResponse.json({ success: true, saved: mergedData })
+    return NextResponse.json({ success: true, saved: mergedData }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
     console.error("Error saving platform marketing:", error)
-    return NextResponse.json({ error: "Error saving settings" }, { status: 500 })
+    return NextResponse.json({ error: "Error saving settings" }, { status: 500, headers: { "Cache-Control": "no-store" } })
   }
 }

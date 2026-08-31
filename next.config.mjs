@@ -1,10 +1,39 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // El server tiene solo 2 CPUs y varios procesos pm2 compitiendo por ellas;
+  // algunas páginas de /blog superaban el límite default de 60s durante la
+  // generación estática en momentos de carga alta, rompiendo el build de forma
+  // intermitente (diagnosticado por Vigía el 27/08/2026).
+  staticPageGenerationTimeout: 180,
+  serverExternalPackages: ['pdfkit'],
   experimental: {
     serverActions: {
       bodySizeLimit: '50mb',
     },
-    optimizePackageImports: [],
+    optimizePackageImports: [
+      'lucide-react',
+      '@radix-ui/react-accordion',
+      '@radix-ui/react-alert-dialog',
+      '@radix-ui/react-avatar',
+      '@radix-ui/react-checkbox',
+      '@radix-ui/react-collapsible',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-label',
+      '@radix-ui/react-navigation-menu',
+      '@radix-ui/react-popover',
+      '@radix-ui/react-progress',
+      '@radix-ui/react-radio-group',
+      '@radix-ui/react-scroll-area',
+      '@radix-ui/react-select',
+      '@radix-ui/react-separator',
+      '@radix-ui/react-slider',
+      '@radix-ui/react-slot',
+      '@radix-ui/react-switch',
+      '@radix-ui/react-tabs',
+      '@radix-ui/react-toast',
+      '@radix-ui/react-tooltip',
+    ],
   },
   typescript: {
     ignoreBuildErrors: true,
@@ -33,14 +62,102 @@ const nextConfig = {
         protocol: 'https',
         hostname: '*.supabase.co',
       },
+      {
+        protocol: 'https',
+        hostname: 'scraping.tol.ar',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.mitiendanube.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'acdn-us.mitiendanube.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.tol.ar',
+      },
+      {
+        protocol: 'http',
+        hostname: '*.tol.ar',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
     ],
+  },
+  async redirects() {
+    return [
+      {
+        source: "/crear-tienda-online-argentina",
+        destination: "/plan-gratis",
+        permanent: true,
+      },
+      {
+        source: "/crear-tienda-online",
+        destination: "/plan-gratis",
+        permanent: true,
+      },
+      {
+        source: "/tienda-online-gratis-argentina",
+        destination: "/plan-gratis",
+        permanent: true,
+      },
+      {
+        source: "/tienda-online-gratis",
+        destination: "/plan-gratis",
+        permanent: true,
+      },
+      {
+        source: "/tienda-online-argentina-gratis",
+        destination: "/plan-gratis",
+        permanent: true,
+      },
+      {
+        source: "/precios",
+        destination: "/plan-gratis",
+        permanent: true,
+      },
+      {
+        source: "/comparacion",
+        destination: "/comparar",
+        permanent: true,
+      },
+      {
+        source: "/comparar/tiendanube",
+        destination: "/comparar",
+        permanent: true,
+      },
+      {
+        source: "/comparar/shopify",
+        destination: "/comparar",
+        permanent: true,
+      },
+      {
+        // Bing rastreó esta URL y da 404 (no existe ningún artículo con este slug exacto,
+        // es mezcla de dos slugs reales). Se redirige al artículo más parecido en vez de
+        // dejar el 404 suelto.
+        source: "/blog/mejor-plataforma-ecommerce-argentina-2026",
+        destination: "/blog/plataformas-ecommerce-argentina-2026",
+        permanent: true,
+      },
+    ]
   },
   async headers() {
     return [
       {
         source: "/:path*",
         headers: [
-          { key: "Cache-Control", value: "no-store, must-revalidate" },
+          { key: "Cache-Control", value: "public, s-maxage=60, stale-while-revalidate=3600" },
+        ],
+      },
+      {
+        source: "/(admin|super-admin|api)/:path*",
+        headers: [
+          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
+          { key: "Cache-Control", value: "no-store, no-cache, must-revalidate" },
         ],
       },
       {
@@ -93,9 +210,9 @@ const nextConfig = {
       },
     ]
   },
+  poweredByHeader: false,
   // Comprimir respuestas
   compress: true,
-  middlewareClientMaxBodySize: 52428800,
 }
 
 export default nextConfig

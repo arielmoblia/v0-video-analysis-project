@@ -21,7 +21,6 @@ import {
   Package,
   Headphones,
   Check,
-  Info,
   Loader2,
   Copy,
   Upload,
@@ -51,6 +50,9 @@ interface PlansManagerProps {
   storeId: string
   storeName?: string
   subdomain?: string
+  initialCustomDomain?: string | null
+  initialLinkedStoreUrl?: string | null
+  initialLinkedStoreLabel?: string | null
 }
 
 interface DbFeature {
@@ -74,6 +76,7 @@ const ICON_MAP: { [key: string]: any } = {
   DollarSign,
   ShoppingCart,
   Palette, // Add Palette to ICON_MAP
+  Truck,
 }
 
 const FEATURE_CONFIG: { [key: string]: { configTitle: string; configDescription: string } } = {
@@ -131,12 +134,34 @@ const FEATURE_CONFIG: { [key: string]: { configTitle: string; configDescription:
     configDescription:
       "Cargá todos tus productos de una sola vez usando un archivo CSV o Excel. Ideal para migrar desde otra plataforma o cargar un catalogo grande.",
   },
+  dropshipping: {
+    configTitle: "Configurar Dropshipping",
+    configDescription:
+      "Tu tienda importa automáticamente los productos, precios y stock de una tienda madre. Vos elegís el margen de ganancia y sincronizás cuando quieras.",
+  },
+  mayorista_minorista: {
+    configTitle: "Configurar Mayorista / Minorista",
+    configDescription:
+      "Poné la dirección de tu otra tienda (la mayorista o la minorista) y va a aparecer un botón en el encabezado de tu tienda que lleva directo a ella.",
+  },
 }
 
-export function PlansManager({ storeId, storeName, subdomain }: PlansManagerProps) {
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://tol.ar"
+
+const LEER_MAS_URLS: Record<string, string> = {
+  dolar_peso: `${APP_URL}/plan-cositas/dolar-peso`,
+  lupa: `${APP_URL}/plan-cositas/lupa`,
+  dropshipping: `${APP_URL}/plan-cositas/dropshipping`,
+  mayorista_minorista: `${APP_URL}/plan-cositas/mayorista-minorista`,
+}
+
+const getLeerMasUrl = (code: string) => LEER_MAS_URLS[code] || `${APP_URL}/cositas#${code}`
+
+export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel }: PlansManagerProps) {
   const [activeTab, setActiveTab] = useState("cositas")
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
   const [purchasedFeatures, setPurchasedFeatures] = useState<string[]>([])
+  const [purchasedDetails, setPurchasedDetails] = useState<any[]>([])
   const [availableFeatures, setAvailableFeatures] = useState<DbFeature[]>([])
   const [loading, setLoading] = useState(true)
   const [paypalLoaded, setPaypalLoaded] = useState(false)
@@ -147,7 +172,14 @@ export function PlansManager({ storeId, storeName, subdomain }: PlansManagerProp
 
   // Modal de configuración
   const [configModal, setConfigModal] = useState<string | null>(null)
-  const [customDomain, setCustomDomain] = useState("")
+  const [trialModal, setTrialModal] = useState<{name: string, days: number} | null>(null)
+  const [customDomain, setCustomDomain] = useState(initialCustomDomain || "")
+  const [savingDomain, setSavingDomain] = useState(false)
+  const [domainSaved, setDomainSaved] = useState(false)
+  const [linkedStoreUrl, setLinkedStoreUrl] = useState(initialLinkedStoreUrl || "")
+  const [linkedStoreLabel, setLinkedStoreLabel] = useState(initialLinkedStoreLabel || "")
+  const [savingLinkedStore, setSavingLinkedStore] = useState(false)
+  const [linkedStoreSaved, setLinkedStoreSaved] = useState(false)
   const [videoUrl, setVideoUrl] = useState("")
   const [aiInstructions, setAiInstructions] = useState("")
   const [copied, setCopied] = useState(false)
@@ -166,6 +198,7 @@ export function PlansManager({ storeId, storeName, subdomain }: PlansManagerProp
         if (res.ok) {
           const data = await res.json()
           setPurchasedFeatures(data.features || [])
+          setPurchasedDetails(data.purchasedDetails || [])
           setAvailableFeatures(data.availableFeatures || [])
           if (data.exchangeRate) {
             setExchangeRate(data.exchangeRate)
@@ -179,6 +212,40 @@ export function PlansManager({ storeId, storeName, subdomain }: PlansManagerProp
     }
     fetchFeatures()
   }, [storeId])
+
+  const handleSaveDomain = async () => {
+    setSavingDomain(true)
+    setDomainSaved(false)
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId, custom_domain: customDomain.trim() }),
+      })
+      if (res.ok) setDomainSaved(true)
+    } finally {
+      setSavingDomain(false)
+    }
+  }
+
+  const handleSaveLinkedStore = async () => {
+    setSavingLinkedStore(true)
+    setLinkedStoreSaved(false)
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          storeId,
+          linked_store_url: linkedStoreUrl.trim(),
+          linked_store_label: linkedStoreLabel.trim(),
+        }),
+      })
+      if (res.ok) setLinkedStoreSaved(true)
+    } finally {
+      setSavingLinkedStore(false)
+    }
+  }
 
   useEffect(() => {
     if (
@@ -269,8 +336,30 @@ export function PlansManager({ storeId, storeName, subdomain }: PlansManagerProp
     }
   }, [selectedFeatures.length])
 
+  const startTrial = async (feature: any) => {
+    if (!feature.trial_days || feature.trial_days === 0) return
+    const trialEnd = new Date()
+    trialEnd.setDate(trialEnd.getDate() + feature.trial_days)
+    const res = await fetch("/api/admin/trial", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        storeId,
+        featureCode: feature.code,
+        trialDays: feature.trial_days,
+        trialEndsAt: trialEnd.toISOString()
+      })
+    })
+    if (res.ok) {
+      setTrialModal({ name: feature.name, days: feature.trial_days })
+      window.location.reload()
+    }
+  }
+
   const toggleFeature = (code: string) => {
-    if (purchasedFeatures.includes(code)) return
+    const detail = purchasedDetails.find((d: any) => d.feature_code === code)
+    const isTrialOnly = detail?.is_trial && detail?.trial_ends_at && new Date(detail.trial_ends_at).getTime() > Date.now()
+    if (purchasedFeatures.includes(code) && !isTrialOnly) return
     setSelectedFeatures((prev) => (prev.includes(code) ? prev.filter((f) => f !== code) : [...prev, code]))
     setPaypalRendered(false)
   }
@@ -306,48 +395,39 @@ export function PlansManager({ storeId, storeName, subdomain }: PlansManagerProp
 
             {customDomain && (
               <div className="space-y-4">
-                <h4 className="font-medium">Configuración DNS requerida:</h4>
-                <p className="text-sm text-muted-foreground">
-                  Ingresá a tu proveedor de dominio (GoDaddy, Hostinger, NIC Argentina, etc.) y agregá estos registros:
-                </p>
-
-                <div className="bg-slate-50 p-4 rounded-lg space-y-4">
-                  <div>
-                    <p className="text-xs font-medium text-slate-500 mb-1">Registro CNAME</p>
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 bg-white p-2 rounded text-sm border">www → cname.vercel-dns.com</code>
-                      <Button size="sm" variant="outline" onClick={() => copyToClipboard("cname.vercel-dns.com")}>
-                        <Copy className="w-4 h-4" />
-                      </Button>
-                    </div>
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 space-y-2">
+                  <p className="text-sm text-blue-900 font-semibold">Para conectarlo, cargá este registro DNS:</p>
+                  <div className="bg-white rounded border border-blue-200 p-3 text-sm font-mono text-gray-800">
+                    Tipo: A &nbsp;·&nbsp; Nombre: @ (o www) &nbsp;·&nbsp; Valor: 157.173.212.229
                   </div>
-
-                  <div>
-                    <p className="text-xs font-medium text-slate-500 mb-1">Registro A (para dominio raíz)</p>
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 bg-white p-2 rounded text-sm border">@ → 76.76.21.21</code>
-                      <Button size="sm" variant="outline" onClick={() => copyToClipboard("76.76.21.21")}>
-                        <Copy className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
+                  <p className="text-sm text-blue-800">
+                    Esta función es solo para dominios comprados directo en nic.ar. Podés ver el paso a paso completo
+                    en{" "}
+                    <a href="/blog/dominio-propio" target="_blank" rel="noopener noreferrer" className="underline font-medium">
+                      esta guía
+                    </a>
+                    . Una vez que el DNS esté apuntando bien, activamos el certificado de seguridad (HTTPS) a mano —
+                    puede tardar hasta 24-48hs.
+                  </p>
                 </div>
 
-                {copied && (
+                <Button
+                  className="w-full"
+                  disabled={!purchasedFeatures.includes("custom_domain") || savingDomain || !customDomain.trim()}
+                  onClick={handleSaveDomain}
+                >
+                  {!purchasedFeatures.includes("custom_domain")
+                    ? "Activá esta función para guardar"
+                    : savingDomain
+                      ? "Guardando..."
+                      : "Guardar dominio"}
+                </Button>
+                {domainSaved && (
                   <p className="text-sm text-green-600 flex items-center gap-1">
-                    <Check className="w-4 h-4" /> Copiado al portapapeles
+                    <Check className="w-4 h-4" /> Dominio guardado. Cargá el registro DNS y avisanos — activamos el
+                    certificado y tu tienda queda funcionando con tu dominio.
                   </p>
                 )}
-
-                <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
-                  <p className="text-sm text-amber-800">
-                    <strong>Importante:</strong> Los cambios de DNS pueden tardar hasta 48 horas en propagarse.
-                  </p>
-                </div>
-
-                <Button className="w-full" disabled={!purchasedFeatures.includes("custom_domain")}>
-                  {purchasedFeatures.includes("custom_domain") ? "Guardar dominio" : "Activá esta función para guardar"}
-                </Button>
               </div>
             )}
           </div>
@@ -407,7 +487,68 @@ export function PlansManager({ storeId, storeName, subdomain }: PlansManagerProp
                   ? "Esta función ya está activa"
                   : "Activá esta función para empezar a usarla"}
               </p>
+              <a
+                href={`${APP_URL}/plan-cositas/dolar-peso`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block mt-3 text-sm text-blue-600 hover:underline"
+              >
+                Leer más →
+              </a>
             </div>
+          </div>
+        )
+
+      case "mayorista_minorista":
+        return (
+          <div className="space-y-6">
+            <div>
+              <Label>Link de tu otra tienda</Label>
+              <Input
+                placeholder="https://tutiendamayorista.tol.ar"
+                value={linkedStoreUrl}
+                onChange={(e) => setLinkedStoreUrl(e.target.value)}
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Pegá la dirección completa de tu otra tienda (la mayorista o la minorista, según corresponda)
+              </p>
+            </div>
+
+            <div>
+              <Label>Texto del botón</Label>
+              <Input
+                placeholder="Ej: Venta mayorista"
+                value={linkedStoreLabel}
+                onChange={(e) => setLinkedStoreLabel(e.target.value)}
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Así se va a ver el botón en el encabezado de tu tienda
+              </p>
+            </div>
+
+            <Button
+              className="w-full"
+              disabled={
+                !purchasedFeatures.includes("mayorista_minorista") ||
+                savingLinkedStore ||
+                !linkedStoreUrl.trim() ||
+                !linkedStoreLabel.trim()
+              }
+              onClick={handleSaveLinkedStore}
+            >
+              {!purchasedFeatures.includes("mayorista_minorista")
+                ? "Activá esta función para guardar"
+                : savingLinkedStore
+                  ? "Guardando..."
+                  : "Guardar"}
+            </Button>
+            {linkedStoreSaved && (
+              <p className="text-sm text-green-600 flex items-center gap-1">
+                <Check className="w-4 h-4" /> Guardado. Ya podés ver el botón en el encabezado de tu tienda.
+              </p>
+            )}
           </div>
         )
 
@@ -711,7 +852,7 @@ export function PlansManager({ storeId, storeName, subdomain }: PlansManagerProp
                       </CardDescription>
                     </div>
                     <a
-                      href="/cositas"
+                      href={`${APP_URL}/cositas`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-orange-500 hover:text-orange-600 hover:underline flex items-center gap-1"
@@ -723,109 +864,137 @@ export function PlansManager({ storeId, storeName, subdomain }: PlansManagerProp
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {availableFeatures.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">
-                      No hay funcionalidades disponibles en este momento.
-                    </p>
+                    <p className="text-center text-muted-foreground py-8">No hay funcionalidades disponibles.</p>
                   ) : (
-                    <>
-                      {/* Features ACTIVAS - las que funcionan */}
-                      {availableFeatures
-                        .filter((f) => ["multi_images", "whatsapp_chat", "custom_variants", "csv_import", "store_stats", "lupa"].includes(f.code))
-                        .map((feature) => {
-                          const IconComponent = ICON_MAP[feature.icon] || Package
-                          const isPurchased = purchasedFeatures.includes(feature.code)
-                          const isSelected = selectedFeatures.includes(feature.code)
-                          const priceARS = getPriceARS(feature.price)
+                    <div className="space-y-5">
 
-                          return (
-                            <div
-                              key={feature.code}
-                              className={`flex items-center gap-4 p-4 rounded-lg border cursor-pointer transition-all ${
-                                isPurchased
-                                  ? "bg-green-50 border-green-300 cursor-default"
-                                  : isSelected
-                                    ? "bg-violet-50 border-violet-300"
-                                    : "hover:bg-slate-50"
-                              }`}
-                              onClick={() => !isPurchased && toggleFeature(feature.code)}
-                            >
-                              <Checkbox
-                                checked={isPurchased || isSelected}
-                                onCheckedChange={() => toggleFeature(feature.code)}
-                                disabled={isPurchased}
-                                onClick={(e) => e.stopPropagation()}
-                                className="h-5 w-5"
-                              />
-                              <div
-                                className={`p-2 rounded-lg ${
-                                  isPurchased ? "bg-green-100" : isSelected ? "bg-violet-100" : "bg-slate-100"
-                                }`}
-                              >
-                                <IconComponent
-                                  className={`h-5 w-5 ${
-                                    isPurchased ? "text-green-600" : isSelected ? "text-violet-600" : "text-slate-600"
-                                  }`}
-                                />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium">{feature.name}</span>
-                                  {isPurchased && <Badge className="bg-green-500 text-white text-xs">Activo</Badge>}
+                      {/* BLOQUE VERDE: activos (pagados + en prueba) */}
+                      {availableFeatures.filter(f => f.is_active && purchasedFeatures.includes(f.code)).length > 0 && (
+                        <div className="rounded-xl overflow-hidden border-2 border-green-300">
+                          <div className="bg-green-100 px-4 py-2.5 flex items-center gap-2 border-b border-green-200">
+                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                            <span className="text-sm font-medium text-green-800">Tus cositas activas</span>
+                          </div>
+                          {availableFeatures.filter(f => f.is_active && purchasedFeatures.includes(f.code)).map(feature => {
+                            const IconComponent = ICON_MAP[feature.icon] || Package
+                            const detail = purchasedDetails.find((d: any) => d.feature_code === feature.code)
+                            const isTrial = detail?.is_trial && detail?.trial_ends_at
+                            const daysLeft = isTrial ? Math.ceil((new Date(detail.trial_ends_at).getTime() - Date.now()) / 86400000) : 0
+                            const totalDays = feature.trial_days || 7
+                            const priceARS = getPriceARS(feature.price)
+                            return (
+                              <div key={feature.code} className="flex items-center gap-3 px-4 py-3 bg-green-50 border-b border-green-100 last:border-b-0">
+                                <div className="w-9 h-9 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                                  <IconComponent className="h-4 w-4 text-green-700" />
                                 </div>
-                                <p className="text-sm text-muted-foreground truncate">{feature.description}</p>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-green-900 text-sm">{feature.name}</p>
+                                  {isTrial && daysLeft > 0 ? (
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <div className="flex-1 h-1.5 bg-green-200 rounded-full overflow-hidden max-w-24">
+                                        <div className="h-full bg-orange-400 rounded-full" style={{width: `${Math.max(5,(daysLeft/totalDays)*100)}%`}}></div>
+                                      </div>
+                                      <span className="text-xs text-orange-600">{daysLeft} días restantes</span>
+                                    </div>
+                                  ) : (
+                                    <p className="text-xs text-green-600">✓ Pagado</p>
+                                  )}
+                                </div>
+                                {isTrial && daysLeft > 0 ? (
+                                  <button onClick={() => toggleFeature(feature.code)} className="text-xs bg-green-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-green-700">Comprar</button>
+                                ) : (
+                                  <span className="text-sm font-medium text-green-700">${priceARS.toLocaleString("es-AR")}/mes</span>
+                                )}
+                                <a
+                                  href={getLeerMasUrl(feature.code)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-xs text-green-700 hover:text-green-800 hover:underline whitespace-nowrap flex-shrink-0"
+                                >
+                                  Leer más →
+                                </a>
                               </div>
-                              <div className="text-right">
-                                <p className="font-bold text-lg">${priceARS.toLocaleString("es-AR")}</p>
-                                <p className="text-xs text-muted-foreground">/mes</p>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setConfigModal(feature.code)
-                                }}
-                              >
-                                <Info className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          )
-                        })}
-                      
-                      {/* Separador */}
-                      {availableFeatures.filter((f) => !["multi_images", "whatsapp_chat", "custom_variants", "csv_import", "store_stats", "lupa"].includes(f.code)).length > 0 && (
-                        <div className="pt-4 mt-4 border-t">
-                          <p className="text-sm font-medium text-slate-500 mb-3">Proximamente</p>
+                            )
+                          })}
                         </div>
                       )}
-                      
-                      {/* Features PROXIMAMENTE - las que aun no funcionan */}
-                      {availableFeatures
-                        .filter((f) => !["multi_images", "whatsapp_chat", "custom_variants", "csv_import", "store_stats", "lupa"].includes(f.code))
-                        .map((feature) => {
-                          const IconComponent = ICON_MAP[feature.icon] || Package
 
-                          return (
-                            <div
-                              key={feature.code}
-                              className="flex items-center gap-4 p-4 rounded-lg border border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed"
-                            >
-                              <div className="p-2 rounded-lg bg-slate-200">
-                                <IconComponent className="h-5 w-5 text-slate-400" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium text-slate-500">{feature.name}</span>
-                                  <Badge variant="outline" className="text-slate-400 border-slate-300 text-xs">
-                                    Pronto
-                                  </Badge>
+                      {/* BLOQUE NARANJA: disponibles no compradas */}
+                      {availableFeatures.filter(f => f.is_active && !purchasedFeatures.includes(f.code)).length > 0 && (
+                        <div className="rounded-xl overflow-hidden border-2 border-orange-300">
+                          <div className="bg-orange-100 px-4 py-2.5 flex items-center gap-2 border-b border-orange-200">
+                            <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                            <span className="text-sm font-medium text-orange-800">Disponibles — probá gratis o comprá</span>
+                          </div>
+                          {availableFeatures.filter(f => f.is_active && !purchasedFeatures.includes(f.code)).map(feature => {
+                            const IconComponent = ICON_MAP[feature.icon] || Package
+                            const hasTrial = (feature.trial_days || 0) > 0
+                            const priceARS = getPriceARS(feature.price)
+                            const isSelected = selectedFeatures.includes(feature.code)
+                            return (
+                              <div key={feature.code} className="flex items-center gap-3 px-4 py-3 bg-orange-50 border-b border-orange-100 last:border-b-0">
+                                <div className="w-9 h-9 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+                                  <IconComponent className="h-4 w-4 text-orange-700" />
                                 </div>
-                                <p className="text-sm text-slate-400 truncate">{feature.description}</p>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-orange-900 text-sm">{feature.name}</p>
+                                  <p className="text-xs text-orange-600 truncate">{feature.description}</p>
+                                </div>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  {hasTrial && (
+                                    <button onClick={() => startTrial(feature)} className="text-xs bg-orange-500 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-orange-600 whitespace-nowrap">
+                                      Probar {feature.trial_days} días
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => toggleFeature(feature.code)}
+                                    className={`text-xs px-3 py-1.5 rounded-lg font-medium border whitespace-nowrap ${isSelected ? "bg-orange-500 text-white border-orange-500" : "bg-white text-orange-600 border-orange-400 hover:bg-orange-50"}`}
+                                  >
+                                    {isSelected ? "Seleccionado" : "Comprar"}
+                                  </button>
+                                </div>
+                                <a
+                                  href={getLeerMasUrl(feature.code)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-xs text-orange-600 hover:text-orange-700 hover:underline whitespace-nowrap flex-shrink-0"
+                                >
+                                  Leer más →
+                                </a>
                               </div>
-                            </div>
-                          )
-                        })}
-                    </>
+                            )
+                          })}
+                        </div>
+                      )}
+
+                      {/* BLOQUE GRIS: proximamente */}
+                      {availableFeatures.filter(f => !f.is_active).length > 0 && (
+                        <div className="rounded-xl overflow-hidden border border-slate-200 opacity-60">
+                          <div className="bg-slate-100 px-4 py-2.5 flex items-center gap-2 border-b border-slate-200">
+                            <div className="w-2 h-2 rounded-full bg-slate-400"></div>
+                            <span className="text-sm font-medium text-slate-500">Próximamente</span>
+                          </div>
+                          {availableFeatures.filter(f => !f.is_active).map(feature => {
+                            const IconComponent = ICON_MAP[feature.icon] || Package
+                            return (
+                              <div key={feature.code} className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 last:border-b-0 cursor-not-allowed">
+                                <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                                  <IconComponent className="h-4 w-4 text-slate-400" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-slate-400 text-sm">{feature.name}</p>
+                                  <p className="text-xs text-slate-400 truncate">{feature.description}</p>
+                                </div>
+                                <span className="text-xs text-slate-400 border border-slate-200 px-3 py-1 rounded-full flex-shrink-0">Pronto</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -1101,6 +1270,18 @@ export function PlansManager({ storeId, storeName, subdomain }: PlansManagerProp
           {renderConfigContent()}
         </DialogContent>
       </Dialog>
+    {trialModal && (
+      <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setTrialModal(null)}>
+        <div style={{ background: "white", borderRadius: "12px", padding: "32px", textAlign: "center", maxWidth: "360px", margin: "16px" }} onClick={(e) => e.stopPropagation()}>
+          <div style={{ fontSize: "40px", marginBottom: "12px" }}>🎉</div>
+          <p style={{ fontSize: "18px", fontWeight: 600, margin: "0 0 8px" }}>¡{trialModal.days} días gratis activados!</p>
+          <p style={{ fontSize: "13px", color: "#666", margin: "0 0 20px" }}>{trialModal.name} está activo. Probalo sin límites durante {trialModal.days} días.</p>
+          <button onClick={() => setTrialModal(null)} style={{ background: "#f97316", color: "white", border: "none", borderRadius: "8px", padding: "12px 28px", fontSize: "15px", fontWeight: 600, cursor: "pointer" }}>
+            ¡Empezar a usar!
+          </button>
+        </div>
+      </div>
+    )}
     </div>
   )
 }
