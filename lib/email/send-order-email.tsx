@@ -245,6 +245,11 @@ export async function sendOrderEmail(params: SendOrderEmailParams): Promise<bool
 
     const paymentInstructionsHtml = getPaymentInstructionsHtml(paymentMethod, paymentData, storeEmail)
 
+    const customerEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((customerEmail || "").trim())
+    if (!customerEmailValid) {
+      console.error(`Email de cliente invalido, no se envia mail al cliente (pedido ${orderId}):`, customerEmail)
+    }
+
     const emailHtml = `
       <!DOCTYPE html>
       <html>
@@ -318,15 +323,17 @@ export async function sendOrderEmail(params: SendOrderEmailParams): Promise<bool
       </html>
     `
 
-    const { error } = await resend.emails.send({
-      from: `${storeName} <ventas@tiendaonline.com.ar>`,
-      to: customerEmail,
-      subject: `${statusInfo.subject} - ${storeName}`,
-      html: emailHtml,
-    })
+    if (customerEmailValid) {
+      const { error } = await resend.emails.send({
+        from: `${storeName} <ventas@tiendaonline.com.ar>`,
+        to: customerEmail.trim(),
+        subject: `${statusInfo.subject} - ${storeName}`,
+        html: emailHtml,
+      })
 
-    if (error) {
-      console.error("Error enviando email al cliente:", error)
+      if (error) {
+        console.error("Error enviando email al cliente:", error)
+      }
     }
 
     // Notificacion al vendedor solo para pedidos nuevos
