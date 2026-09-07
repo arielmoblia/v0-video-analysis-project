@@ -6,7 +6,7 @@ import { getBrand } from "@/lib/get-brand"
 export const metadata: Metadata = {
   title: "Sumá tu negocio a tol.ar — Vendemos tus productos sin costo | Tienda Online",
   description:
-    "Programa de reventa online de Tienda Online (tiendaonline.com.ar): publicamos y vendemos tus productos en tol.ar sin costo para tu negocio. Solo cobramos 10% si vendemos.",
+    "Programa de reventa online de Tienda Online (tiendaonline.com.ar): publicamos y vendemos tus productos en tol.ar sin costo para tu negocio. Si vendemos, te pagamos el 100% de tu precio.",
   robots: { index: false, follow: false },
 }
 
