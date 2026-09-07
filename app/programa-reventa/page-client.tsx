@@ -78,7 +78,13 @@ export default function ProgramaReventaClient({ brand = "tol", negocio, email }:
             {ET("kicker", "Programa de reventa online — tol.ar")}
           </p>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            {negocio ? `${ET("h1_saludo", "Hola")}, ${negocio} 👋` : ET("h1_saludo", "Hola 👋")}
+            {negocio ? (
+              <>
+                {ET("h1_saludo", "Hola")}, {negocio} 👋
+              </>
+            ) : (
+              ET("h1_saludo", "Hola 👋")
+            )}
           </h1>
           <p className="text-lg text-gray-700 mb-8">
             {ET(
