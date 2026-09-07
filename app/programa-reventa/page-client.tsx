@@ -136,6 +136,13 @@ export default function ProgramaReventaClient({ brand = "tol", negocio, email }:
                 <p className="font-semibold text-gray-900 mb-4 text-center">
                   {ET("pregunta", "¿Querés que sumemos tu negocio al programa?")}
                 </p>
+                <p className="text-gray-500 text-xs mb-4 text-center">
+                  {ET("legal_previo", "Al hacer clic en \"Sí, quiero sumar mi negocio\" aceptás los")}{" "}
+                  <Link href="/scraping-terminos-condiciones" className="underline hover:text-gray-700" target="_blank">
+                    {ET("legal_link", "Términos y condiciones del programa de reventa online")}
+                  </Link>
+                  .
+                </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button
                     onClick={() => responder("si")}
@@ -155,14 +162,6 @@ export default function ProgramaReventaClient({ brand = "tol", negocio, email }:
               </>
             )}
           </div>
-
-          <p className="text-gray-500 text-xs mt-6 text-center">
-            {ET("legal_previo", "Al hacer clic en \"Sí, quiero sumar mi negocio\" aceptás los")}{" "}
-            <Link href="/scraping-terminos-condiciones" className="underline hover:text-gray-700" target="_blank">
-              {ET("legal_link", "Términos y condiciones del programa de reventa online")}
-            </Link>
-            .
-          </p>
         </div>
       </main>
       <Footer brand={brand} />

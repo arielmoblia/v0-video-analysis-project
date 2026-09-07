@@ -59,7 +59,7 @@ const clausulas = [
     tk: "c8_titulo",
     td: "Cómo se acepta (firma electrónica)",
     dk: "c8_desc",
-    dd: "Estos términos se aceptan respondiendo por mail al mensaje que te los compartió, con una confirmación expresa (por ejemplo \"Sí, acepto\"). Esa respuesta por correo electrónico se considera firma electrónica válida, sin necesidad de trámites adicionales.",
+    dd: "Estos términos se aceptan haciendo clic en el botón \"Sí, quiero sumar mi negocio\" en la página del programa de reventa (tol.ar/programa-reventa), a la que se accede desde el mail que te los compartió. Ese clic queda registrado con fecha, hora e IP, y se considera firma electrónica válida, sin necesidad de trámites adicionales.",
   },
   {
     numero: 9,
