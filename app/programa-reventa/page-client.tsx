@@ -10,7 +10,7 @@ const beneficios = [
     tk: "b1_titulo",
     td: "No pagás nada por sumarte",
     dk: "b1_desc",
-    dd: "No hay costo de alta ni mensualidad. Solo cobramos comisión sobre lo que efectivamente vendamos por vos.",
+    dd: "No hay costo de alta ni mensualidad. Cobrás el 100% del precio que vos pusiste en cada venta; nuestra ganancia la sumamos aparte, a cargo del comprador.",
   },
   {
     tk: "b2_titulo",
@@ -22,7 +22,7 @@ const beneficios = [
     tk: "b3_titulo",
     td: "Solo cobramos si vendemos",
     dk: "b3_desc",
-    dd: "10% de comisión, únicamente sobre lo que se vende a través de tol.ar. Si no vendemos, no pagás nada.",
+    dd: "No te descontamos nada de tu precio: si vendemos algo tuyo, te lo pagamos completo. Si no vendemos, no pagás nada.",
   },
   {
     tk: "b4_titulo",
@@ -98,7 +98,7 @@ export default function ProgramaReventaClient({ brand = "tol", negocio, email }:
             <p className="text-green-800 mt-2">
               {ET(
                 "resumen_texto",
-                "Publicamos tus productos (fotos, precios y descripciones tal cual los tenés) en tol.ar. Si vendemos algo, cobramos 10% de comisión solo sobre esa venta. Si no vendemos nada, no pagás nada. Vos seguís vendiendo como siempre, esto es un canal extra. Podés dar de baja el acuerdo cuando quieras."
+                "Publicamos tus productos (fotos, precios y descripciones tal cual los tenés) en tol.ar. Si vendemos algo, te pagamos el 100% del precio que vos pusiste; nuestra ganancia la sumamos aparte, a cargo del comprador. Si no vendemos nada, no pagás nada. Vos seguís vendiendo como siempre, esto es un canal extra. Podés dar de baja el acuerdo cuando quieras."
               )}
             </p>
           </div>

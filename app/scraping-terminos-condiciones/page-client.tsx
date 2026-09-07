@@ -24,7 +24,7 @@ const clausulas = [
     tk: "c3_titulo",
     td: "Comisión",
     dk: "c3_desc",
-    dd: "Tienda Online cobra una comisión del 10% sobre el precio de venta, solo sobre lo que efectivamente se vende a través de tol.ar. Si no hay venta, no hay ningún cobro ni costo para tu negocio.",
+    dd: "Tienda Online suma su propio margen de reventa sobre el precio que tu negocio fija, a cargo del comprador. Tu negocio cobra el 100% del precio que puso en cada venta realizada a través de tol.ar — no se le descuenta nada. Si no hay venta, no hay ningún cobro ni costo para tu negocio.",
   },
   {
     numero: 4,
@@ -106,7 +106,7 @@ export default function ScrapingTerminosClient({ brand = "tol" }: Props) {
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-10">
             <p className="text-blue-900 font-semibold text-lg">{ET("resumen_titulo", "En criollo")}</p>
             <p className="text-blue-800 mt-2">
-              {ET("resumen_texto", "Tienda Online publica y vende tus productos por internet sin costo para vos. Si vendemos, cobramos 10% de comisión solo sobre esa venta; si no vendemos, no pagás nada. Vos seguís vendiendo como siempre, esto es un canal extra. Podés dar de baja el acuerdo cuando quieras avisando con 30 días de anticipación.")}
+              {ET("resumen_texto", "Tienda Online publica y vende tus productos por internet sin costo para vos. Si vendemos, te pagamos el 100% del precio que vos pusiste — nuestra ganancia la sumamos aparte, a cargo del comprador. Si no vendemos, no pagás nada. Vos seguís vendiendo como siempre, esto es un canal extra. Podés dar de baja el acuerdo cuando quieras avisando con 30 días de anticipación.")}
             </p>
           </div>
 
@@ -114,7 +114,7 @@ export default function ScrapingTerminosClient({ brand = "tol" }: Props) {
             <p className="text-gray-700 mb-8">
               {ET(
                 "intro",
-                "Estos términos aplican a los negocios que aceptan participar del programa de reventa online de Tienda Online (tiendaonline.com.ar), operador de la plataforma tol.ar. Si tu negocio respondió aceptando el mail que incluía el enlace a esta página, estas son las condiciones que rigen esa relación."
+                "Estos términos aplican a los negocios que aceptan participar del programa de reventa online de Tienda Online (tiendaonline.com.ar), operador de la plataforma tol.ar. Si tu negocio hizo clic en \"Sí, quiero sumar mi negocio\" en la página a la que te dirigió el mail, estas son las condiciones que rigen esa relación."
               )}
             </p>
 
