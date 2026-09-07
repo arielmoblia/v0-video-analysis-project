@@ -7,7 +7,7 @@ export default async function Page() {
   return (
     <>
       <PageClient brand={brand} />
-      <SeoExtraBlock page="plan-socio" />
+      <SeoExtraBlock page="plan-socio-vieja-tienda" />
     </>
   )
 }
