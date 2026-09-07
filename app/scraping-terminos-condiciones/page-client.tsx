@@ -38,7 +38,7 @@ const clausulas = [
     tk: "c5_titulo",
     td: "Actualización de precios y stock",
     dk: "c5_desc",
-    dd: "Tu negocio puede actualizar precios, fotos o stock cuando quiera. Te pedimos avisarnos los cambios dentro de las 48 horas para reflejarlos en tol.ar y que el comprador siempre vea información real.",
+    dd: "Tienda Online revisa tu página automáticamente todos los días y actualiza solo los precios y el stock en tol.ar según lo que encuentre. No hace falta que nos avises nada: si cambiás un precio o te quedás sin stock de algo, en la próxima revisión diaria ya queda reflejado en tol.ar.",
   },
   {
     numero: 6,
