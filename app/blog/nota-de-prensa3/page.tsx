@@ -7,14 +7,14 @@ import { getBrand } from "@/lib/get-brand"
 const SLUG = "nota-de-prensa3"
 
 export const metadata: Metadata = {
-  title: "tol.ar: 73 tiendas online nuevas se crearon en la plataforma gratuita en solo una semana",
+  title: "tol.ar suma nuevas funciones para que cualquier tienda online cumpla con la ley y venda con más opciones de pago",
   description:
-    "La plataforma argentina para crear tiendas online sin costo ya suma 739 locales activos, la mayoría armados por personas sin experiencia en programación ni diseño.",
+    "La plataforma argentina para crear tiendas online gratis incorporó un botón de arrepentimiento automático en todas sus tiendas y sumó el cobro con tarjeta al momento de la entrega, sin costo adicional para el dueño del negocio.",
   alternates: { canonical: `https://tol.ar/blog/${SLUG}` },
   openGraph: {
-    title: "tol.ar: 73 tiendas online nuevas se crearon en la plataforma gratuita en solo una semana",
+    title: "tol.ar suma nuevas funciones para que cualquier tienda online cumpla con la ley y venda con más opciones de pago",
     description:
-      "La plataforma argentina para crear tiendas online sin costo ya suma 739 locales activos, la mayoría armados por personas sin experiencia en programación ni diseño.",
+      "La plataforma argentina para crear tiendas online gratis incorporó un botón de arrepentimiento automático en todas sus tiendas y sumó el cobro con tarjeta al momento de la entrega, sin costo adicional para el dueño del negocio.",
     type: "article",
     url: `https://tol.ar/blog/${SLUG}`,
   },
@@ -33,9 +33,9 @@ const breadcrumbJsonLd = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Article",
-  headline: "tol.ar: 73 tiendas online nuevas se crearon en la plataforma gratuita en solo una semana",
+  headline: "tol.ar suma nuevas funciones para que cualquier tienda online cumpla con la ley y venda con más opciones de pago",
   description:
-    "La plataforma argentina para crear tiendas online sin costo ya suma 739 locales activos, la mayoría armados por personas sin experiencia en programación ni diseño.",
+    "La plataforma argentina para crear tiendas online gratis incorporó un botón de arrepentimiento automático en todas sus tiendas y sumó el cobro con tarjeta al momento de la entrega, sin costo adicional para el dueño del negocio.",
   author: { "@type": "Organization", name: "tol.ar", url: "https://tol.ar" },
   publisher: {
     "@type": "Organization",
@@ -43,7 +43,7 @@ const jsonLd = {
     logo: { "@type": "ImageObject", url: "https://tol.ar/tol-logo.png" },
   },
   datePublished: "2026-09-05",
-  dateModified: "2026-09-05",
+  dateModified: "2026-09-08",
   mainEntityOfPage: { "@type": "WebPage", "@id": `https://tol.ar/blog/${SLUG}` },
 }
 
