@@ -25,13 +25,14 @@ function generarCodigo(nombre: string, existentes: Set<string>): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { nombre, email, cuit, comoPromociona, modeloComision } = await request.json()
+    const { nombre, email, cuit, tipoAfiliado, comoPromociona, modeloComision } = await request.json()
 
     if (!nombre || !email) {
       return NextResponse.json({ error: "Falta nombre o email" }, { status: 400 })
     }
 
     const modeloComisionValido = modeloComision === "porcentaje" ? "porcentaje" : "fijo"
+    const tipoAfiliadoValido = tipoAfiliado === "agencia" ? "agencia" : "recomendacion"
 
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown"
     const userAgent = request.headers.get("user-agent") || "unknown"
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
       nombre,
       email,
       cuit: cuit || "",
+      tipo_afiliado: tipoAfiliadoValido,
       comoPromociona: comoPromociona || "",
       modelo_comision: modeloComisionValido,
       estado: "pendiente",
@@ -78,6 +80,7 @@ export async function POST(request: NextRequest) {
           <p><b>Email:</b> ${email}</p>
           <p><b>Código asignado:</b> ${codigo}</p>
           <p><b>CUIT:</b> ${cuit || "(no informado)"}</p>
+          <p><b>Tipo de afiliado:</b> ${tipoAfiliadoValido === "agencia" ? "Agencia / profesional (hace tiendas para otros)" : "Recomendación"}</p>
           <p><b>Cómo piensa promocionar:</b> ${comoPromociona || "(no informado)"}</p>
           <p><b>Modelo de comisión elegido:</b> ${modeloComisionValido === "porcentaje" ? "Porcentaje mientras crece" : "Monto fijo por tienda"}</p>
           <p><b>Fecha/hora:</b> ${fecha}</p>

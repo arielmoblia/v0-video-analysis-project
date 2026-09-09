@@ -44,6 +44,7 @@ export default function AfiliadosClient({ brand = "tol" }: Props) {
   const [nombre, setNombre] = useState("")
   const [email, setEmail] = useState("")
   const [cuit, setCuit] = useState("")
+  const [tipoAfiliado, setTipoAfiliado] = useState<"recomendacion" | "agencia">("recomendacion")
   const [comoPromociona, setComoPromociona] = useState("")
   const [modeloComision, setModeloComision] = useState<"fijo" | "porcentaje">("fijo")
   const [aceptaTerminos, setAceptaTerminos] = useState(false)
@@ -62,7 +63,7 @@ export default function AfiliadosClient({ brand = "tol" }: Props) {
       const res = await fetch("/api/afiliados-registro", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, email, cuit, comoPromociona, modeloComision }),
+        body: JSON.stringify({ nombre, email, cuit, tipoAfiliado, comoPromociona, modeloComision }),
       })
       if (!res.ok) throw new Error("fallo")
       const data = await res.json()
@@ -159,6 +160,41 @@ export default function AfiliadosClient({ brand = "tol" }: Props) {
                     {ET("error_texto", "No pudimos registrar tu solicitud. Probá de nuevo o escribinos a soporte@tiendaonline.com.ar.")}
                   </p>
                 )}
+                <div className="mb-4">
+                  <p className="text-sm font-semibold text-gray-900 mb-2">
+                    {ET("tipo_pregunta", "¿Cómo querés participar?")}
+                  </p>
+                  <div className="space-y-2">
+                    <label className="flex items-start gap-2 border border-gray-200 rounded-lg p-3 cursor-pointer has-[:checked]:border-purple-400 has-[:checked]:bg-purple-50">
+                      <input
+                        type="radio"
+                        name="tipoAfiliado"
+                        checked={tipoAfiliado === "recomendacion"}
+                        onChange={() => setTipoAfiliado("recomendacion")}
+                        className="mt-0.5"
+                      />
+                      <span className="text-sm text-gray-700">
+                        <span className="font-medium text-gray-900">{ET("tipo_recomendacion_titulo", "Recomiendo tol.ar")}</span>
+                        <br />
+                        {ET("tipo_recomendacion_desc", "Compartís tu link con gente que conocés. No armás nada vos, solo referís.")}
+                      </span>
+                    </label>
+                    <label className="flex items-start gap-2 border border-gray-200 rounded-lg p-3 cursor-pointer has-[:checked]:border-purple-400 has-[:checked]:bg-purple-50">
+                      <input
+                        type="radio"
+                        name="tipoAfiliado"
+                        checked={tipoAfiliado === "agencia"}
+                        onChange={() => setTipoAfiliado("agencia")}
+                        className="mt-0.5"
+                      />
+                      <span className="text-sm text-gray-700">
+                        <span className="font-medium text-gray-900">{ET("tipo_agencia_titulo", "Armo tiendas para otros (agencia / profesional)")}</span>
+                        <br />
+                        {ET("tipo_agencia_desc", "Le hacés la tienda vos mismo a tu cliente, bajo tu propio nombre, y cobrás comisión por cada una que quede activa.")}
+                      </span>
+                    </label>
+                  </div>
+                </div>
                 <div className="space-y-3 mb-4">
                   <input
                     type="text"
