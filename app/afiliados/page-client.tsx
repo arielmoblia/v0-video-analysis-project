@@ -45,6 +45,7 @@ export default function AfiliadosClient({ brand = "tol" }: Props) {
   const [email, setEmail] = useState("")
   const [cuit, setCuit] = useState("")
   const [comoPromociona, setComoPromociona] = useState("")
+  const [modeloComision, setModeloComision] = useState<"fijo" | "porcentaje">("fijo")
   const [aceptaTerminos, setAceptaTerminos] = useState(false)
   const [codigo, setCodigo] = useState("")
   const [copiado, setCopiado] = useState(false)
@@ -61,7 +62,7 @@ export default function AfiliadosClient({ brand = "tol" }: Props) {
       const res = await fetch("/api/afiliados-registro", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, email, cuit, comoPromociona }),
+        body: JSON.stringify({ nombre, email, cuit, comoPromociona, modeloComision }),
       })
       if (!res.ok) throw new Error("fallo")
       const data = await res.json()
@@ -189,6 +190,41 @@ export default function AfiliadosClient({ brand = "tol" }: Props) {
                     rows={2}
                     className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-purple-400 focus:outline-none text-sm resize-none"
                   />
+                </div>
+                <div className="mb-4">
+                  <p className="text-sm font-semibold text-gray-900 mb-2">
+                    {ET("modelo_pregunta", "¿Cómo preferís cobrar la comisión?")}
+                  </p>
+                  <div className="space-y-2">
+                    <label className="flex items-start gap-2 border border-gray-200 rounded-lg p-3 cursor-pointer has-[:checked]:border-purple-400 has-[:checked]:bg-purple-50">
+                      <input
+                        type="radio"
+                        name="modeloComision"
+                        checked={modeloComision === "fijo"}
+                        onChange={() => setModeloComision("fijo")}
+                        className="mt-0.5"
+                      />
+                      <span className="text-sm text-gray-700">
+                        <span className="font-medium text-gray-900">{ET("modelo_fijo_titulo", "Monto fijo por tienda")}</span>
+                        <br />
+                        {ET("modelo_fijo_desc", "Cobrás un monto fijo por cada tienda que refieras y pase a un plan pago. Simple y predecible (monto a confirmar antes de tu primera comisión).")}
+                      </span>
+                    </label>
+                    <label className="flex items-start gap-2 border border-gray-200 rounded-lg p-3 cursor-pointer has-[:checked]:border-purple-400 has-[:checked]:bg-purple-50">
+                      <input
+                        type="radio"
+                        name="modeloComision"
+                        checked={modeloComision === "porcentaje"}
+                        onChange={() => setModeloComision("porcentaje")}
+                        className="mt-0.5"
+                      />
+                      <span className="text-sm text-gray-700">
+                        <span className="font-medium text-gray-900">{ET("modelo_porcentaje_titulo", "Porcentaje mientras la tienda crece")}</span>
+                        <br />
+                        {ET("modelo_porcentaje_desc", "Cobrás un porcentaje de lo que tol.ar le cobra a esa tienda durante varios meses. Puede ser más si esa tienda crece (porcentaje y plazo a confirmar antes de tu primera comisión).")}
+                      </span>
+                    </label>
+                  </div>
                 </div>
                 <label className="flex items-start gap-2 mb-4 text-xs text-gray-500">
                   <input
