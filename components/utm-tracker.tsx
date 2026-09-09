@@ -25,6 +25,14 @@ export function UtmTracker() {
         }),
       }).catch(() => {})
     }
+
+    // Link de afiliado (tol.ar/?ref=CODIGO). 60 días, igual al plazo del
+    // Programa de Afiliados (afiliados-terminos, cláusula 1). No pisa un
+    // ref ya guardado si el visitante navega de nuevo sin el parámetro.
+    const ref = searchParams.get("ref")
+    if (ref) {
+      document.cookie = `tol_ref=${ref};path=/;max-age=5184000`
+    }
   }, [searchParams, pathname])
   return null
 }

@@ -2,6 +2,42 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { generatePassword } from "@/lib/utils/generate-password"
 import { generateAutologinToken } from "@/lib/utils/autologin-token"
+import fs from "fs/promises"
+import path from "path"
+
+// Si la tienda se creó con el link de un afiliado (cookie tol_ref, ver
+// components/utm-tracker.tsx), deja constancia de la referencia. Nunca debe
+// romper la creación de la tienda: cualquier error acá se ignora en silencio.
+async function registrarReferidoAfiliado(codigo: string, subdomain: string, storeEmail: string) {
+  try {
+    const AFILIADOS_FILE = path.join(process.cwd(), "data", "afiliados-registro.json")
+    const REFERIDOS_FILE = path.join(process.cwd(), "data", "afiliados-referidos.json")
+
+    const afiliadosRaw = await fs.readFile(AFILIADOS_FILE, "utf-8")
+    const afiliados: { codigo?: string; nombre: string; email: string }[] = JSON.parse(afiliadosRaw)
+    const afiliado = afiliados.find((a) => a.codigo === codigo)
+    if (!afiliado) return // código inválido o vencido, no se registra nada
+
+    let referidos: unknown[] = []
+    try {
+      referidos = JSON.parse(await fs.readFile(REFERIDOS_FILE, "utf-8"))
+    } catch {
+      referidos = []
+    }
+    referidos.push({
+      codigo,
+      afiliado_nombre: afiliado.nombre,
+      afiliado_email: afiliado.email,
+      subdomain,
+      store_email: storeEmail,
+      fecha: new Date().toISOString(),
+    })
+    await fs.mkdir(path.dirname(REFERIDOS_FILE), { recursive: true })
+    await fs.writeFile(REFERIDOS_FILE, JSON.stringify(referidos, null, 2))
+  } catch (error) {
+    console.error("Error registrando referido de afiliado:", error)
+  }
+}
 
 // Mapeo de template seleccionado -> subdomain de tienda template a clonar
 const TEMPLATE_MAPPING: Record<string, string> = {
@@ -17,11 +53,14 @@ const TEMPLATE_SUBDOMAIN = TEMPLATE_MAPPING["default"] // Declare TEMPLATE_SUBDO
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { username, email, subdomain, siteTitle, allowIndexing, template, referral_source, landing_visitor_id } = body
+    const { username, email, subdomain, siteTitle, allowIndexing, template, referral_source, landing_visitor_id, country } = body
+    const storeCountry = (typeof country === "string" && country.length === 2 ? country.toUpperCase() : "AR")
     const creator_ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || null
     const cookieHeader = request.headers.get("cookie") || ""
     const utmMatch = cookieHeader.match(/utm_campaign=([^;]+)/)
     const utm_campaign = utmMatch ? decodeURIComponent(utmMatch[1]) : null
+    const refMatch = cookieHeader.match(/tol_ref=([^;]+)/)
+    const affiliateRef = refMatch ? decodeURIComponent(refMatch[1]) : null
 
     // Validate required fields
     if (!username || !email || !subdomain || !siteTitle || !template) {
@@ -70,9 +109,12 @@ const { data: templateStore } = await supabase
     // Generate admin password
     const adminPassword = generatePassword(12)
 
+    const requestHost = (request.headers.get("host") || "").toLowerCase()
+    const platformDomain = requestHost.includes("tiendabasica.com") ? "tiendabasica.com" : "tol.ar"
+
     const subdomainLower = subdomain.toLowerCase()
-    const storeUrl = `https://${subdomainLower}.tol.ar/`
-    const adminUrl = `https://${subdomainLower}.tol.ar/admin`
+    const storeUrl = `https://${subdomainLower}.${platformDomain}/`
+    const adminUrl = `https://${subdomainLower}.${platformDomain}/admin`
 
     // Calcular fecha de expiracion del trial (7 dias)
     const trialExpiresAt = new Date()
@@ -83,6 +125,7 @@ const { data: templateStore } = await supabase
       email: email.toLowerCase(),
       subdomain: subdomainLower,
       site_title: siteTitle,
+      country: storeCountry,
       allow_indexing: allowIndexing === "yes",
       template,
       referral_source: referral_source || null,
@@ -116,6 +159,10 @@ const { data: templateStore } = await supabase
     if (insertError) {
       console.error("Error inserting store:", insertError)
       return NextResponse.json({ error: "Error al crear la tienda: " + insertError.message }, { status: 500 })
+    }
+
+    if (affiliateRef) {
+      await registrarReferidoAfiliado(affiliateRef, subdomainLower, email.toLowerCase())
     }
 
     if (templateStore) {
@@ -224,11 +271,11 @@ const { data: templateStore } = await supabase
         const { Resend } = await import("resend")
         const resend = new Resend(resendApiKey)
 
-        const trialExpireDate = trialExpiresAt.toLocaleDateString('es-AR', { 
-          weekday: 'long', 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
+        const trialExpireDate = trialExpiresAt.toLocaleDateString('es', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
         })
 
         await resend.emails.send({
@@ -280,7 +327,7 @@ const { data: templateStore } = await supabase
                 <li>Entra al panel de administracion</li>
                 <li>Edita o elimina los productos de ejemplo</li>
                 <li>Agrega tus propios productos</li>
-                <li>Configura Mercado Pago en la seccion Pagos</li>
+                <li>Configura tus medios de pago en la seccion Pagos</li>
                 <li>Configura tus metodos de envio</li>
               </ol>
               
