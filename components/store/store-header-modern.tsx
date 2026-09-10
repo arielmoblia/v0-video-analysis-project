@@ -11,9 +11,10 @@ interface StoreHeaderModernProps {
   store: Store
   categories: Category[]
   accentColor?: string
+  disableNav?: boolean
 }
 
-export function StoreHeaderModern({ store, categories, accentColor = "#111827" }: StoreHeaderModernProps) {
+export function StoreHeaderModern({ store, categories, accentColor = "#111827", disableNav = false }: StoreHeaderModernProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [basePath, setBasePath] = useState(`/tienda/${store.subdomain}`)
   const { items, setCartOpen } = useCart()
@@ -42,26 +43,40 @@ export function StoreHeaderModern({ store, categories, accentColor = "#111827" }
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
 
-          <Link href={basePath || "/"} className="font-bold text-xl text-neutral-900">
-            {store.site_title}
-          </Link>
+          {disableNav ? (
+            <span className="font-bold text-xl text-neutral-900">{store.site_title}</span>
+          ) : (
+            <Link href={basePath || "/"} className="font-bold text-xl text-neutral-900">
+              {store.site_title}
+            </Link>
+          )}
 
           <nav className="hidden md:flex items-center gap-1 flex-1 justify-center" aria-label="Categorias de la tienda">
-            <Link
-              href={basePath || "/"}
-              className="px-4 py-2 rounded-full text-sm font-medium text-neutral-600 hover:bg-neutral-100 transition-colors"
-            >
-              Todo
-            </Link>
-            {categories.slice(0, 5).map((cat) => (
+            {disableNav ? (
+              <span className="px-4 py-2 rounded-full text-sm font-medium text-neutral-600">Todo</span>
+            ) : (
               <Link
-                key={cat.id}
-                href={`${basePath}/categoria/${cat.slug}`}
+                href={basePath || "/"}
                 className="px-4 py-2 rounded-full text-sm font-medium text-neutral-600 hover:bg-neutral-100 transition-colors"
               >
-                {cat.name}
+                Todo
               </Link>
-            ))}
+            )}
+            {categories.slice(0, 5).map((cat) =>
+              disableNav ? (
+                <span key={cat.id} className="px-4 py-2 rounded-full text-sm font-medium text-neutral-600">
+                  {cat.name}
+                </span>
+              ) : (
+                <Link
+                  key={cat.id}
+                  href={`${basePath}/categoria/${cat.slug}`}
+                  className="px-4 py-2 rounded-full text-sm font-medium text-neutral-600 hover:bg-neutral-100 transition-colors"
+                >
+                  {cat.name}
+                </Link>
+              ),
+            )}
           </nav>
 
           <div className="flex items-center gap-2">
@@ -95,18 +110,28 @@ export function StoreHeaderModern({ store, categories, accentColor = "#111827" }
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-neutral-100">
             <nav className="flex flex-col gap-1">
-              <Link href={basePath || "/"} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-neutral-100">
-                Todo
-              </Link>
-              {categories.map((cat) => (
-                <Link
-                  key={cat.id}
-                  href={`${basePath}/categoria/${cat.slug}`}
-                  className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-neutral-100"
-                >
-                  {cat.name}
+              {disableNav ? (
+                <span className="px-3 py-2 rounded-lg text-sm font-medium">Todo</span>
+              ) : (
+                <Link href={basePath || "/"} className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-neutral-100">
+                  Todo
                 </Link>
-              ))}
+              )}
+              {categories.map((cat) =>
+                disableNav ? (
+                  <span key={cat.id} className="px-3 py-2 rounded-lg text-sm font-medium">
+                    {cat.name}
+                  </span>
+                ) : (
+                  <Link
+                    key={cat.id}
+                    href={`${basePath}/categoria/${cat.slug}`}
+                    className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-neutral-100"
+                  >
+                    {cat.name}
+                  </Link>
+                ),
+              )}
             </nav>
           </div>
         )}

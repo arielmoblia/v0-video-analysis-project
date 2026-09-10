@@ -13,6 +13,7 @@ interface ProductGridModernProps {
   exchangeRate?: number
   country?: string | null
   accentColor?: string
+  disableNav?: boolean
 }
 
 const PRODUCT_FALLBACKS: Record<string, string[]> = {
@@ -41,7 +42,7 @@ function getProductFallbackImage(subdomain: string, index: number): string {
   return images[index % images.length]
 }
 
-export function ProductGridModern({ products, subdomain, exchangeRate = 0, country, accentColor = "#111827" }: ProductGridModernProps) {
+export function ProductGridModern({ products, subdomain, exchangeRate = 0, country, accentColor = "#111827", disableNav = false }: ProductGridModernProps) {
   const [basePath, setBasePath] = useState(`/tienda/${subdomain}`)
 
   useEffect(() => {
@@ -64,17 +65,29 @@ export function ProductGridModern({ products, subdomain, exchangeRate = 0, count
         return (
           <div key={product.id} className="bg-white rounded-2xl border border-neutral-100 overflow-hidden flex flex-col">
             <div className="aspect-square relative overflow-hidden bg-neutral-100">
-              <Link href={`${basePath}/producto/${product.slug}`}>
+              {disableNav ? (
                 <Image
                   src={productImage || "/images/placeholders/placeholder.svg"}
                   alt={product.name}
                   fill
-                  className="object-cover hover:scale-105 transition-transform duration-500"
+                  className="object-cover"
                   sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   loading="lazy"
                   quality={80}
                 />
-              </Link>
+              ) : (
+                <Link href={`${basePath}/producto/${product.slug}`}>
+                  <Image
+                    src={productImage || "/images/placeholders/placeholder.svg"}
+                    alt={product.name}
+                    fill
+                    className="object-cover hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    loading="lazy"
+                    quality={80}
+                  />
+                </Link>
+              )}
               {onSale && (
                 <span
                   className="absolute top-3 left-3 text-white text-xs font-bold px-2.5 py-1 rounded-full"
@@ -86,9 +99,13 @@ export function ProductGridModern({ products, subdomain, exchangeRate = 0, count
             </div>
 
             <div className="p-4 flex flex-col flex-1">
-              <Link href={`${basePath}/producto/${product.slug}`}>
+              {disableNav ? (
                 <h3 className="text-sm font-semibold text-neutral-900 mb-1 line-clamp-2">{product.name}</h3>
-              </Link>
+              ) : (
+                <Link href={`${basePath}/producto/${product.slug}`}>
+                  <h3 className="text-sm font-semibold text-neutral-900 mb-1 line-clamp-2">{product.name}</h3>
+                </Link>
+              )}
               <div className="flex items-center gap-2 mb-3">
                 {exchangeRate > 0 ? (
                   <span className="text-base font-bold text-neutral-900">{formatPrice(product.price * exchangeRate, country)}</span>
@@ -103,12 +120,18 @@ export function ProductGridModern({ products, subdomain, exchangeRate = 0, count
               </div>
               <div className="mt-auto">
                 {product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0 ? (
-                  <Link
-                    href={`${basePath}/producto/${product.slug}`}
-                    className="block w-full text-center py-2.5 rounded-full text-xs font-semibold border border-neutral-900 hover:bg-neutral-900 hover:text-white transition-colors"
-                  >
-                    Elegir talle
-                  </Link>
+                  disableNav ? (
+                    <span className="block w-full text-center py-2.5 rounded-full text-xs font-semibold border border-neutral-900">
+                      Elegir talle
+                    </span>
+                  ) : (
+                    <Link
+                      href={`${basePath}/producto/${product.slug}`}
+                      className="block w-full text-center py-2.5 rounded-full text-xs font-semibold border border-neutral-900 hover:bg-neutral-900 hover:text-white transition-colors"
+                    >
+                      Elegir talle
+                    </Link>
+                  )
                 ) : (
                   <AddToCartButton product={product} className="rounded-full" />
                 )}

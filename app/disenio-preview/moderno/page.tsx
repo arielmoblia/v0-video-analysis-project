@@ -104,13 +104,13 @@ export default function DisenioPreviewModernoPage() {
         <div className="bg-neutral-900 text-white text-center text-xs py-2 px-4">
           Propuesta de diseño "Moderno" — vista previa con datos de ejemplo, inspirada en storefront.saleor.io. No es una tienda real.
         </div>
-        <StoreHeaderModern store={MOCK_STORE} categories={MOCK_CATEGORIES} accentColor={ACCENT_COLOR} />
+        <StoreHeaderModern store={MOCK_STORE} categories={MOCK_CATEGORIES} accentColor={ACCENT_COLOR} disableNav />
         <main className="flex-1">
           <StoreHeroModern store={MOCK_STORE} accentColor={ACCENT_COLOR} />
-          <CategoryShowcaseModern categories={MOCK_CATEGORIES} subdomain={MOCK_STORE.subdomain} />
+          <CategoryShowcaseModern categories={MOCK_CATEGORIES} subdomain={MOCK_STORE.subdomain} disableNav />
           <section id="productos" className="container mx-auto px-6 py-14">
             <h2 className="text-2xl font-bold text-neutral-900 mb-6">Destacados</h2>
-            <ProductGridModern products={MOCK_PRODUCTS} subdomain={MOCK_STORE.subdomain} accentColor={ACCENT_COLOR} country="AR" />
+            <ProductGridModern products={MOCK_PRODUCTS} subdomain={MOCK_STORE.subdomain} accentColor={ACCENT_COLOR} country="AR" disableNav />
           </section>
         </main>
         <StoreFooter store={MOCK_STORE} />
