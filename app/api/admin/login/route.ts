@@ -7,6 +7,10 @@ export async function POST(request: NextRequest) {
   try {
     const { subdomain, username, password } = await request.json()
 
+    if (!subdomain || !username || !password) {
+      return NextResponse.json({ error: "Faltan datos" }, { status: 400 })
+    }
+
     const subdomainLower = subdomain.toLowerCase()
     
     // Rate limiting - prevenir fuerza bruta
