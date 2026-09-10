@@ -10,6 +10,7 @@ import { getStoreCategories } from "@/lib/store-context"
 import { StoreHeader } from "@/components/store/store-header"
 import { StoreFooter } from "@/components/store/store-footer"
 import { ProductSelector } from "@/components/store/product-selector"
+import { ProductEditable } from "@/components/store/product-editable"
 import { formatPriceNumber } from "@/lib/currency"
 
 export const revalidate = 0
@@ -187,7 +188,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
             Volver a la tienda
           </Link>
 
-          <ProductSelector product={product} subdomain={subdomain} hasMultiImages={hasMultiImages} exchangeRate={exchangeRate} template={store.template} country={store.country} canEdit={canEditProduct} storeId={store.id} />
+          {canEditProduct ? (
+            <ProductEditable product={product} subdomain={subdomain} hasMultiImages={hasMultiImages} exchangeRate={exchangeRate} template={store.template} country={store.country} storeId={store.id} />
+          ) : (
+            <ProductSelector product={product} subdomain={subdomain} hasMultiImages={hasMultiImages} exchangeRate={exchangeRate} template={store.template} country={store.country} />
+          )}
         </div>
       </main>
 

@@ -9,6 +9,7 @@ import { StoreFooter } from "@/components/store/store-footer"
 import { CartProvider } from "@/components/store/cart-provider"
 import { CartDrawer } from "@/components/store/cart-drawer"
 import { ProductSelector } from "@/components/store/product-selector"
+import { ProductEditable } from "@/components/store/product-editable"
 import { PageTracker } from "@/components/store/page-tracker"
 import { formatPriceNumber } from "@/lib/currency"
 
@@ -191,7 +192,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <StoreHeader store={store} categories={categories} hasMayoristaMinorista={hasMayoristaMinorista} />
         <main className="flex-1 py-12 px-6">
           <div className="container mx-auto max-w-6xl">
-            <ProductSelector product={product} subdomain={subdomain} hasMultiImages={hasMultiImages} template={store.template} country={store.country} canEdit={canEditProduct} storeId={store.id} />
+            {canEditProduct ? (
+              <ProductEditable product={product} subdomain={subdomain} hasMultiImages={hasMultiImages} template={store.template} country={store.country} storeId={store.id} />
+            ) : (
+              <ProductSelector product={product} subdomain={subdomain} hasMultiImages={hasMultiImages} template={store.template} country={store.country} />
+            )}
           </div>
         </main>
         <StoreFooter store={store} />

@@ -1,9 +1,8 @@
 "use client"
 
 import { useState, useMemo, useRef } from "react"
-import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { Check, ImagePlus, Loader2, Pencil } from "lucide-react"
+import { ImagePlus, Loader2, Pencil } from "lucide-react"
 import { seoClean } from "@/lib/utils"
 import { formatPrice as formatPriceForCountry } from "@/lib/currency"
 import { AddToCartButton } from "./add-to-cart-button"
@@ -26,6 +25,13 @@ interface Product {
   sizes?: SizeWithStock[]
 }
 
+interface EditedFields {
+  name: string
+  description: string
+  price: number
+  image_url: string
+}
+
 interface ProductSelectorProps {
   product: Product
   subdomain?: string
@@ -33,9 +39,17 @@ interface ProductSelectorProps {
   exchangeRate?: number
   template?: string
   country?: string | null
-  canEdit?: boolean
-  storeId?: string
   accentColor?: string
+  // Edición in-situ (temple Moderno, solo dueño): el estado de qué se guarda
+  // vive en el componente padre (mismo split que el editor del index:
+  // store-moderno-live.tsx dueño del estado, sub-componentes solo muestran/avisan
+  // cambios). Sin editMode, este componente se comporta igual que siempre.
+  editMode?: boolean
+  edited?: EditedFields
+  onChangeName?: (value: string) => void
+  onChangeDescription?: (value: string) => void
+  onChangePrice?: (value: number) => void
+  onChangeImage?: (url: string) => void
 }
 
 const categoryLabels: Record<string, string> = {
@@ -113,33 +127,35 @@ function looksLikeTalle(value: string): boolean {
   return false
 }
 
-export function ProductSelector({ product, subdomain, hasMultiImages = false, exchangeRate = 0, template, country, canEdit = false, storeId, accentColor = "#e8590c" }: ProductSelectorProps) {
+export function ProductSelector({
+  product,
+  hasMultiImages = false,
+  exchangeRate = 0,
+  template,
+  country,
+  accentColor = "#e8590c",
+  editMode = false,
+  edited,
+  onChangeName,
+  onChangeDescription,
+  onChangePrice,
+  onChangeImage,
+}: ProductSelectorProps) {
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null)
   const [selectedTalle, setSelectedTalle] = useState<string | null>(null)
   const [selectedColor, setSelectedColor] = useState<string | null>(null)
 
-  // Edición in-situ (solo dueño, temple Moderno): mismo mecanismo que el
-  // banner/categorías del index — lápices sobre foto/título/descripción/precio
-  // y guardado flotante, pegando contra el mismo endpoint que usa el panel.
-  const [editMode, setEditMode] = useState(false)
-  const initialEdited = {
+  const fields: EditedFields = edited || {
     name: product.name,
     description: product.description || "",
     price: product.price,
     image_url: product.image_url || "",
   }
-  const [edited, setEdited] = useState(initialEdited)
-  const [saved, setSaved] = useState(initialEdited)
+
   const [editingField, setEditingField] = useState<"name" | "description" | "price" | null>(null)
   const [hoverImage, setHoverImage] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [justSaved, setJustSaved] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const router = useRouter()
-
-  const dirty = JSON.stringify(edited) !== JSON.stringify(saved)
 
   const subirImagen = async (file: File) => {
     setUploading(true)
@@ -153,39 +169,9 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false, ex
         alert(data.error || "No se pudo subir la imagen")
         return
       }
-      setEdited((e) => ({ ...e, image_url: data.url }))
+      onChangeImage?.(data.url)
     } finally {
       setUploading(false)
-    }
-  }
-
-  const handleSave = async () => {
-    setSaving(true)
-    setSaveError(null)
-    try {
-      const res = await fetch("/api/admin/products", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: product.id, storeId, ...edited }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setSaveError(data.error || "No se pudo guardar")
-        return
-      }
-      setSaved(edited)
-      setJustSaved(true)
-      setTimeout(() => setJustSaved(false), 2000)
-      // Cambiar el nombre regenera el slug (misma lógica que ya usa el panel de
-      // productos) — si cambió, hay que llevar al dueño a la URL nueva o el
-      // link que está viendo se vuelve un 404 apenas recargue.
-      const pathParts = window.location.pathname.split("/")
-      if (data.product?.slug && data.product.slug !== pathParts[pathParts.length - 1]) {
-        pathParts[pathParts.length - 1] = data.product.slug
-        router.replace(pathParts.join("/"))
-      }
-    } finally {
-      setSaving(false)
     }
   }
 
@@ -193,8 +179,8 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false, ex
   const allImages: string[] = []
   if (product.images && product.images.length > 0) {
     allImages.push(...product.images)
-  } else if (edited.image_url) {
-    allImages.push(edited.image_url)
+  } else if (fields.image_url) {
+    allImages.push(fields.image_url)
   }
 
   // Si no hay imagenes, usar placeholder
@@ -284,7 +270,7 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false, ex
     ? (currentVariant?.size || null)
     : selectedVariant
 
-  const displayPrice = currentVariant?.price || edited.price
+  const displayPrice = currentVariant?.price || fields.price
   const hasSizes = sizes.length > 0
   const totalStock = hasSizes ? sizes.reduce((acc, s) => acc + (s.stock || 0), 0) : (product.stock || 0)
 
@@ -295,18 +281,6 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false, ex
 
   return (
     <div>
-      {canEdit && (
-        <div className="bg-neutral-900 text-white text-center text-xs py-2 px-4 mb-6 -mx-6 rounded-lg flex items-center justify-center gap-3 flex-wrap">
-          <span>Solo vos ves esto: sos el dueño de la tienda.</span>
-          <button
-            onClick={() => setEditMode((v) => !v)}
-            className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold"
-            style={{ backgroundColor: editMode ? accentColor : "rgba(255,255,255,0.15)" }}
-          >
-            <Pencil size={12} /> {editMode ? "Editando producto" : "Editar producto"}
-          </button>
-        </div>
-      )}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
       {/* Columna izquierda: Miniaturas + Imagen principal */}
       <div className="flex gap-4 self-start">
@@ -334,7 +308,7 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false, ex
             ))}
           </div>
         )}
-        
+
         {/* Imagen principal — sin recortar: se ajusta solo el ancho y el alto sigue
             la proporción real de la foto (nunca la fuerza a cuadrado) */}
         <div
@@ -345,16 +319,16 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false, ex
         >
           <Image
             src={allImages[selectedImage] || "/images/placeholders/placeholder.svg"}
-            alt={edited.name}
+            alt={fields.name}
             width={0}
             height={0}
             sizes="(max-width: 1023px) 100vw, 50vw"
             className="w-full h-auto"
             priority
           />
-          {product.compare_price && product.compare_price > edited.price && (
+          {product.compare_price && product.compare_price > fields.price && (
             <span className="absolute top-4 left-4 bg-red-500 text-white text-sm px-3 py-1 rounded">
-              {Math.round((1 - edited.price / product.compare_price) * 100)}% OFF
+              {Math.round((1 - fields.price / product.compare_price) * 100)}% OFF
             </span>
           )}
           {editMode && allImages.length === 1 && (
@@ -392,8 +366,8 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false, ex
         {editMode && editingField === "name" ? (
           <input
             autoFocus
-            value={edited.name}
-            onChange={(e) => setEdited((s) => ({ ...s, name: e.target.value }))}
+            value={fields.name}
+            onChange={(e) => onChangeName?.(e.target.value)}
             onBlur={() => setEditingField(null)}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setEditingField(null) } }}
             className="text-2xl md:text-3xl font-light mb-4 w-full bg-white border-2 rounded-lg p-2 outline-none"
@@ -407,7 +381,7 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false, ex
             onMouseEnter={(e) => { if (editMode) e.currentTarget.style.outline = `2px dashed ${accentColor}` }}
             onMouseLeave={(e) => { if (editMode) e.currentTarget.style.outline = "2px dashed transparent" }}
           >
-            {seoClean(edited.name)}
+            {seoClean(fields.name)}
             {editMode && <Pencil size={14} className="inline-block ml-2 align-middle opacity-50" />}
           </h1>
         )}
@@ -418,8 +392,8 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false, ex
             <input
               autoFocus
               type="number"
-              value={edited.price}
-              onChange={(e) => setEdited((s) => ({ ...s, price: Number(e.target.value) || 0 }))}
+              value={fields.price}
+              onChange={(e) => onChangePrice?.(Number(e.target.value) || 0)}
               onBlur={() => setEditingField(null)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setEditingField(null) } }}
               className="text-2xl md:text-3xl font-medium w-40 bg-white border-2 rounded-lg p-2 outline-none"
@@ -437,7 +411,7 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false, ex
               {editMode && <Pencil size={12} className="inline-block ml-2 align-middle opacity-50" />}
             </span>
           )}
-          {product.compare_price && product.compare_price > edited.price && (
+          {product.compare_price && product.compare_price > fields.price && (
             <span className="text-lg text-neutral-400 line-through">
               {formatPrice(product.compare_price)}
             </span>
@@ -448,14 +422,14 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false, ex
         {editMode && editingField === "description" ? (
           <textarea
             autoFocus
-            value={edited.description}
-            onChange={(e) => setEdited((s) => ({ ...s, description: e.target.value }))}
+            value={fields.description}
+            onChange={(e) => onChangeDescription?.(e.target.value)}
             onBlur={() => setEditingField(null)}
             rows={6}
             className="text-neutral-600 mb-8 w-full bg-white border-2 rounded-lg p-2 outline-none"
             style={{ borderColor: accentColor }}
           />
-        ) : (edited.description || editMode) && (
+        ) : (fields.description || editMode) && (
           <div
             onClick={() => editMode && setEditingField("description")}
             className="text-neutral-600 mb-8 leading-relaxed prose prose-sm max-w-none
@@ -467,8 +441,8 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false, ex
             onMouseEnter={(e) => { if (editMode) e.currentTarget.style.outline = `2px dashed ${accentColor}` }}
             onMouseLeave={(e) => { if (editMode) e.currentTarget.style.outline = "2px dashed transparent" }}
           >
-            {edited.description
-              ? <span dangerouslySetInnerHTML={{ __html: edited.description }} />
+            {fields.description
+              ? <span dangerouslySetInnerHTML={{ __html: fields.description }} />
               : <span className="text-neutral-400 italic">Sin descripción — click para agregar</span>}
             {editMode && <Pencil size={12} className="inline-block ml-2 align-middle opacity-50" />}
           </div>
@@ -645,28 +619,6 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false, ex
         </div>
       </div>
       </div>
-
-      {editMode && dirty && (
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105"
-          style={{ backgroundColor: accentColor }}
-        >
-          {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-          {saving ? "Guardando..." : "Guardar cambios"}
-        </button>
-      )}
-      {justSaved && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white bg-emerald-600 shadow-lg">
-          <Check size={16} /> Guardado
-        </div>
-      )}
-      {saveError && (
-        <div className="fixed bottom-20 right-6 z-50 flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white bg-red-600 shadow-lg">
-          {saveError}
-        </div>
-      )}
     </div>
   )
 }
