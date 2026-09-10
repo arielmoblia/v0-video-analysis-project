@@ -7,6 +7,12 @@ import { StoreHeader } from "@/components/store/store-header"
 import { StoreHero } from "@/components/store/store-hero"
 import { ProductGrid } from "@/components/store/product-grid"
 import { StoreFooter } from "@/components/store/store-footer"
+import { StoreHeaderModern } from "@/components/store/store-header-modern"
+import { StoreHeroModern } from "@/components/store/store-hero-modern"
+import { CategoryShowcaseModern } from "@/components/store/category-showcase-modern"
+import { ProductGridModern } from "@/components/store/product-grid-modern"
+
+const MODERNO_ACCENT = "#e8590c"
 
 export const revalidate = 0
 
@@ -77,7 +83,10 @@ export default async function StorePage({ params }: StorePageProps) {
   }
 
   const hasDolarPeso = await hasStoreFeature(store.id, 'dolar_peso')
-  const exchangeRate = hasDolarPeso ? (store.dolar_valor || 0) : 0
+  // La conversión por "dólar blue" es una feature paga pensada para tiendas
+  // argentinas; para tiendas de Chile se ignora y se muestra el precio
+  // cargado tal cual (en CLP), sin conversión.
+  const exchangeRate = hasDolarPeso && store.country !== "CL" ? (store.dolar_valor || 0) : 0
 
   const [products, categories, featuredProducts, hasMayoristaMinorista] = await Promise.all([
     getStoreProducts(store.id),
@@ -85,6 +94,59 @@ export default async function StorePage({ params }: StorePageProps) {
     getFeaturedProducts(store.id),
     hasStoreFeature(store.id, 'mayorista_minorista'),
   ])
+
+  // El temple "Moderno" solo reemplaza el index (header/hero/categorías/destacados).
+  // Todo lo demás —producto, categoría, checkout, carrito— sigue siendo el
+  // ecommerce estándar de tol.ar: los links de acá abajo van a esas mismas rutas.
+  const activeTheme = store.plan_features?.active_theme
+
+  if (activeTheme === "moderno") {
+    return (
+      <div className="min-h-screen flex flex-col bg-white">
+        <StoreHeaderModern store={store} categories={categories} accentColor={MODERNO_ACCENT} />
+        <main className="flex-1">
+          <StoreHeroModern store={store} accentColor={MODERNO_ACCENT} />
+          <CategoryShowcaseModern categories={categories} subdomain={subdomain} />
+
+          {featuredProducts.length > 0 && (
+            <section className="container mx-auto px-6 py-14">
+              <h2 className="text-2xl font-bold text-neutral-900 mb-6">Destacados</h2>
+              <ProductGridModern
+                products={featuredProducts}
+                subdomain={subdomain}
+                exchangeRate={exchangeRate}
+                country={store.country}
+                accentColor={MODERNO_ACCENT}
+              />
+            </section>
+          )}
+
+          <section id="productos" className="bg-neutral-50">
+            <div className="container mx-auto px-6 py-14">
+              <h2 className="text-2xl font-bold text-neutral-900 mb-6">Todos los productos</h2>
+              {products.length > 0 ? (
+                <ProductGridModern
+                  products={products}
+                  subdomain={subdomain}
+                  exchangeRate={exchangeRate}
+                  country={store.country}
+                  accentColor={MODERNO_ACCENT}
+                />
+              ) : (
+                <div className="text-center py-20">
+                  <p className="text-neutral-500 text-lg font-light">Esta tienda aún no tiene productos.</p>
+                  <p className="text-sm text-neutral-400 mt-3">
+                    El dueño puede agregar productos desde el panel de administración.
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+        </main>
+        <StoreFooter store={store} />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -99,7 +161,7 @@ export default async function StorePage({ params }: StorePageProps) {
                 <p className="text-xs tracking-[0.3em] uppercase text-neutral-500 mb-3">Lo mejor</p>
                 <h2 className="text-3xl font-light tracking-wide">Productos Destacados</h2>
               </div>
-              <ProductGrid products={featuredProducts} subdomain={subdomain} exchangeRate={exchangeRate} />
+              <ProductGrid products={featuredProducts} subdomain={subdomain} exchangeRate={exchangeRate} country={store.country} />
             </div>
           </section>
         )}
@@ -111,7 +173,7 @@ export default async function StorePage({ params }: StorePageProps) {
               <h2 className="text-3xl font-light tracking-wide">Todos los Productos</h2>
             </div>
             {products.length > 0 ? (
-              <ProductGrid products={products} subdomain={subdomain} exchangeRate={exchangeRate} />
+              <ProductGrid products={products} subdomain={subdomain} exchangeRate={exchangeRate} country={store.country} />
             ) : (
               <div className="text-center py-20">
                 <p className="text-neutral-500 text-lg font-light">Esta tienda aún no tiene productos.</p>

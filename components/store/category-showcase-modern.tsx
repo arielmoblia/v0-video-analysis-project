@@ -1,5 +1,8 @@
+"use client"
+
 import Link from "next/link"
 import Image from "next/image"
+import { useEffect, useState } from "react"
 import type { Category } from "@/lib/store-context"
 
 interface CategoryShowcaseModernProps {
@@ -17,6 +20,15 @@ const DEFAULT_IMAGES = [
 ]
 
 export function CategoryShowcaseModern({ categories, subdomain, images, disableNav = false }: CategoryShowcaseModernProps) {
+  const [basePath, setBasePath] = useState(`/tienda/${subdomain}`)
+
+  useEffect(() => {
+    const hostname = window.location.hostname
+    if (hostname.includes("tol.ar") && !hostname.startsWith("www.") && hostname !== "tol.ar") {
+      setBasePath("")
+    }
+  }, [])
+
   if (categories.length === 0) return null
 
   return (
@@ -49,7 +61,7 @@ export function CategoryShowcaseModern({ categories, subdomain, images, disableN
           return (
             <Link
               key={cat.id}
-              href={`/tienda/${subdomain}/categoria/${cat.slug}`}
+              href={`${basePath}/categoria/${cat.slug}`}
               className="group relative shrink-0 w-40 md:w-auto aspect-square rounded-2xl overflow-hidden"
             >
               {content}
