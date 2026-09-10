@@ -1,8 +1,11 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef } from "react"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
+import { Check, ImagePlus, Loader2, Pencil } from "lucide-react"
 import { seoClean } from "@/lib/utils"
+import { formatPrice as formatPriceForCountry } from "@/lib/currency"
 import { AddToCartButton } from "./add-to-cart-button"
 
 interface SizeWithStock {
@@ -29,6 +32,10 @@ interface ProductSelectorProps {
   hasMultiImages?: boolean
   exchangeRate?: number
   template?: string
+  country?: string | null
+  canEdit?: boolean
+  storeId?: string
+  accentColor?: string
 }
 
 const categoryLabels: Record<string, string> = {
@@ -106,17 +113,88 @@ function looksLikeTalle(value: string): boolean {
   return false
 }
 
-export function ProductSelector({ product, subdomain, hasMultiImages = false, exchangeRate = 0, template }: ProductSelectorProps) {
+export function ProductSelector({ product, subdomain, hasMultiImages = false, exchangeRate = 0, template, country, canEdit = false, storeId, accentColor = "#e8590c" }: ProductSelectorProps) {
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null)
   const [selectedTalle, setSelectedTalle] = useState<string | null>(null)
   const [selectedColor, setSelectedColor] = useState<string | null>(null)
+
+  // Edición in-situ (solo dueño, temple Moderno): mismo mecanismo que el
+  // banner/categorías del index — lápices sobre foto/título/descripción/precio
+  // y guardado flotante, pegando contra el mismo endpoint que usa el panel.
+  const [editMode, setEditMode] = useState(false)
+  const initialEdited = {
+    name: product.name,
+    description: product.description || "",
+    price: product.price,
+    image_url: product.image_url || "",
+  }
+  const [edited, setEdited] = useState(initialEdited)
+  const [saved, setSaved] = useState(initialEdited)
+  const [editingField, setEditingField] = useState<"name" | "description" | "price" | null>(null)
+  const [hoverImage, setHoverImage] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [justSaved, setJustSaved] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
+
+  const dirty = JSON.stringify(edited) !== JSON.stringify(saved)
+
+  const subirImagen = async (file: File) => {
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("type", "product")
+      const res = await fetch("/api/upload", { method: "POST", body: formData })
+      const data = await res.json()
+      if (!res.ok || !data.url) {
+        alert(data.error || "No se pudo subir la imagen")
+        return
+      }
+      setEdited((e) => ({ ...e, image_url: data.url }))
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    setSaveError(null)
+    try {
+      const res = await fetch("/api/admin/products", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: product.id, storeId, ...edited }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setSaveError(data.error || "No se pudo guardar")
+        return
+      }
+      setSaved(edited)
+      setJustSaved(true)
+      setTimeout(() => setJustSaved(false), 2000)
+      // Cambiar el nombre regenera el slug (misma lógica que ya usa el panel de
+      // productos) — si cambió, hay que llevar al dueño a la URL nueva o el
+      // link que está viendo se vuelve un 404 apenas recargue.
+      const pathParts = window.location.pathname.split("/")
+      if (data.product?.slug && data.product.slug !== pathParts[pathParts.length - 1]) {
+        pathParts[pathParts.length - 1] = data.product.slug
+        router.replace(pathParts.join("/"))
+      }
+    } finally {
+      setSaving(false)
+    }
+  }
 
   // Mostrar todas las imágenes del producto (imagen principal + secundarias)
   const allImages: string[] = []
   if (product.images && product.images.length > 0) {
     allImages.push(...product.images)
-  } else if (product.image_url) {
-    allImages.push(product.image_url)
+  } else if (edited.image_url) {
+    allImages.push(edited.image_url)
   }
 
   // Si no hay imagenes, usar placeholder
@@ -206,17 +284,30 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false, ex
     ? (currentVariant?.size || null)
     : selectedVariant
 
-  const displayPrice = currentVariant?.price || product.price
+  const displayPrice = currentVariant?.price || edited.price
   const hasSizes = sizes.length > 0
   const totalStock = hasSizes ? sizes.reduce((acc, s) => acc + (s.stock || 0), 0) : (product.stock || 0)
 
   const formatPrice = (price: number) => {
-    if (exchangeRate > 0) return `$${(price * exchangeRate).toLocaleString("es-AR", { maximumFractionDigits: 0 })}`
-    return `$${price.toLocaleString("es-AR")}`
+    if (exchangeRate > 0) return formatPriceForCountry(price * exchangeRate, country)
+    return formatPriceForCountry(price, country)
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+    <div>
+      {canEdit && (
+        <div className="bg-neutral-900 text-white text-center text-xs py-2 px-4 mb-6 -mx-6 rounded-lg flex items-center justify-center gap-3 flex-wrap">
+          <span>Solo vos ves esto: sos el dueño de la tienda.</span>
+          <button
+            onClick={() => setEditMode((v) => !v)}
+            className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold"
+            style={{ backgroundColor: editMode ? accentColor : "rgba(255,255,255,0.15)" }}
+          >
+            <Pencil size={12} /> {editMode ? "Editando producto" : "Editar producto"}
+          </button>
+        </div>
+      )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
       {/* Columna izquierda: Miniaturas + Imagen principal */}
       <div className="flex gap-4 self-start">
         {/* Miniaturas verticales */}
@@ -246,20 +337,46 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false, ex
         
         {/* Imagen principal — sin recortar: se ajusta solo el ancho y el alto sigue
             la proporción real de la foto (nunca la fuerza a cuadrado) */}
-        <div className="relative flex-1 bg-neutral-100 rounded-lg overflow-hidden">
+        <div
+          className="relative flex-1 bg-neutral-100 rounded-lg overflow-hidden"
+          onMouseEnter={() => setHoverImage(true)}
+          onMouseLeave={() => setHoverImage(false)}
+          style={editMode && allImages.length === 1 ? { outline: hoverImage ? `2px dashed ${accentColor}` : "2px dashed transparent", outlineOffset: "3px" } : undefined}
+        >
           <Image
             src={allImages[selectedImage] || "/images/placeholders/placeholder.svg"}
-            alt={product.name}
+            alt={edited.name}
             width={0}
             height={0}
             sizes="(max-width: 1023px) 100vw, 50vw"
             className="w-full h-auto"
             priority
           />
-          {product.compare_price && product.compare_price > product.price && (
+          {product.compare_price && product.compare_price > edited.price && (
             <span className="absolute top-4 left-4 bg-red-500 text-white text-sm px-3 py-1 rounded">
-              {Math.round((1 - product.price / product.compare_price) * 100)}% OFF
+              {Math.round((1 - edited.price / product.compare_price) * 100)}% OFF
             </span>
+          )}
+          {editMode && allImages.length === 1 && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) subirImagen(f) }}
+              />
+              {(hoverImage || uploading) && (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="absolute top-3 right-3 flex items-center justify-center gap-2 rounded-full text-white text-xs font-medium px-3 py-2 z-10"
+                  style={{ backgroundColor: accentColor }}
+                >
+                  {uploading ? <Loader2 size={14} className="animate-spin" /> : <><ImagePlus size={14} /> Cambiar foto</>}
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -271,14 +388,56 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false, ex
             {categoryLabels[template]}
           </p>
         )}
-        <h1 className="text-2xl md:text-3xl font-light mb-4">{seoClean(product.name)}</h1>
-        
+
+        {editMode && editingField === "name" ? (
+          <input
+            autoFocus
+            value={edited.name}
+            onChange={(e) => setEdited((s) => ({ ...s, name: e.target.value }))}
+            onBlur={() => setEditingField(null)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setEditingField(null) } }}
+            className="text-2xl md:text-3xl font-light mb-4 w-full bg-white border-2 rounded-lg p-2 outline-none"
+            style={{ borderColor: accentColor }}
+          />
+        ) : (
+          <h1
+            onClick={() => editMode && setEditingField("name")}
+            className="text-2xl md:text-3xl font-light mb-4"
+            style={editMode ? { cursor: "text", outline: "2px dashed transparent", outlineOffset: "4px", borderRadius: "6px" } : undefined}
+            onMouseEnter={(e) => { if (editMode) e.currentTarget.style.outline = `2px dashed ${accentColor}` }}
+            onMouseLeave={(e) => { if (editMode) e.currentTarget.style.outline = "2px dashed transparent" }}
+          >
+            {seoClean(edited.name)}
+            {editMode && <Pencil size={14} className="inline-block ml-2 align-middle opacity-50" />}
+          </h1>
+        )}
+
         {/* Precio */}
         <div className="flex items-center gap-3 mb-6">
-          <span className="text-2xl md:text-3xl font-medium">
-            {formatPrice(displayPrice)}
-          </span>
-          {product.compare_price && product.compare_price > product.price && (
+          {editMode && editingField === "price" ? (
+            <input
+              autoFocus
+              type="number"
+              value={edited.price}
+              onChange={(e) => setEdited((s) => ({ ...s, price: Number(e.target.value) || 0 }))}
+              onBlur={() => setEditingField(null)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setEditingField(null) } }}
+              className="text-2xl md:text-3xl font-medium w-40 bg-white border-2 rounded-lg p-2 outline-none"
+              style={{ borderColor: accentColor }}
+            />
+          ) : (
+            <span
+              onClick={() => editMode && setEditingField("price")}
+              className="text-2xl md:text-3xl font-medium"
+              style={editMode ? { cursor: "text", outline: "2px dashed transparent", outlineOffset: "4px", borderRadius: "6px" } : undefined}
+              onMouseEnter={(e) => { if (editMode) e.currentTarget.style.outline = `2px dashed ${accentColor}` }}
+              onMouseLeave={(e) => { if (editMode) e.currentTarget.style.outline = "2px dashed transparent" }}
+            >
+              {formatPrice(displayPrice)}
+              {editMode && <Pencil size={12} className="inline-block ml-2 align-middle opacity-50" />}
+            </span>
+          )}
+          {product.compare_price && product.compare_price > edited.price && (
             <span className="text-lg text-neutral-400 line-through">
               {formatPrice(product.compare_price)}
             </span>
@@ -286,15 +445,33 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false, ex
         </div>
 
         {/* Descripcion - soporta HTML para tablas de talles, etc */}
-        {product.description && (
+        {editMode && editingField === "description" ? (
+          <textarea
+            autoFocus
+            value={edited.description}
+            onChange={(e) => setEdited((s) => ({ ...s, description: e.target.value }))}
+            onBlur={() => setEditingField(null)}
+            rows={6}
+            className="text-neutral-600 mb-8 w-full bg-white border-2 rounded-lg p-2 outline-none"
+            style={{ borderColor: accentColor }}
+          />
+        ) : (edited.description || editMode) && (
           <div
+            onClick={() => editMode && setEditingField("description")}
             className="text-neutral-600 mb-8 leading-relaxed prose prose-sm max-w-none
               [&_table]:border-collapse [&_table]:w-auto [&_table]:text-sm
               [&_td]:border [&_td]:border-neutral-300 [&_td]:px-3 [&_td]:py-1
               [&_th]:border [&_th]:border-neutral-300 [&_th]:px-3 [&_th]:py-1 [&_th]:bg-neutral-100
               [&_p]:mb-2"
-            dangerouslySetInnerHTML={{ __html: product.description }}
-          />
+            style={editMode ? { cursor: "text", outline: "2px dashed transparent", outlineOffset: "4px", borderRadius: "6px" } : undefined}
+            onMouseEnter={(e) => { if (editMode) e.currentTarget.style.outline = `2px dashed ${accentColor}` }}
+            onMouseLeave={(e) => { if (editMode) e.currentTarget.style.outline = "2px dashed transparent" }}
+          >
+            {edited.description
+              ? <span dangerouslySetInnerHTML={{ __html: edited.description }} />
+              : <span className="text-neutral-400 italic">Sin descripción — click para agregar</span>}
+            {editMode && <Pencil size={12} className="inline-block ml-2 align-middle opacity-50" />}
+          </div>
         )}
 
         {/* Selectores de variantes */}
@@ -467,6 +644,29 @@ export function ProductSelector({ product, subdomain, hasMultiImages = false, ex
           />
         </div>
       </div>
+      </div>
+
+      {editMode && dirty && (
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105"
+          style={{ backgroundColor: accentColor }}
+        >
+          {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+          {saving ? "Guardando..." : "Guardar cambios"}
+        </button>
+      )}
+      {justSaved && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white bg-emerald-600 shadow-lg">
+          <Check size={16} /> Guardado
+        </div>
+      )}
+      {saveError && (
+        <div className="fixed bottom-20 right-6 z-50 flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white bg-red-600 shadow-lg">
+          {saveError}
+        </div>
+      )}
     </div>
   )
 }

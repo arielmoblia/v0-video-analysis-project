@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { cookies } from "next/headers"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
@@ -9,6 +10,7 @@ import { getStoreCategories } from "@/lib/store-context"
 import { StoreHeader } from "@/components/store/store-header"
 import { StoreFooter } from "@/components/store/store-footer"
 import { ProductSelector } from "@/components/store/product-selector"
+import { formatPriceNumber } from "@/lib/currency"
 
 interface ProductPageProps {
   params: Promise<{ subdomain: string; slug: string }>
@@ -22,7 +24,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   if (!product) return {}
 
   const storeName = store.site_title || subdomain
-  const priceFormatted = product.price.toLocaleString("es-AR")
+  const priceFormatted = formatPriceNumber(product.price, store.country)
 
   // Título: producto primero para keyword match; prefix de categoría para perfumes; sin emojis
   const titleSuffix = ` | ${storeName}`
@@ -100,7 +102,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound()
   }
 
-  const exchangeRate = hasDolarPeso ? (store.dolar_valor || 0) : 0
+  // La conversión por "dólar blue" es una feature paga pensada para tiendas
+  // argentinas (dolar_valor lo carga el dueño con la cotización blue AR/USD).
+  // Para tiendas de Chile no tiene sentido esa conversión, así que se ignora
+  // y se muestra el precio de la tienda tal cual está cargado (en CLP).
+  const exchangeRate = hasDolarPeso && store.country !== "CL" ? (store.dolar_valor || 0) : 0
+
+  const cookieStore = await cookies()
+  const isOwner = cookieStore.get(`admin_${subdomain.toLowerCase()}`)?.value === "true"
+  const canEditProduct = isOwner && store.plan_features?.active_theme === "moderno"
 
   // JSON-LD Product schema automatico
   const categoryMap: Record<string, string> = {
@@ -175,7 +185,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             Volver a la tienda
           </Link>
 
-          <ProductSelector product={product} subdomain={subdomain} hasMultiImages={hasMultiImages} exchangeRate={exchangeRate} template={store.template} />
+          <ProductSelector product={product} subdomain={subdomain} hasMultiImages={hasMultiImages} exchangeRate={exchangeRate} template={store.template} country={store.country} canEdit={canEditProduct} storeId={store.id} />
         </div>
       </main>
 

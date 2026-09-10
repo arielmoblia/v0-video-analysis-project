@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { headers } from "next/headers"
+import { headers, cookies } from "next/headers"
 import { notFound } from "next/navigation"
 import { seoClean, seoDesc } from "@/lib/utils"
 import { getStoreBySubdomain, getProductBySlug, getStoreCategories } from "@/lib/store-context"
@@ -10,6 +10,7 @@ import { CartProvider } from "@/components/store/cart-provider"
 import { CartDrawer } from "@/components/store/cart-drawer"
 import { ProductSelector } from "@/components/store/product-selector"
 import { PageTracker } from "@/components/store/page-tracker"
+import { formatPriceNumber } from "@/lib/currency"
 
 export const revalidate = 0
 
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!product) return {}
 
   const storeName = store.site_title || subdomain
-  const priceFormatted = product.price.toLocaleString("es-AR")
+  const priceFormatted = formatPriceNumber(product.price, store.country)
 
   // Título: producto primero para keyword match; prefix de categoría para perfumes; sin emojis
   const titleSuffix = ` | ${storeName}`
@@ -107,6 +108,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     notFound()
   }
 
+  const cookieStore = await cookies()
+  const isOwner = cookieStore.get(`admin_${subdomain.toLowerCase()}`)?.value === "true"
+  const canEditProduct = isOwner && store.plan_features?.active_theme === "moderno"
+
   // Categoria Google Merchant Center segun el template de la tienda
   const categoryMap: Record<string, string> = {
     zapatos: "Apparel & Accessories > Shoes",
@@ -176,7 +181,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   }
 
   return (
-    <CartProvider>
+    <CartProvider country={store.country}>
       <PageTracker storeId={store.id} />
       <script
         type="application/ld+json"
@@ -186,7 +191,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <StoreHeader store={store} categories={categories} hasMayoristaMinorista={hasMayoristaMinorista} />
         <main className="flex-1 py-12 px-6">
           <div className="container mx-auto max-w-6xl">
-            <ProductSelector product={product} subdomain={subdomain} hasMultiImages={hasMultiImages} template={store.template} />
+            <ProductSelector product={product} subdomain={subdomain} hasMultiImages={hasMultiImages} template={store.template} country={store.country} canEdit={canEditProduct} storeId={store.id} />
           </div>
         </main>
         <StoreFooter store={store} />
