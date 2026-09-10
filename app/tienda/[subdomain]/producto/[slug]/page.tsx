@@ -12,6 +12,8 @@ import { StoreFooter } from "@/components/store/store-footer"
 import { ProductSelector } from "@/components/store/product-selector"
 import { formatPriceNumber } from "@/lib/currency"
 
+export const revalidate = 0
+
 interface ProductPageProps {
   params: Promise<{ subdomain: string; slug: string }>
 }
