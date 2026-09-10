@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { cookies } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import { getStoreBySubdomain, getStoreProducts, getStoreCategories, getFeaturedProducts } from "@/lib/store-context"
 import { hasStoreFeature } from "@/lib/services/stores"
@@ -7,10 +8,7 @@ import { StoreHeader } from "@/components/store/store-header"
 import { StoreHero } from "@/components/store/store-hero"
 import { ProductGrid } from "@/components/store/product-grid"
 import { StoreFooter } from "@/components/store/store-footer"
-import { StoreHeaderModern } from "@/components/store/store-header-modern"
-import { StoreHeroModern } from "@/components/store/store-hero-modern"
-import { CategoryShowcaseModern } from "@/components/store/category-showcase-modern"
-import { ProductGridModern } from "@/components/store/product-grid-modern"
+import { StoreModernoLive } from "@/components/store/store-moderno-live"
 
 const MODERNO_ACCENT = "#e8590c"
 
@@ -101,50 +99,22 @@ export default async function StorePage({ params }: StorePageProps) {
   const activeTheme = store.plan_features?.active_theme
 
   if (activeTheme === "moderno") {
+    const cookieStore = await cookies()
+    const isOwner = cookieStore.get(`admin_${subdomain.toLowerCase()}`)?.value === "true"
+    const initialCategoryImages = store.plan_features?.category_images || {}
+
     return (
-      <div className="min-h-screen flex flex-col bg-white">
-        <StoreHeaderModern store={store} categories={categories} accentColor={MODERNO_ACCENT} />
-        <main className="flex-1">
-          <StoreHeroModern store={store} accentColor={MODERNO_ACCENT} />
-          <CategoryShowcaseModern categories={categories} subdomain={subdomain} />
-
-          {featuredProducts.length > 0 && (
-            <section className="container mx-auto px-6 py-14">
-              <h2 className="text-2xl font-bold text-neutral-900 mb-6">Destacados</h2>
-              <ProductGridModern
-                products={featuredProducts}
-                subdomain={subdomain}
-                exchangeRate={exchangeRate}
-                country={store.country}
-                accentColor={MODERNO_ACCENT}
-              />
-            </section>
-          )}
-
-          <section id="productos" className="bg-neutral-50">
-            <div className="container mx-auto px-6 py-14">
-              <h2 className="text-2xl font-bold text-neutral-900 mb-6">Todos los productos</h2>
-              {products.length > 0 ? (
-                <ProductGridModern
-                  products={products}
-                  subdomain={subdomain}
-                  exchangeRate={exchangeRate}
-                  country={store.country}
-                  accentColor={MODERNO_ACCENT}
-                />
-              ) : (
-                <div className="text-center py-20">
-                  <p className="text-neutral-500 text-lg font-light">Esta tienda aún no tiene productos.</p>
-                  <p className="text-sm text-neutral-400 mt-3">
-                    El dueño puede agregar productos desde el panel de administración.
-                  </p>
-                </div>
-              )}
-            </div>
-          </section>
-        </main>
-        <StoreFooter store={store} />
-      </div>
+      <StoreModernoLive
+        store={store}
+        categories={categories}
+        products={products}
+        featuredProducts={featuredProducts}
+        accentColor={MODERNO_ACCENT}
+        subdomain={subdomain}
+        exchangeRate={exchangeRate}
+        isOwner={isOwner}
+        initialCategoryImages={initialCategoryImages}
+      />
     )
   }
 

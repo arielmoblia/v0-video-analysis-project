@@ -1,6 +1,7 @@
 "use client"
 
-import { useRef, useState } from "react"
+import Link from "next/link"
+import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { ImagePlus, Loader2 } from "lucide-react"
 import type { Category } from "@/lib/store-context"
@@ -11,6 +12,7 @@ interface CategoryShowcaseModernEditableProps {
   editMode: boolean
   accentColor?: string
   onChangeImage: (slug: string, url: string) => void
+  subdomain?: string
 }
 
 const DEFAULT_IMAGES = [
@@ -29,7 +31,18 @@ export function CategoryShowcaseModernEditable({
   editMode,
   accentColor = "#111827",
   onChangeImage,
+  subdomain,
 }: CategoryShowcaseModernEditableProps) {
+  const [basePath, setBasePath] = useState(subdomain ? `/tienda/${subdomain}` : "")
+
+  useEffect(() => {
+    if (!subdomain) return
+    const hostname = window.location.hostname
+    if (hostname.includes("tol.ar") && !hostname.startsWith("www.") && hostname !== "tol.ar") {
+      setBasePath("")
+    }
+  }, [subdomain])
+
   if (categories.length === 0) return null
 
   return (
@@ -39,11 +52,13 @@ export function CategoryShowcaseModernEditable({
         {categories.slice(0, 8).map((cat, index) => (
           <CategoryTile
             key={cat.id}
+            slug={cat.slug}
             image={images[cat.slug] || DEFAULT_IMAGES[index % DEFAULT_IMAGES.length]}
             name={cat.name}
             editMode={editMode}
             accentColor={accentColor}
             onChangeImage={(url) => onChangeImage(cat.slug, url)}
+            href={subdomain ? `${basePath}/categoria/${cat.slug}` : undefined}
           />
         ))}
       </div>
@@ -52,17 +67,21 @@ export function CategoryShowcaseModernEditable({
 }
 
 function CategoryTile({
+  slug,
   image,
   name,
   editMode,
   accentColor,
   onChangeImage,
+  href,
 }: {
+  slug: string
   image: string
   name: string
   editMode: boolean
   accentColor: string
   onChangeImage: (url: string) => void
+  href?: string
 }) {
   const [hover, setHover] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -86,13 +105,8 @@ function CategoryTile({
     }
   }
 
-  return (
-    <div
-      className="relative shrink-0 w-40 md:w-auto aspect-square rounded-2xl overflow-hidden"
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={editMode ? { outline: hover ? `2px dashed ${accentColor}` : "2px dashed transparent", outlineOffset: "3px" } : undefined}
-    >
+  const content = (
+    <>
       <Image src={image} alt={name} fill className="object-cover" sizes="(max-width: 768px) 160px, 25vw" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent" />
       <span className="absolute bottom-3 left-3 text-white font-semibold">{name}</span>
@@ -111,7 +125,7 @@ function CategoryTile({
           />
           {(hover || uploading) && (
             <button
-              onClick={() => fileInputRef.current?.click()}
+              onClick={(e) => { e.preventDefault(); fileInputRef.current?.click() }}
               disabled={uploading}
               className="absolute top-2 right-2 flex items-center justify-center gap-1 rounded-full text-white text-[10px] font-medium px-2 py-1.5 z-10"
               style={{ backgroundColor: accentColor }}
@@ -121,6 +135,24 @@ function CategoryTile({
           )}
         </>
       )}
+    </>
+  )
+
+  const className = "relative shrink-0 w-40 md:w-auto aspect-square rounded-2xl overflow-hidden block"
+  const style = editMode ? { outline: hover ? `2px dashed ${accentColor}` : "2px dashed transparent", outlineOffset: "3px" } : undefined
+  const handlers = { onMouseEnter: () => setHover(true), onMouseLeave: () => setHover(false) }
+
+  if (href && !editMode) {
+    return (
+      <Link key={slug} href={href} className={`group ${className}`} style={style} {...handlers}>
+        {content}
+      </Link>
+    )
+  }
+
+  return (
+    <div key={slug} className={className} style={style} {...handlers}>
+      {content}
     </div>
   )
 }
