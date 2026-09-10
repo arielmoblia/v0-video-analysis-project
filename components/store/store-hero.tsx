@@ -48,12 +48,14 @@ export function StoreHero({ store }: StoreHeroProps) {
         <p className="text-sm tracking-[0.3em] uppercase mb-4 font-light">{bannerTitle}</p>
         <h1 className="text-5xl md:text-7xl font-light tracking-[0.1em] uppercase mb-6">{store.site_title}</h1>
         <p className="text-lg font-light tracking-wide max-w-xl mx-auto mb-8 opacity-90">{bannerSubtitle}</p>
-        <a
-          href="#productos"
-          className="inline-block border border-white px-10 py-4 text-sm tracking-[0.2em] uppercase hover:bg-white hover:text-black transition-all duration-300"
-        >
-          Ver Productos
-        </a>
+        {store.show_products_button !== false && (
+          <a
+            href="#productos"
+            className="inline-block border border-white px-10 py-4 text-sm tracking-[0.2em] uppercase hover:bg-white hover:text-black transition-all duration-300"
+          >
+            Ver Productos
+          </a>
+        )}
       </div>
     </section>
   )

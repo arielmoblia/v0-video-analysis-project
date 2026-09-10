@@ -38,6 +38,7 @@ export function StoreSettings({ store }: StoreSettingsProps) {
   const [bannerImage, setBannerImage] = useState(store.banner_image || "")
   const [bannerTitle, setBannerTitle] = useState(store.banner_title || "Bienvenido a")
   const [bannerSubtitle, setBannerSubtitle] = useState(store.banner_subtitle || "Descubre nuestra colección exclusiva")
+  const [showProductsButton, setShowProductsButton] = useState(store.show_products_button !== false)
 
   // Banda superior
   const [topBarEnabled, setTopBarEnabled] = useState(store.top_bar_enabled !== false)
@@ -132,6 +133,7 @@ export function StoreSettings({ store }: StoreSettingsProps) {
           banner_image: bannerImage,
           banner_title: bannerTitle,
           banner_subtitle: bannerSubtitle,
+          show_products_button: showProductsButton,
           top_bar_enabled: topBarEnabled,
           top_bar_text: topBarText,
           social_instagram: socialInstagram,
@@ -314,6 +316,14 @@ export function StoreSettings({ store }: StoreSettingsProps) {
               rows={2}
             />
             <p className="text-xs text-neutral-500 mt-1">Este texto aparece debajo del nombre de tu tienda</p>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Mostrar botón "Ver Productos"</Label>
+              <p className="text-xs text-neutral-500">El botón del banner que lleva directo a los productos</p>
+            </div>
+            <Switch checked={showProductsButton} onCheckedChange={setShowProductsButton} />
           </div>
         </CardContent>
       </Card>

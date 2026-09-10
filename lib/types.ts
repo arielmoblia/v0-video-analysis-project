@@ -11,6 +11,7 @@ export interface Store {
   template: string
   status: string
   email: string
+  country?: string | null
   plan?: string
   admin_password?: string
   banner_image?: string | null
@@ -18,6 +19,7 @@ export interface Store {
   banner_subtitle?: string | null
   top_bar_text?: string | null
   top_bar_enabled?: boolean
+  show_products_button?: boolean
   social_instagram?: string | null
   social_facebook?: string | null
   social_twitter?: string | null
