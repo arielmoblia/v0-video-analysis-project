@@ -89,6 +89,16 @@ const freeTemplates = [
 
 const premiumTemplates = [
   {
+    id: "premium-moderno",
+    name: "Moderno",
+    subtitle: "Inspirado en Saleor",
+    description: "Diseño moderno con grillas amplias y tarjetas redondeadas, ideal para marcas actuales.",
+    image: "/images/templates/moderno-saleor-store.jpg",
+    previewUrl: "/disenio-preview/moderno",
+    price: 2000,
+    comingSoon: false,
+  },
+  {
     id: "premium-luxury",
     name: "Luxury",
     subtitle: "Diseño premium",
@@ -144,9 +154,11 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
   const [siteTitle, setSiteTitle] = useState("")
   const [allowIndexing, setAllowIndexing] = useState("yes")
   const [selectedTemplate, setSelectedTemplate] = useState("")
+  const [selectedPremiumTemplate, setSelectedPremiumTemplate] = useState("")
   const [referralSource, setReferralSource] = useState("")
   const [isCreatingStore, setIsCreatingStore] = useState(false)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [country, setCountry] = useState("AR")
   
   // Validacion subdominio en tiempo real
   const [subdomainAvailable, setSubdomainAvailable] = useState<boolean | null>(null)
@@ -168,6 +180,14 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
       setReferralSource("")
       setIsCreatingStore(false)
       setAcceptedTerms(false)
+      setCountry("AR")
+
+      fetch("/api/detect-country")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.country) setCountry(data.country)
+        })
+        .catch(() => {})
     }
   }, [isOpen, preselectedTemplate])
 
@@ -255,7 +275,9 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
           subdomain,
           siteTitle: subdomain, // Usa el subdominio como título
           allowIndexing,
+          country,
           template: selectedTemplate,
+          premium_template: selectedPremiumTemplate || null,
           referral_source: referralSource,
           landing_visitor_id: typeof window !== "undefined" ? localStorage.getItem("visitor_id") : null,
         }),
@@ -296,18 +318,25 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
   const isEmailValid = email.includes("@") && email.includes(".")
   const isSubdomainValid = subdomain.length >= 4 && /^[a-zA-Z0-9]+$/.test(subdomain)
 
+  const getPlatformDomain = () => {
+    if (typeof window !== "undefined" && window.location.hostname.includes("tiendabasica.com")) {
+      return "tiendabasica.com"
+    }
+    return "tol.ar"
+  }
+
   const getTestStoreUrl = (sub: string) => {
     if (typeof window !== "undefined" && window.location.hostname === "localhost") {
       return `${window.location.origin}/tienda/${sub}`
     }
-    return `https://${sub}.tol.ar/`
+    return `https://${sub}.${getPlatformDomain()}/`
   }
 
   const getTestAdminUrl = (sub: string) => {
     if (typeof window !== "undefined" && window.location.hostname === "localhost") {
       return `${window.location.origin}/tienda/${sub}/admin`
     }
-    return `https://${sub}.tol.ar/admin`
+    return `https://${sub}.${getPlatformDomain()}/admin`
   }
 
   const getAutologinAdminUrl = (sub: string, token: string | null) => {
@@ -327,6 +356,23 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
             </div>
 
             <div className="space-y-4">
+              {/* País - abierto para cualquier dominio, se detecta por IP y el usuario puede corregirlo */}
+              <div className="space-y-2">
+                <Label htmlFor="country" className="text-gray-900 font-medium">País</Label>
+                <select
+                  id="country"
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="AR">Argentina</option>
+                  <option value="CL">Chile</option>
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  Lo detectamos automáticamente, corregilo si no es correcto
+                </p>
+              </div>
+
               {/* Nombre de la tienda */}
               <div className="space-y-2">
                 <Label htmlFor="subdomain" className="text-gray-900 font-medium">Nombre de la tienda</Label>
@@ -354,7 +400,7 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
                       </div>
                     )}
                   </div>
-                  <span className="text-sm text-muted-foreground font-medium">.tol.ar</span>
+                  <span className="text-sm text-muted-foreground font-medium">.{getPlatformDomain()}</span>
                 </div>
                 {subdomainAvailable === false && subdomain.length >= 4 && (
                   <p className="text-xs text-red-500 font-medium">
@@ -543,42 +589,95 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">
-                    Diseños exclusivos para destacar tu marca. Próximamente disponibles.
+                    Diseños exclusivos para destacar tu marca. El resto, próximamente disponibles.
                   </p>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {premiumTemplates.map((template) => (
-                      <div
-                        key={template.id}
-                        className="relative border-2 rounded-xl p-2 transition-all text-left border-border opacity-60 cursor-not-allowed"
-                      >
-                        <Badge className="absolute -top-2 -right-2 text-[10px] px-1.5 py-0.5 bg-amber-500">
-                          Pronto
-                        </Badge>
+                    {premiumTemplates.map((template) =>
+                      template.comingSoon ? (
+                        <div
+                          key={template.id}
+                          className="relative border-2 rounded-xl p-2 transition-all text-left border-border opacity-60 cursor-not-allowed"
+                        >
+                          <Badge className="absolute -top-2 -right-2 text-[10px] px-1.5 py-0.5 bg-amber-500">
+                            Pronto
+                          </Badge>
 
-<div className="relative h-16 rounded-lg overflow-hidden mb-2 bg-muted">
-                                          <Image
-                                            src={template.image || "/images/placeholders/placeholder.svg"}
-                                            alt={template.name}
-                                            fill
-                                            className="object-cover grayscale"
-                                            sizes="100px"
-                                            loading="lazy"
-                                          />
-                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                            <Lock className="h-4 w-4 text-white" />
+                          <div className="relative h-16 rounded-lg overflow-hidden mb-2 bg-muted">
+                            <Image
+                              src={template.image || "/images/placeholders/placeholder.svg"}
+                              alt={template.name}
+                              fill
+                              className="object-cover grayscale"
+                              sizes="100px"
+                              loading="lazy"
+                            />
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                              <Lock className="h-4 w-4 text-white" />
+                            </div>
                           </div>
-                        </div>
 
-                        <div className="flex items-center gap-1 mb-0.5">
-                          <div className="p-1 rounded bg-gradient-to-br from-amber-500 to-yellow-500">
-                            <Crown className="h-3 w-3 text-white" />
+                          <div className="flex items-center gap-1 mb-0.5">
+                            <div className="p-1 rounded bg-gradient-to-br from-amber-500 to-yellow-500">
+                              <Crown className="h-3 w-3 text-white" />
+                            </div>
+                            <span className="text-xs font-medium">{template.name}</span>
                           </div>
-                          <span className="text-xs font-medium">{template.name}</span>
+                          <p className="text-[9px] text-muted-foreground leading-tight">{template.subtitle}</p>
                         </div>
-                        <p className="text-[9px] text-muted-foreground leading-tight">{template.subtitle}</p>
-                      </div>
-                    ))}
+                      ) : (
+                        <div
+                          key={template.id}
+                          className={`relative border-2 rounded-xl p-2 transition-all text-left cursor-pointer ${
+                            selectedPremiumTemplate === template.id
+                              ? "border-amber-500 ring-2 ring-amber-200"
+                              : "border-border hover:border-amber-300"
+                          }`}
+                          onClick={() =>
+                            setSelectedPremiumTemplate(
+                              selectedPremiumTemplate === template.id ? "" : template.id,
+                            )
+                          }
+                        >
+                          {selectedPremiumTemplate === template.id && (
+                            <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center z-10">
+                              <Check className="h-3 w-3 text-white" />
+                            </div>
+                          )}
+
+                          <a
+                            href={template.previewUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative h-16 rounded-lg overflow-hidden mb-2 bg-muted group block"
+                          >
+                            <Image
+                              src={template.image || "/images/placeholders/placeholder.svg"}
+                              alt={template.name}
+                              fill
+                              className="object-cover object-top"
+                              sizes="100px"
+                              loading="lazy"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                              <span className="hidden group-hover:flex items-center gap-1 text-white text-[9px] font-medium">
+                                <Eye className="h-3 w-3" />
+                                Ver demo
+                              </span>
+                            </div>
+                          </a>
+
+                          <div className="flex items-center gap-1 mb-0.5">
+                            <div className="p-1 rounded bg-gradient-to-br from-amber-500 to-yellow-500">
+                              <Crown className="h-3 w-3 text-white" />
+                            </div>
+                            <span className="text-xs font-medium">{template.name}</span>
+                          </div>
+                          <p className="text-[9px] text-muted-foreground leading-tight">{template.subtitle}</p>
+                        </div>
+                      ),
+                    )}
                   </div>
                 </div>
               </div>
