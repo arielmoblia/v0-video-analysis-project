@@ -17,8 +17,6 @@ import {
   Shirt,
   Smartphone,
   Footprints,
-  Crown,
-  Lock,
   Palette,
   ExternalLink,
   Settings,
@@ -87,59 +85,6 @@ const freeTemplates = [
 
 
 
-const premiumTemplates = [
-  {
-    id: "premium-moderno",
-    name: "Moderno",
-    subtitle: "Inspirado en Saleor",
-    description: "Diseño moderno con grillas amplias y tarjetas redondeadas, ideal para marcas actuales.",
-    image: "/images/templates/moderno-saleor-store.jpg",
-    previewUrl: "/disenio-preview/moderno",
-    price: 2000,
-    comingSoon: false,
-  },
-  {
-    id: "premium-luxury",
-    name: "Luxury",
-    subtitle: "Diseño premium",
-    description: "Estilo elegante y sofisticado para marcas de alta gama.",
-    image: "/images/templates/luxury-elegant-store-dark-gold.jpg",
-    previewUrl: "#",
-    price: 2000,
-    comingSoon: true,
-  },
-  {
-    id: "premium-minimal",
-    name: "Minimal",
-    subtitle: "Diseño minimalista",
-    description: "Líneas limpias y espacios amplios para destacar tus productos.",
-    image: "/images/templates/minimal-clean-white-store-modern.jpg",
-    previewUrl: "#",
-    price: 2000,
-    comingSoon: true,
-  },
-  {
-    id: "premium-bold",
-    name: "Bold",
-    subtitle: "Diseño audaz",
-    description: "Colores vibrantes y tipografías impactantes para marcas jóvenes.",
-    image: "/images/templates/bold-colorful-vibrant-store-young.jpg",
-    previewUrl: "#",
-    price: 2000,
-    comingSoon: true,
-  },
-  {
-    id: "premium-vintage",
-    name: "Vintage",
-    subtitle: "Diseño retro",
-    description: "Estética clásica con toques nostálgicos para productos artesanales.",
-    image: "/images/templates/vintage-retro-store-classic-artisan.jpg",
-    previewUrl: "#",
-    price: 2000,
-    comingSoon: true,
-  },
-]
-
 export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModalProps) {
   const [step, setStep] = useState<Step>("user-info")
   const [progress, setProgress] = useState(0)
@@ -154,7 +99,6 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
   const [siteTitle, setSiteTitle] = useState("")
   const [allowIndexing, setAllowIndexing] = useState("yes")
   const [selectedTemplate, setSelectedTemplate] = useState("")
-  const [selectedPremiumTemplate, setSelectedPremiumTemplate] = useState("")
   const [referralSource, setReferralSource] = useState("")
   const [isCreatingStore, setIsCreatingStore] = useState(false)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
@@ -277,7 +221,6 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
           allowIndexing,
           country,
           template: selectedTemplate,
-          premium_template: selectedPremiumTemplate || null,
           referral_source: referralSource,
           landing_visitor_id: typeof window !== "undefined" ? localStorage.getItem("visitor_id") : null,
         }),
@@ -576,117 +519,7 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
                     <div className="flex items-center gap-2 mt-2 p-2 rounded-md bg-red-50 border border-red-200">
                       <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
                       <p className="text-sm text-red-700 font-medium">
-                        Elegí uno de estos 4 para poder crear tu tienda (es obligatorio, sin importar el diseño de abajo)
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Templates Premium */}
-                <div className="pt-4 border-t">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Crown className="h-4 w-4 text-amber-500" />
-                    <p className="font-medium">Diseños Premium</p>
-                    <Badge className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white text-[10px]">
-                      $2.000
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Diseños exclusivos para destacar tu marca. El resto, próximamente disponibles.
-                  </p>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {premiumTemplates.map((template) =>
-                      template.comingSoon ? (
-                        <div
-                          key={template.id}
-                          className="relative border-2 rounded-xl p-2 transition-all text-left border-border opacity-60 cursor-not-allowed"
-                        >
-                          <Badge className="absolute -top-2 -right-2 text-[10px] px-1.5 py-0.5 bg-amber-500">
-                            Pronto
-                          </Badge>
-
-                          <div className="relative h-16 rounded-lg overflow-hidden mb-2 bg-muted">
-                            <Image
-                              src={template.image || "/images/placeholders/placeholder.svg"}
-                              alt={template.name}
-                              fill
-                              className="object-cover grayscale"
-                              sizes="100px"
-                              loading="lazy"
-                            />
-                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                              <Lock className="h-4 w-4 text-white" />
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1 mb-0.5">
-                            <div className="p-1 rounded bg-gradient-to-br from-amber-500 to-yellow-500">
-                              <Crown className="h-3 w-3 text-white" />
-                            </div>
-                            <span className="text-xs font-medium">{template.name}</span>
-                          </div>
-                          <p className="text-[9px] text-muted-foreground leading-tight">{template.subtitle}</p>
-                        </div>
-                      ) : (
-                        <div
-                          key={template.id}
-                          className={`relative border-2 rounded-xl p-2 transition-all text-left cursor-pointer ${
-                            selectedPremiumTemplate === template.id
-                              ? "border-amber-500 ring-2 ring-amber-200"
-                              : "border-border hover:border-amber-300"
-                          }`}
-                          onClick={() =>
-                            setSelectedPremiumTemplate(
-                              selectedPremiumTemplate === template.id ? "" : template.id,
-                            )
-                          }
-                        >
-                          {selectedPremiumTemplate === template.id && (
-                            <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center z-10">
-                              <Check className="h-3 w-3 text-white" />
-                            </div>
-                          )}
-
-                          <a
-                            href={template.previewUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="relative h-16 rounded-lg overflow-hidden mb-2 bg-muted group block"
-                          >
-                            <Image
-                              src={template.image || "/images/placeholders/placeholder.svg"}
-                              alt={template.name}
-                              fill
-                              className="object-cover object-top"
-                              sizes="100px"
-                              loading="lazy"
-                            />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
-                              <span className="hidden group-hover:flex items-center gap-1 text-white text-[9px] font-medium">
-                                <Eye className="h-3 w-3" />
-                                Ver demo
-                              </span>
-                            </div>
-                          </a>
-
-                          <div className="flex items-center gap-1 mb-0.5">
-                            <div className="p-1 rounded bg-gradient-to-br from-amber-500 to-yellow-500">
-                              <Crown className="h-3 w-3 text-white" />
-                            </div>
-                            <span className="text-xs font-medium">{template.name}</span>
-                          </div>
-                          <p className="text-[9px] text-muted-foreground leading-tight">{template.subtitle}</p>
-                        </div>
-                      ),
-                    )}
-                  </div>
-                  {selectedPremiumTemplate && !selectedTemplate && (
-                    <div className="flex items-center gap-2 mt-3 p-2 rounded-md bg-red-50 border border-red-200">
-                      <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
-                      <p className="text-sm text-red-700 font-medium">
-                        Falta un paso: subí y elegí también un rubro arriba ↑ (esto solo elige el diseño, no alcanza)
+                        Elegí uno de estos 4 para poder crear tu tienda (es obligatorio)
                       </p>
                     </div>
                   )}

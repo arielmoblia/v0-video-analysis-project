@@ -41,6 +41,7 @@ export interface Store {
   source_url?: string | null
   markup_percent?: number
   is_dropship?: boolean
+  plan_features?: Record<string, any> | null
 }
 
 // ----- PRODUCTOS -----

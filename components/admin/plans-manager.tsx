@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Script from "next/script"
+import Image from "next/image"
 import {
   BarChart3,
   Video,
@@ -41,6 +42,9 @@ import {
   ShieldCheck,
   CheckCircle,
   Palette, // Import Palette
+  Crown,
+  Lock,
+  Eye,
 } from "lucide-react"
 import CustomVariantsManager from "./custom-variants-manager" // Import CustomVariantsManager
 
@@ -53,7 +57,56 @@ interface PlansManagerProps {
   initialCustomDomain?: string | null
   initialLinkedStoreUrl?: string | null
   initialLinkedStoreLabel?: string | null
+  initialActiveTheme?: string | null
 }
+
+const pageDesigns = [
+  {
+    id: "moderno",
+    name: "Moderno",
+    subtitle: "Inspirado en Saleor",
+    description: "Diseño moderno con grillas amplias y tarjetas redondeadas, ideal para marcas actuales.",
+    image: "/images/templates/moderno-saleor-store.jpg",
+    previewUrl: "/disenio-preview/moderno",
+    comingSoon: false,
+  },
+  {
+    id: "luxury",
+    name: "Luxury",
+    subtitle: "Diseño premium",
+    description: "Estilo elegante y sofisticado para marcas de alta gama.",
+    image: "/images/templates/luxury-elegant-store-dark-gold.jpg",
+    previewUrl: "#",
+    comingSoon: true,
+  },
+  {
+    id: "minimal",
+    name: "Minimal",
+    subtitle: "Diseño minimalista",
+    description: "Líneas limpias y espacios amplios para destacar tus productos.",
+    image: "/images/templates/minimal-clean-white-store-modern.jpg",
+    previewUrl: "#",
+    comingSoon: true,
+  },
+  {
+    id: "bold",
+    name: "Bold",
+    subtitle: "Diseño audaz",
+    description: "Colores vibrantes y tipografías impactantes para marcas jóvenes.",
+    image: "/images/templates/bold-colorful-vibrant-store-young.jpg",
+    previewUrl: "#",
+    comingSoon: true,
+  },
+  {
+    id: "vintage",
+    name: "Vintage",
+    subtitle: "Diseño retro",
+    description: "Estética clásica con toques nostálgicos para productos artesanales.",
+    image: "/images/templates/vintage-retro-store-classic-artisan.jpg",
+    previewUrl: "#",
+    comingSoon: true,
+  },
+]
 
 interface DbFeature {
   id: string
@@ -157,7 +210,7 @@ const LEER_MAS_URLS: Record<string, string> = {
 
 const getLeerMasUrl = (code: string) => LEER_MAS_URLS[code] || `${APP_URL}/cositas#${code}`
 
-export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel }: PlansManagerProps) {
+export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme }: PlansManagerProps) {
   const [activeTab, setActiveTab] = useState("cositas")
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
   const [purchasedFeatures, setPurchasedFeatures] = useState<string[]>([])
@@ -180,6 +233,8 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   const [linkedStoreLabel, setLinkedStoreLabel] = useState(initialLinkedStoreLabel || "")
   const [savingLinkedStore, setSavingLinkedStore] = useState(false)
   const [linkedStoreSaved, setLinkedStoreSaved] = useState(false)
+  const [activeTheme, setActiveTheme] = useState(initialActiveTheme || "")
+  const [savingTheme, setSavingTheme] = useState(false)
   const [videoUrl, setVideoUrl] = useState("")
   const [aiInstructions, setAiInstructions] = useState("")
   const [copied, setCopied] = useState(false)
@@ -244,6 +299,21 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       if (res.ok) setLinkedStoreSaved(true)
     } finally {
       setSavingLinkedStore(false)
+    }
+  }
+
+  const handleChooseTheme = async (themeId: string) => {
+    const next = activeTheme === themeId ? "" : themeId
+    setSavingTheme(true)
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId, active_theme: next || null }),
+      })
+      if (res.ok) setActiveTheme(next)
+    } finally {
+      setSavingTheme(false)
     }
   }
 
@@ -829,8 +899,9 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 w-full max-w-md">
+        <TabsList className="grid grid-cols-4 w-full max-w-xl">
           <TabsTrigger value="cositas">Plan Cositas</TabsTrigger>
+          <TabsTrigger value="modelos">Modelos</TabsTrigger>
           <TabsTrigger value="socio">Plan Socio</TabsTrigger>
           <TabsTrigger value="medida">Plan a Medida</TabsTrigger>
         </TabsList>
@@ -1168,6 +1239,105 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
               </Card>
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="modelos" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Palette className="w-5 h-5 text-violet-500" />
+                Modelos para tu primera página
+              </CardTitle>
+              <CardDescription>
+                Elegí el diseño de tu página principal (index). El resto del panel sigue igual, esto solo cambia cómo se ve la portada.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {pageDesigns.map((design) =>
+                  design.comingSoon ? (
+                    <div
+                      key={design.id}
+                      className="relative border-2 rounded-xl p-2 transition-all text-left border-border opacity-60 cursor-not-allowed"
+                    >
+                      <Badge className="absolute -top-2 -right-2 text-[10px] px-1.5 py-0.5 bg-amber-500">
+                        Pronto
+                      </Badge>
+                      <div className="relative h-20 rounded-lg overflow-hidden mb-2 bg-muted">
+                        <Image
+                          src={design.image || "/images/placeholders/placeholder.svg"}
+                          alt={design.name}
+                          fill
+                          className="object-cover grayscale"
+                          sizes="150px"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                          <Lock className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 mb-0.5">
+                        <Crown className="h-3 w-3 text-amber-500" />
+                        <span className="text-xs font-medium">{design.name}</span>
+                      </div>
+                      <p className="text-[9px] text-muted-foreground leading-tight">{design.subtitle}</p>
+                    </div>
+                  ) : (
+                    <div
+                      key={design.id}
+                      className={`relative border-2 rounded-xl p-2 transition-all text-left ${
+                        activeTheme === design.id ? "border-violet-500 ring-2 ring-violet-200" : "border-border hover:border-violet-300"
+                      }`}
+                    >
+                      {activeTheme === design.id && (
+                        <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center z-10">
+                          <Check className="h-3 w-3 text-white" />
+                        </div>
+                      )}
+                      <a
+                        href={design.previewUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="relative h-20 rounded-lg overflow-hidden mb-2 bg-muted group block"
+                      >
+                        <Image
+                          src={design.image || "/images/placeholders/placeholder.svg"}
+                          alt={design.name}
+                          fill
+                          className="object-cover object-top"
+                          sizes="150px"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                          <span className="hidden group-hover:flex items-center gap-1 text-white text-[10px] font-medium">
+                            <Eye className="h-3 w-3" />
+                            Ver demo
+                          </span>
+                        </div>
+                      </a>
+                      <p className="text-xs font-medium mb-0.5">{design.name}</p>
+                      <p className="text-[9px] text-muted-foreground leading-tight mb-2">{design.subtitle}</p>
+                      <button
+                        type="button"
+                        disabled={savingTheme}
+                        onClick={() => handleChooseTheme(design.id)}
+                        className={`w-full text-xs py-1.5 rounded-lg font-medium transition-colors ${
+                          activeTheme === design.id
+                            ? "bg-violet-100 text-violet-700"
+                            : "bg-violet-500 hover:bg-violet-600 text-white"
+                        }`}
+                      >
+                        {activeTheme === design.id ? "Elegido" : "Elegir"}
+                      </button>
+                    </div>
+                  ),
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-4">
+                Por ahora esto guarda tu preferencia de diseño. Todavía estamos conectando cada modelo a los productos y el carrito reales de tu tienda — te avisamos apenas "Moderno" quede funcionando 100% con tus datos.
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="socio" className="mt-6">

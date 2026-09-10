@@ -397,6 +397,7 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
                 initialCustomDomain={store.custom_domain}
                 initialLinkedStoreUrl={store.linked_store_url}
                 initialLinkedStoreLabel={store.linked_store_label}
+                initialActiveTheme={store.plan_features?.active_theme || null}
                 purchasedFeatures={purchasedFeatures}
                 onFeaturePurchased={(code) => setPurchasedFeatures([...purchasedFeatures, code])}
               />

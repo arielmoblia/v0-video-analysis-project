@@ -27,6 +27,7 @@ export async function PUT(request: NextRequest) {
       custom_domain,
       linked_store_url,
       linked_store_label,
+      active_theme,
     } = body
 
     if (!storeId) {
@@ -34,6 +35,18 @@ export async function PUT(request: NextRequest) {
     }
 
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+
+    // plan_features es un jsonb que ya usan otras cositas (ej. dropshipping);
+    // hay que leerlo y mergear para no pisar lo que ya tenga guardado.
+    let mergedPlanFeatures: Record<string, any> | undefined
+    if (active_theme !== undefined) {
+      const { data: currentStore } = await supabase
+        .from("stores")
+        .select("plan_features")
+        .eq("id", storeId)
+        .single()
+      mergedPlanFeatures = { ...(currentStore?.plan_features || {}), active_theme: active_theme || null }
+    }
 
     // Validar unicidad de subdominio si cambió
     if (subdomain) {
@@ -85,6 +98,7 @@ export async function PUT(request: NextRequest) {
         ...(custom_domain !== undefined && { custom_domain: custom_domain ? custom_domain.trim().toLowerCase() : null }),
         ...(linked_store_url !== undefined && { linked_store_url: linked_store_url ? linked_store_url.trim() : null }),
         ...(linked_store_label !== undefined && { linked_store_label: linked_store_label ? linked_store_label.trim() : null }),
+        ...(mergedPlanFeatures !== undefined && { plan_features: mergedPlanFeatures }),
       })
       .eq("id", storeId)
       .select()
