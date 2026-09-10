@@ -1,12 +1,6 @@
 import type { Metadata } from "next"
 import type { Store, Product, Category } from "@/lib/types"
-import { CartProvider } from "@/components/store/cart-provider"
-import { CartDrawer } from "@/components/store/cart-drawer"
-import { StoreHeaderModern } from "@/components/store/store-header-modern"
-import { StoreHeroModern } from "@/components/store/store-hero-modern"
-import { CategoryShowcaseModern } from "@/components/store/category-showcase-modern"
-import { ProductGridModern } from "@/components/store/product-grid-modern"
-import { StoreFooter } from "@/components/store/store-footer"
+import { ModernoPreviewClient } from "./preview-client"
 
 export const metadata: Metadata = {
   title: "Propuesta de diseño: Moderno — Vista previa",
@@ -99,23 +93,11 @@ const MOCK_PRODUCTS: Product[] = [
 
 export default function DisenioPreviewModernoPage() {
   return (
-    <CartProvider country="AR">
-      <div className="min-h-screen flex flex-col bg-white">
-        <div className="bg-neutral-900 text-white text-center text-xs py-2 px-4">
-          Propuesta de diseño "Moderno" — vista previa con datos de ejemplo, inspirada en storefront.saleor.io. No es una tienda real.
-        </div>
-        <StoreHeaderModern store={MOCK_STORE} categories={MOCK_CATEGORIES} accentColor={ACCENT_COLOR} disableNav />
-        <main className="flex-1">
-          <StoreHeroModern store={MOCK_STORE} accentColor={ACCENT_COLOR} />
-          <CategoryShowcaseModern categories={MOCK_CATEGORIES} subdomain={MOCK_STORE.subdomain} disableNav />
-          <section id="productos" className="container mx-auto px-6 py-14">
-            <h2 className="text-2xl font-bold text-neutral-900 mb-6">Destacados</h2>
-            <ProductGridModern products={MOCK_PRODUCTS} subdomain={MOCK_STORE.subdomain} accentColor={ACCENT_COLOR} country="AR" disableNav />
-          </section>
-        </main>
-        <StoreFooter store={MOCK_STORE} />
-        <CartDrawer />
-      </div>
-    </CartProvider>
+    <ModernoPreviewClient
+      store={MOCK_STORE}
+      categories={MOCK_CATEGORIES}
+      products={MOCK_PRODUCTS}
+      accentColor={ACCENT_COLOR}
+    />
   )
 }
