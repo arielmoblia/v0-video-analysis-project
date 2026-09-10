@@ -7,11 +7,12 @@ import { CartProvider } from "@/components/store/cart-provider"
 import { CartDrawer } from "@/components/store/cart-drawer"
 import { StoreHeaderModern } from "@/components/store/store-header-modern"
 import { StoreHeroModernEditable } from "@/components/store/store-hero-modern-editable"
-import { CategoryShowcaseModern } from "@/components/store/category-showcase-modern"
+import { CategoryShowcaseModernEditable } from "@/components/store/category-showcase-modern-editable"
 import { ProductGridModern } from "@/components/store/product-grid-modern"
 import { StoreFooter } from "@/components/store/store-footer"
 
 const STORAGE_KEY = "tol-disenio-preview-moderno-banner"
+const CATEGORIES_STORAGE_KEY = "tol-disenio-preview-moderno-categorias"
 
 interface PreviewClientProps {
   store: Store
@@ -30,6 +31,8 @@ export function ModernoPreviewClient({ store, categories, products, accentColor 
     banner_subtitle: store.banner_subtitle || "",
   })
   const [savedBanner, setSavedBanner] = useState(banner)
+  const [categoryImages, setCategoryImages] = useState<Record<string, string>>({})
+  const [savedCategoryImages, setSavedCategoryImages] = useState<Record<string, string>>({})
   const [editMode, setEditMode] = useState(false)
   const [saving, setSaving] = useState(false)
   const [justSaved, setJustSaved] = useState(false)
@@ -42,15 +45,25 @@ export function ModernoPreviewClient({ store, categories, products, accentColor 
         setBanner(stored)
         setSavedBanner(stored)
       }
+      const rawCats = localStorage.getItem(CATEGORIES_STORAGE_KEY)
+      if (rawCats) {
+        const storedCats = JSON.parse(rawCats)
+        setCategoryImages(storedCats)
+        setSavedCategoryImages(storedCats)
+      }
     } catch {}
   }, [])
 
-  const dirty = JSON.stringify(banner) !== JSON.stringify(savedBanner)
+  const dirty =
+    JSON.stringify(banner) !== JSON.stringify(savedBanner) ||
+    JSON.stringify(categoryImages) !== JSON.stringify(savedCategoryImages)
 
   const handleSave = async () => {
     setSaving(true)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(banner))
+    localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(categoryImages))
     setSavedBanner(banner)
+    setSavedCategoryImages(categoryImages)
     setSaving(false)
     setJustSaved(true)
     setTimeout(() => setJustSaved(false), 2000)
@@ -81,7 +94,13 @@ export function ModernoPreviewClient({ store, categories, products, accentColor 
             onChangeTitle={(value) => setBanner((b) => ({ ...b, banner_title: value }))}
             onChangeSubtitle={(value) => setBanner((b) => ({ ...b, banner_subtitle: value }))}
           />
-          <CategoryShowcaseModern categories={categories} subdomain={store.subdomain} disableNav />
+          <CategoryShowcaseModernEditable
+            categories={categories}
+            images={categoryImages}
+            editMode={editMode}
+            accentColor={accentColor}
+            onChangeImage={(slug, url) => setCategoryImages((c) => ({ ...c, [slug]: url }))}
+          />
           <section id="productos" className="container mx-auto px-6 py-14">
             <h2 className="text-2xl font-bold text-neutral-900 mb-6">Destacados</h2>
             <ProductGridModern products={products} subdomain={store.subdomain} accentColor={accentColor} country="AR" disableNav />
