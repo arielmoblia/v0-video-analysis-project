@@ -573,9 +573,12 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
                     ))}
                   </div>
                   {!selectedTemplate && (
-                    <p className="text-xs text-red-500 font-medium mt-2">
-                      Elegí un rubro para poder crear tu tienda
-                    </p>
+                    <div className="flex items-center gap-2 mt-2 p-2 rounded-md bg-red-50 border border-red-200">
+                      <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
+                      <p className="text-sm text-red-700 font-medium">
+                        Elegí uno de estos 4 para poder crear tu tienda (es obligatorio, sin importar el diseño de abajo)
+                      </p>
+                    </div>
                   )}
                 </div>
 
@@ -679,6 +682,14 @@ export function SignupModal({ isOpen, onClose, preselectedTemplate }: SignupModa
                       ),
                     )}
                   </div>
+                  {selectedPremiumTemplate && !selectedTemplate && (
+                    <div className="flex items-center gap-2 mt-3 p-2 rounded-md bg-red-50 border border-red-200">
+                      <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
+                      <p className="text-sm text-red-700 font-medium">
+                        Falta un paso: subí y elegí también un rubro arriba ↑ (esto solo elige el diseño, no alcanza)
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
