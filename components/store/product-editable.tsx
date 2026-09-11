@@ -98,10 +98,6 @@ export function ProductEditable({
 
   return (
     <div>
-      <div className="bg-neutral-900 text-white text-center text-xs py-2 px-4 mb-6 -mx-6 rounded-lg">
-        Solo vos ves esto: sos el dueño de la tienda.
-      </div>
-
       <ProductSelector
         product={productConEdicion}
         subdomain={subdomain}

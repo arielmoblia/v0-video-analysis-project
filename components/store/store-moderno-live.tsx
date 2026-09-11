@@ -80,18 +80,6 @@ export function StoreModernoLive({
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {isOwner && (
-        <div className="bg-neutral-900 text-white text-center text-xs py-2 px-4 flex items-center justify-center gap-3 flex-wrap">
-          <span>Solo vos ves esto: sos el dueño de la tienda.</span>
-          <button
-            onClick={() => setEditMode((v) => !v)}
-            className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold"
-            style={{ backgroundColor: editMode ? accentColor : "rgba(255,255,255,0.15)" }}
-          >
-            <Pencil size={12} /> {editMode ? "Editando diseño" : "Editar diseño"}
-          </button>
-        </div>
-      )}
       <StoreHeaderModern store={storeConEdicion} categories={categories} accentColor={accentColor} />
       <main className="flex-1">
         <StoreHeroModernEditable
@@ -148,20 +136,33 @@ export function StoreModernoLive({
       </main>
       <StoreFooter store={storeConEdicion} />
 
-      {editMode && dirty && (
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105"
-          style={{ backgroundColor: accentColor }}
-        >
-          {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-          {saving ? "Guardando..." : "Guardar cambios"}
-        </button>
-      )}
-      {justSaved && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white bg-emerald-600 shadow-lg">
-          <Check size={16} /> Guardado
+      {isOwner && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
+          <button
+            onClick={() => setEditMode((v) => !v)}
+            className="inline-flex items-center gap-1 rounded-full px-4 py-3 text-sm font-semibold text-white shadow-lg"
+            style={{ backgroundColor: editMode ? "rgba(23,23,23,0.85)" : accentColor }}
+          >
+            <Pencil size={14} /> {editMode ? "Editando diseño" : "Editar diseño"}
+          </button>
+
+          {editMode && dirty && !justSaved && (
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105"
+              style={{ backgroundColor: accentColor }}
+            >
+              {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+              {saving ? "Guardando..." : "Guardar cambios"}
+            </button>
+          )}
+
+          {justSaved && (
+            <div className="flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white bg-emerald-600 shadow-lg">
+              <Check size={16} /> Guardado
+            </div>
+          )}
         </div>
       )}
       {saveError && (
