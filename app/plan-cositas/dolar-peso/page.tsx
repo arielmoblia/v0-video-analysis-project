@@ -2,6 +2,7 @@ import { Metadata } from "next"
 import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import Link from "next/link"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Dólar / Peso — Precios en dólares, tus clientes ven pesos",
@@ -14,10 +15,22 @@ export const metadata: Metadata = {
   }
 }
 
-export default function DolarPesoPage() {
+async function getDolarBlueVenta(): Promise<number> {
+  try {
+    const res = await fetch("https://dolarapi.com/v1/dolares/blue", { next: { revalidate: 3600 } })
+    const data = await res.json()
+    if (data?.venta) return Math.round(data.venta)
+  } catch {}
+  return 1405
+}
+
+export default async function DolarPesoPage() {
+  const brand = await getBrand()
+  const dolarVenta = await getDolarBlueVenta()
+  const pesosDemo = (dolarVenta * 10).toLocaleString("es-AR")
   return (
     <div className="min-h-screen bg-white">
-      <Header />
+      <Header brand={brand} />
 
       {/* HERO */}
       <section className="py-16 md:py-24 text-center border-b border-slate-100">
@@ -79,7 +92,7 @@ export default function DolarPesoPage() {
             <div className="text-slate-300 text-3xl">→</div>
             <div className="flex-1 text-center bg-black rounded-xl p-6">
               <p className="text-sm text-slate-400 mb-2">Tu cliente ve</p>
-              <p className="text-4xl font-bold text-white">$14.050 ARS</p>
+              <p className="text-4xl font-bold text-white">${pesosDemo} ARS</p>
               <p className="text-xs text-slate-500 mt-2">actualizado hoy</p>
             </div>
           </div>
@@ -181,7 +194,7 @@ export default function DolarPesoPage() {
         </div>
       </section>
 
-      <Footer />
+      <Footer brand={brand} />
     </div>
   )
 }
