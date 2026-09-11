@@ -79,7 +79,8 @@ const pageDesigns = [
     name: "Elegante",
     subtitle: "Diseño premium",
     description: "Franja superior, categorías circulares y hero a todo el ancho, ideal para marcas premium.",
-    image: "/images/templates/elegante-premium-store.jpg",
+    image: "/images/templates/elegant-fashion-lifestyle-photography.jpg",
+    imagePosition: "object-center",
     previewUrl: "/disenio-preview/elegante",
     comingSoon: false,
   },
@@ -107,6 +108,7 @@ const pageDesigns = [
     subtitle: "Diseño audaz",
     description: "Colores vibrantes rosa y verde, tarjetas redondeadas y botones en pastilla, ideal para marcas jóvenes.",
     image: "/images/templates/bold-colorful-vibrant-store-young.jpg",
+    imagePosition: "object-center",
     previewUrl: "/disenio-preview/bold",
     comingSoon: false,
   },
@@ -1070,7 +1072,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                                 src={design.image || "/images/placeholders/placeholder.svg"}
                                                 alt={design.name}
                                                 fill
-                                                className="object-cover object-top"
+                                                className={`object-cover ${design.imagePosition || "object-top"}`}
                                                 sizes="150px"
                                                 loading="lazy"
                                               />
@@ -1478,7 +1480,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                           src={design.image || "/images/placeholders/placeholder.svg"}
                           alt={design.name}
                           fill
-                          className="object-cover object-top"
+                          className={`object-cover ${design.imagePosition || "object-top"}`}
                           sizes="150px"
                           loading="lazy"
                         />
