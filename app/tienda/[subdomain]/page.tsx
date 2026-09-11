@@ -11,11 +11,17 @@ import { StoreFooter } from "@/components/store/store-footer"
 import { StoreModernoLive } from "@/components/store/store-moderno-live"
 import { StoreEleganteLive } from "@/components/store/store-elegante-live"
 import { StoreBoldLive } from "@/components/store/store-bold-live"
+import { StoreBlinggLive } from "@/components/store/store-blingg-live"
+import { StoreArtesanoLive } from "@/components/store/store-artesano-live"
 
 const MODERNO_ACCENT = "#e8590c"
 const ELEGANTE_ACCENT = "#f7791e"
 const BOLD_ACCENT = "#ec4899"
 const BOLD_ACCENT_2 = "#22c55e"
+const BLINGG_ACCENT = "#6EC1E4"
+const BLINGG_ACCENT_2 = "#61CE70"
+const ARTESANO_ACCENT = "#C19A83"
+const ARTESANO_ACCENT_2 = "#4A3427"
 
 export const revalidate = 0
 
@@ -157,6 +163,48 @@ export default async function StorePage({ params }: StorePageProps) {
         featuredProducts={featuredProducts}
         accentColor={BOLD_ACCENT}
         accentColor2={BOLD_ACCENT_2}
+        subdomain={subdomain}
+        exchangeRate={exchangeRate}
+        isOwner={isOwner}
+        initialCategoryImages={initialCategoryImages}
+      />
+    )
+  }
+
+  if (activeTheme === "blingg") {
+    const cookieStore = await cookies()
+    const isOwner = cookieStore.get(`admin_${subdomain.toLowerCase()}`)?.value === "true"
+    const initialCategoryImages = store.plan_features?.category_images || {}
+
+    return (
+      <StoreBlinggLive
+        store={store}
+        categories={categories}
+        products={products}
+        featuredProducts={featuredProducts}
+        accentColor={BLINGG_ACCENT}
+        accentColor2={BLINGG_ACCENT_2}
+        subdomain={subdomain}
+        exchangeRate={exchangeRate}
+        isOwner={isOwner}
+        initialCategoryImages={initialCategoryImages}
+      />
+    )
+  }
+
+  if (activeTheme === "artesano") {
+    const cookieStore = await cookies()
+    const isOwner = cookieStore.get(`admin_${subdomain.toLowerCase()}`)?.value === "true"
+    const initialCategoryImages = store.plan_features?.category_images || {}
+
+    return (
+      <StoreArtesanoLive
+        store={store}
+        categories={categories}
+        products={products}
+        featuredProducts={featuredProducts}
+        accentColor={ARTESANO_ACCENT}
+        accentColor2={ARTESANO_ACCENT_2}
         subdomain={subdomain}
         exchangeRate={exchangeRate}
         isOwner={isOwner}
