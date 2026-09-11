@@ -1,6 +1,6 @@
 "use client"
 
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import { Minus, Plus, X, ShoppingBag } from "lucide-react"
 import { useCart } from "./cart-provider"
 import Image from "next/image"
@@ -47,7 +47,8 @@ export function CartDrawer() {
       <SheetContent className="w-full sm:max-w-md flex flex-col p-0 bg-white">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b">
-          <h2 className="text-xs tracking-[0.2em] uppercase">Carrito</h2>
+          <SheetTitle className="text-xs tracking-[0.2em] uppercase">Carrito</SheetTitle>
+          <SheetDescription className="sr-only">Productos agregados a tu carrito de compras</SheetDescription>
         </div>
 
         {items.length === 0 ? (
