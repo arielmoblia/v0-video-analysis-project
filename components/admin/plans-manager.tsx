@@ -49,6 +49,7 @@ import {
   ChevronUp,
 } from "lucide-react"
 import CustomVariantsManager from "./custom-variants-manager" // Import CustomVariantsManager
+import { DolarManager } from "./dolar-manager"
 
 const PAYPAL_CLIENT_ID = "ASYvylVa8L7Qf57IKodIEIYd6BalypfW9TGuFkanCnaCR55rP-B-XRemN1FcVLcx0Aii2DIKDtr68RSA"
 
@@ -1107,6 +1108,11 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                     </div>
                                   </div>
                                 )}
+                                {expandedFeatures.has(feature.code) && feature.code === "dolar_peso" && (
+                                  <div className="px-4 pb-4 pt-1">
+                                    <DolarManager storeId={storeId} />
+                                  </div>
+                                )}
                                 {expandedFeatures.has(feature.code) && feature.code === "mayorista_minorista" && (
                                   <div className="px-4 pb-4 pt-1 space-y-3">
                                     <div>
@@ -1146,7 +1152,8 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                 )}
                                 {expandedFeatures.has(feature.code) &&
                                   feature.code !== "modelos_templates" &&
-                                  feature.code !== "mayorista_minorista" && (
+                                  feature.code !== "mayorista_minorista" &&
+                                  feature.code !== "dolar_peso" && (
                                     <div className="px-4 pb-4 pt-1">
                                       <p className="text-xs text-green-700">{feature.description}</p>
                                     </div>
