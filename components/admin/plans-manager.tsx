@@ -248,6 +248,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   const [linkedStoreSaved, setLinkedStoreSaved] = useState(false)
   const [activeTheme, setActiveTheme] = useState(initialActiveTheme || "")
   const [savingTheme, setSavingTheme] = useState(false)
+  const [previewDesign, setPreviewDesign] = useState<(typeof pageDesigns)[number] | null>(null)
   const [videoUrl, setVideoUrl] = useState("")
   const [aiInstructions, setAiInstructions] = useState("")
   const [copied, setCopied] = useState(false)
@@ -1306,11 +1307,10 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                           <Check className="h-3 w-3 text-white" />
                         </div>
                       )}
-                      <a
-                        href={design.previewUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="relative h-20 rounded-lg overflow-hidden mb-2 bg-muted group block"
+                      <button
+                        type="button"
+                        onClick={() => setPreviewDesign(design)}
+                        className="relative h-20 w-full rounded-lg overflow-hidden mb-2 bg-muted group block"
                       >
                         <Image
                           src={design.image || "/images/placeholders/placeholder.svg"}
@@ -1326,7 +1326,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                             Ver demo
                           </span>
                         </div>
-                      </a>
+                      </button>
                       <p className="text-xs font-medium mb-0.5">{design.name}</p>
                       <p className="text-[9px] text-muted-foreground leading-tight mb-2">{design.subtitle}</p>
                       <button
@@ -1450,6 +1450,23 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
             <DialogDescription>{currentConfig?.configDescription}</DialogDescription>
           </DialogHeader>
           {renderConfigContent()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview grande del modelo */}
+      <Dialog open={!!previewDesign} onOpenChange={(open) => !open && setPreviewDesign(null)}>
+        <DialogContent className="max-w-[800px] p-0 overflow-hidden">
+          <DialogHeader className="p-4 pb-0">
+            <DialogTitle>{previewDesign?.name}</DialogTitle>
+            <DialogDescription>{previewDesign?.description}</DialogDescription>
+          </DialogHeader>
+          {previewDesign && (
+            <iframe
+              src={previewDesign.previewUrl}
+              title={previewDesign.name}
+              className="w-full h-[70vh] border-0"
+            />
+          )}
         </DialogContent>
       </Dialog>
     {trialModal && (

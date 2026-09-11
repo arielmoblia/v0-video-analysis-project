@@ -183,6 +183,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api') ||
     pathname.startsWith('/favicon') ||
     pathname.startsWith('/public') ||
+    pathname.startsWith('/disenio-preview') ||
     pathname.includes('.')
   ) {
     return NextResponse.next()
