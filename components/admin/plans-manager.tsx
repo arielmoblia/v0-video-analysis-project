@@ -105,10 +105,10 @@ const pageDesigns = [
     id: "bold",
     name: "Bold",
     subtitle: "Diseño audaz",
-    description: "Colores vibrantes y tipografías impactantes para marcas jóvenes.",
+    description: "Colores vibrantes rosa y verde, tarjetas redondeadas y botones en pastilla, ideal para marcas jóvenes.",
     image: "/images/templates/bold-colorful-vibrant-store-young.jpg",
-    previewUrl: "#",
-    comingSoon: true,
+    previewUrl: "/disenio-preview/bold",
+    comingSoon: false,
   },
   {
     id: "vintage",

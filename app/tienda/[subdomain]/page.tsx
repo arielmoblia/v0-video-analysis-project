@@ -9,8 +9,13 @@ import { StoreHero } from "@/components/store/store-hero"
 import { ProductGrid } from "@/components/store/product-grid"
 import { StoreFooter } from "@/components/store/store-footer"
 import { StoreModernoLive } from "@/components/store/store-moderno-live"
+import { StoreEleganteLive } from "@/components/store/store-elegante-live"
+import { StoreBoldLive } from "@/components/store/store-bold-live"
 
 const MODERNO_ACCENT = "#e8590c"
+const ELEGANTE_ACCENT = "#f7791e"
+const BOLD_ACCENT = "#ec4899"
+const BOLD_ACCENT_2 = "#22c55e"
 
 export const revalidate = 0
 
@@ -93,9 +98,10 @@ export default async function StorePage({ params }: StorePageProps) {
     hasStoreFeature(store.id, 'mayorista_minorista'),
   ])
 
-  // El temple "Moderno" solo reemplaza el index (header/hero/categorías/destacados).
-  // Todo lo demás —producto, categoría, checkout, carrito— sigue siendo el
-  // ecommerce estándar de tol.ar: los links de acá abajo van a esas mismas rutas.
+  // Los temples "Moderno" y "Elegante" solo reemplazan el index (header/hero/
+  // categorías/destacados). Todo lo demás —producto, categoría, checkout,
+  // carrito— sigue siendo el ecommerce estándar de tol.ar: los links de acá
+  // abajo van a esas mismas rutas.
   const activeTheme = store.plan_features?.active_theme
 
   if (activeTheme === "moderno") {
@@ -110,6 +116,47 @@ export default async function StorePage({ params }: StorePageProps) {
         products={products}
         featuredProducts={featuredProducts}
         accentColor={MODERNO_ACCENT}
+        subdomain={subdomain}
+        exchangeRate={exchangeRate}
+        isOwner={isOwner}
+        initialCategoryImages={initialCategoryImages}
+      />
+    )
+  }
+
+  if (activeTheme === "elegante") {
+    const cookieStore = await cookies()
+    const isOwner = cookieStore.get(`admin_${subdomain.toLowerCase()}`)?.value === "true"
+    const initialCategoryImages = store.plan_features?.category_images || {}
+
+    return (
+      <StoreEleganteLive
+        store={store}
+        categories={categories}
+        products={products}
+        featuredProducts={featuredProducts}
+        accentColor={ELEGANTE_ACCENT}
+        subdomain={subdomain}
+        exchangeRate={exchangeRate}
+        isOwner={isOwner}
+        initialCategoryImages={initialCategoryImages}
+      />
+    )
+  }
+
+  if (activeTheme === "bold") {
+    const cookieStore = await cookies()
+    const isOwner = cookieStore.get(`admin_${subdomain.toLowerCase()}`)?.value === "true"
+    const initialCategoryImages = store.plan_features?.category_images || {}
+
+    return (
+      <StoreBoldLive
+        store={store}
+        categories={categories}
+        products={products}
+        featuredProducts={featuredProducts}
+        accentColor={BOLD_ACCENT}
+        accentColor2={BOLD_ACCENT_2}
         subdomain={subdomain}
         exchangeRate={exchangeRate}
         isOwner={isOwner}
