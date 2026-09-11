@@ -15,18 +15,40 @@ export const metadata: Metadata = {
   }
 }
 
-async function getDolarBlueVenta(): Promise<number> {
+type DolarCotizacion = { key: string; precio: number; rec: boolean; desc: string }
+
+const DOLAR_FALLBACK: DolarCotizacion[] = [
+  { key: "Blue", precio: 1405, rec: true, desc: "El más usado para fijar precios en negocios reales. Refleja la realidad económica del argentino común." },
+  { key: "Bolsa (MEP)", precio: 1426, rec: false, desc: "Legal y muy usado por empresas. Se opera a través de la bolsa." },
+  { key: "CCL", precio: 1485, rec: false, desc: "Similar al MEP pero involucra bonos en el exterior. Suele ser un poco más caro." },
+  { key: "Oficial", precio: 1395, rec: false, desc: "El del Banco Nación. El más bajo de todos." },
+]
+
+async function getDolarCotizaciones(): Promise<DolarCotizacion[]> {
   try {
-    const res = await fetch("https://dolarapi.com/v1/dolares/blue", { next: { revalidate: 3600 } })
+    const res = await fetch("https://dolarapi.com/v1/dolares", { next: { revalidate: 3600 } })
     const data = await res.json()
-    if (data?.venta) return Math.round(data.venta)
-  } catch {}
-  return 1405
+    const porCasa = (casa: string) => data.find((d: any) => d.casa === casa)?.venta
+    const blue = porCasa("blue")
+    const bolsa = porCasa("bolsa")
+    const ccl = porCasa("contadoconliqui")
+    const oficial = porCasa("oficial")
+    if (![blue, bolsa, ccl, oficial].every((v) => typeof v === "number")) return DOLAR_FALLBACK
+    return [
+      { key: "Blue", precio: Math.round(blue), rec: true, desc: "El más usado para fijar precios en negocios reales. Refleja la realidad económica del argentino común." },
+      { key: "Bolsa (MEP)", precio: Math.round(bolsa), rec: false, desc: "Legal y muy usado por empresas. Se opera a través de la bolsa." },
+      { key: "CCL", precio: Math.round(ccl), rec: false, desc: "Similar al MEP pero involucra bonos en el exterior. Suele ser un poco más caro." },
+      { key: "Oficial", precio: Math.round(oficial), rec: false, desc: "El del Banco Nación. El más bajo de todos." },
+    ]
+  } catch {
+    return DOLAR_FALLBACK
+  }
 }
 
 export default async function DolarPesoPage() {
   const brand = await getBrand()
-  const dolarVenta = await getDolarBlueVenta()
+  const cotizaciones = await getDolarCotizaciones()
+  const dolarVenta = cotizaciones.find((c) => c.key === "Blue")?.precio ?? 1405
   const pesosDemo = (dolarVenta * 10).toLocaleString("es-AR")
   return (
     <div className="min-h-screen bg-white">
@@ -123,12 +145,7 @@ export default async function DolarPesoPage() {
           <h2 className="text-3xl font-bold text-slate-900 mb-3">Elegís con qué dólar trabajar</h2>
           <p className="text-slate-500 mb-8">No todos los negocios son iguales. Vos sabés mejor que nadie cuál dólar refleja tu realidad.</p>
           <div className="space-y-3">
-            {[
-              { key: "Blue", precio: "$1.405", rec: true, desc: "El más usado para fijar precios en negocios reales. Refleja la realidad económica del argentino común." },
-              { key: "Bolsa (MEP)", precio: "$1.426", rec: false, desc: "Legal y muy usado por empresas. Se opera a través de la bolsa." },
-              { key: "CCL", precio: "$1.485", rec: false, desc: "Similar al MEP pero involucra bonos en el exterior. Suele ser un poco más caro." },
-              { key: "Oficial", precio: "$1.395", rec: false, desc: "El del Banco Nación. El más bajo de todos." },
-            ].map((d, i) => (
+            {cotizaciones.map((d, i) => (
               <div key={i} className={`flex items-center justify-between rounded-xl px-5 py-4 ${d.rec ? "bg-black text-white" : "bg-white border border-slate-100"}`}>
                 <div>
                   <div className="flex items-center gap-2">
@@ -137,11 +154,11 @@ export default async function DolarPesoPage() {
                   </div>
                   <p className={`text-sm mt-0.5 ${d.rec ? "text-slate-400" : "text-slate-400"}`}>{d.desc}</p>
                 </div>
-                <span className={`text-xl font-bold ml-4 whitespace-nowrap ${d.rec ? "text-white" : "text-slate-700"}`}>{d.precio}</span>
+                <span className={`text-xl font-bold ml-4 whitespace-nowrap ${d.rec ? "text-white" : "text-slate-700"}`}>${d.precio.toLocaleString("es-AR")}</span>
               </div>
             ))}
           </div>
-          <p className="text-xs text-slate-400 mt-4 text-right">Fuente: dolarapi.com · cotizaciones de ejemplo</p>
+          <p className="text-xs text-slate-400 mt-4 text-right">Fuente: dolarapi.com · cotización del día</p>
         </div>
       </section>
 
