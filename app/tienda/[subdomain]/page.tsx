@@ -13,6 +13,9 @@ import { StoreEleganteLive } from "@/components/store/store-elegante-live"
 import { StoreBoldLive } from "@/components/store/store-bold-live"
 import { StoreBlinggLive } from "@/components/store/store-blingg-live"
 import { StoreArtesanoLive } from "@/components/store/store-artesano-live"
+import { StoreLuxuryLive } from "@/components/store/store-luxury-live"
+import { StoreMinimalLive } from "@/components/store/store-minimal-live"
+import { StoreVintageLive } from "@/components/store/store-vintage-live"
 
 const MODERNO_ACCENT = "#e8590c"
 const ELEGANTE_ACCENT = "#f7791e"
@@ -22,6 +25,9 @@ const BLINGG_ACCENT = "#6EC1E4"
 const BLINGG_ACCENT_2 = "#61CE70"
 const ARTESANO_ACCENT = "#C19A83"
 const ARTESANO_ACCENT_2 = "#4A3427"
+const LUXURY_ACCENT = "#ebb868"
+const MINIMAL_ACCENT = "#ff7f00"
+const VINTAGE_ACCENT = "#cc3833"
 
 export const revalidate = 0
 
@@ -205,6 +211,64 @@ export default async function StorePage({ params }: StorePageProps) {
         featuredProducts={featuredProducts}
         accentColor={ARTESANO_ACCENT}
         accentColor2={ARTESANO_ACCENT_2}
+        subdomain={subdomain}
+        exchangeRate={exchangeRate}
+        isOwner={isOwner}
+        initialCategoryImages={initialCategoryImages}
+      />
+    )
+  }
+
+  if (activeTheme === "luxury") {
+    const cookieStore = await cookies()
+    const isOwner = cookieStore.get(`admin_${subdomain.toLowerCase()}`)?.value === "true"
+    const initialCategoryImages = store.plan_features?.category_images || {}
+
+    return (
+      <StoreLuxuryLive
+        store={store}
+        categories={categories}
+        products={products}
+        featuredProducts={featuredProducts}
+        subdomain={subdomain}
+        exchangeRate={exchangeRate}
+        isOwner={isOwner}
+        initialCategoryImages={initialCategoryImages}
+      />
+    )
+  }
+
+  if (activeTheme === "minimal") {
+    const cookieStore = await cookies()
+    const isOwner = cookieStore.get(`admin_${subdomain.toLowerCase()}`)?.value === "true"
+    const initialCategoryImages = store.plan_features?.category_images || {}
+
+    return (
+      <StoreMinimalLive
+        store={store}
+        categories={categories}
+        products={products}
+        featuredProducts={featuredProducts}
+        accentColor={MINIMAL_ACCENT}
+        subdomain={subdomain}
+        exchangeRate={exchangeRate}
+        isOwner={isOwner}
+        initialCategoryImages={initialCategoryImages}
+      />
+    )
+  }
+
+  if (activeTheme === "vintage") {
+    const cookieStore = await cookies()
+    const isOwner = cookieStore.get(`admin_${subdomain.toLowerCase()}`)?.value === "true"
+    const initialCategoryImages = store.plan_features?.category_images || {}
+
+    return (
+      <StoreVintageLive
+        store={store}
+        categories={categories}
+        products={products}
+        featuredProducts={featuredProducts}
         subdomain={subdomain}
         exchangeRate={exchangeRate}
         isOwner={isOwner}

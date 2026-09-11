@@ -91,8 +91,8 @@ const pageDesigns = [
     subtitle: "Diseño premium",
     description: "Estilo elegante y sofisticado para marcas de alta gama.",
     image: "/images/templates/luxury-elegant-store-dark-gold.jpg",
-    previewUrl: "#",
-    comingSoon: true,
+    previewUrl: "/disenio-preview/luxury",
+    comingSoon: false,
   },
   {
     id: "minimal",
@@ -100,8 +100,8 @@ const pageDesigns = [
     subtitle: "Diseño minimalista",
     description: "Líneas limpias y espacios amplios para destacar tus productos.",
     image: "/images/templates/minimal-clean-white-store-modern.jpg",
-    previewUrl: "#",
-    comingSoon: true,
+    previewUrl: "/disenio-preview/minimal",
+    comingSoon: false,
   },
   {
     id: "bold",
@@ -139,8 +139,8 @@ const pageDesigns = [
     subtitle: "Diseño retro",
     description: "Estética clásica con toques nostálgicos para productos artesanales.",
     image: "/images/templates/vintage-retro-store-classic-artisan.jpg",
-    previewUrl: "#",
-    comingSoon: true,
+    previewUrl: "/disenio-preview/vintage",
+    comingSoon: false,
   },
   {
     id: "nuevo_propio",
