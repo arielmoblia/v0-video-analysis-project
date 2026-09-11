@@ -45,6 +45,8 @@ import {
   Crown,
   Lock,
   Eye,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react"
 import CustomVariantsManager from "./custom-variants-manager" // Import CustomVariantsManager
 
@@ -249,6 +251,16 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   const [activeTheme, setActiveTheme] = useState(initialActiveTheme || "")
   const [savingTheme, setSavingTheme] = useState(false)
   const [previewDesign, setPreviewDesign] = useState<(typeof pageDesigns)[number] | null>(null)
+  const [expandedFeatures, setExpandedFeatures] = useState<Set<string>>(new Set())
+
+  const toggleExpanded = (code: string) => {
+    setExpandedFeatures((prev) => {
+      const next = new Set(prev)
+      if (next.has(code)) next.delete(code)
+      else next.add(code)
+      return next
+    })
+  }
   const [videoUrl, setVideoUrl] = useState("")
   const [aiInstructions, setAiInstructions] = useState("")
   const [copied, setCopied] = useState(false)
@@ -999,8 +1011,20 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                   >
                                     Leer más →
                                   </a>
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleExpanded(feature.code)}
+                                    className="flex-shrink-0 w-7 h-7 rounded-lg bg-green-100 hover:bg-green-200 flex items-center justify-center text-green-700"
+                                    aria-label={expandedFeatures.has(feature.code) ? "Cerrar" : "Abrir"}
+                                  >
+                                    {expandedFeatures.has(feature.code) ? (
+                                      <ChevronUp className="h-4 w-4" />
+                                    ) : (
+                                      <ChevronDown className="h-4 w-4" />
+                                    )}
+                                  </button>
                                 </div>
-                                {feature.code === "modelos_templates" && (
+                                {expandedFeatures.has(feature.code) && feature.code === "modelos_templates" && (
                                   <div className="px-4 pb-4 pt-1">
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                       {pageDesigns.map((design) =>
@@ -1083,6 +1107,50 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                     </div>
                                   </div>
                                 )}
+                                {expandedFeatures.has(feature.code) && feature.code === "mayorista_minorista" && (
+                                  <div className="px-4 pb-4 pt-1 space-y-3">
+                                    <div>
+                                      <Label className="text-xs text-green-900">Link de tu otra tienda</Label>
+                                      <Input
+                                        placeholder="https://tutiendamayorista.tol.ar"
+                                        value={linkedStoreUrl}
+                                        onChange={(e) => setLinkedStoreUrl(e.target.value)}
+                                        className="mt-1 bg-white"
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label className="text-xs text-green-900">Texto del botón</Label>
+                                      <Input
+                                        placeholder="Ej: Venta mayorista"
+                                        value={linkedStoreLabel}
+                                        onChange={(e) => setLinkedStoreLabel(e.target.value)}
+                                        className="mt-1 bg-white"
+                                      />
+                                      <p className="text-xs text-green-700 mt-1">
+                                        Así se va a ver el botón en el encabezado de tu tienda
+                                      </p>
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      disabled={savingLinkedStore || !linkedStoreUrl.trim() || !linkedStoreLabel.trim()}
+                                      onClick={handleSaveLinkedStore}
+                                    >
+                                      {savingLinkedStore ? "Guardando..." : "Guardar"}
+                                    </Button>
+                                    {linkedStoreSaved && (
+                                      <p className="text-xs text-green-700 flex items-center gap-1">
+                                        <Check className="w-3.5 h-3.5" /> Guardado. Ya podés ver el botón en el encabezado de tu tienda.
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                                {expandedFeatures.has(feature.code) &&
+                                  feature.code !== "modelos_templates" &&
+                                  feature.code !== "mayorista_minorista" && (
+                                    <div className="px-4 pb-4 pt-1">
+                                      <p className="text-xs text-green-700">{feature.description}</p>
+                                    </div>
+                                  )}
                               </div>
                             )
                           })}
