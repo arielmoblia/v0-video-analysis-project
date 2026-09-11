@@ -59,6 +59,7 @@ interface PlansManagerProps {
   initialLinkedStoreUrl?: string | null
   initialLinkedStoreLabel?: string | null
   initialActiveTheme?: string | null
+  initialCustomThemeRequest?: { url: string; status: string; requested_at: string } | null
   activeTab?: string
   onActiveTabChange?: (tab: string) => void
   onGoToProducts?: () => void
@@ -140,6 +141,16 @@ const pageDesigns = [
     image: "/images/templates/vintage-retro-store-classic-artisan.jpg",
     previewUrl: "#",
     comingSoon: true,
+  },
+  {
+    id: "nuevo_propio",
+    name: "Nuevo / Propio",
+    subtitle: "Creá tu propio modelo",
+    description: "Pegá el link de una tienda que te gusta y armamos un modelo nuevo con ese estilo, usando tus productos y fotos reales.",
+    image: "",
+    previewUrl: "#",
+    comingSoon: false,
+    isCustom: true,
   },
 ]
 
@@ -245,7 +256,7 @@ const LEER_MAS_URLS: Record<string, string> = {
 
 const getLeerMasUrl = (code: string) => LEER_MAS_URLS[code] || `${APP_URL}/cositas#${code}`
 
-export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts }: PlansManagerProps) {
+export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialCustomThemeRequest, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts }: PlansManagerProps) {
   const [internalActiveTab, setInternalActiveTab] = useState("cositas")
   const activeTab = controlledActiveTab ?? internalActiveTab
   const setActiveTab = onActiveTabChange ?? setInternalActiveTab
@@ -274,6 +285,13 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   const [savingTheme, setSavingTheme] = useState(false)
   const [previewDesign, setPreviewDesign] = useState<(typeof pageDesigns)[number] | null>(null)
   const [expandedFeatures, setExpandedFeatures] = useState<Set<string>>(new Set())
+  const [customThemeRequest, setCustomThemeRequest] = useState<{ url: string; status: string; requested_at: string } | null>(
+    initialCustomThemeRequest || null,
+  )
+  const [customUrlDialogOpen, setCustomUrlDialogOpen] = useState(false)
+  const [customUrl, setCustomUrl] = useState("")
+  const [customUrlError, setCustomUrlError] = useState("")
+  const [submittingCustomUrl, setSubmittingCustomUrl] = useState(false)
 
   const toggleExpanded = (code: string) => {
     setExpandedFeatures((prev) => {
@@ -362,6 +380,42 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       if (res.ok) setActiveTheme(next)
     } finally {
       setSavingTheme(false)
+    }
+  }
+
+  const handleSubmitCustomUrl = async () => {
+    setCustomUrlError("")
+    let normalized = customUrl.trim()
+    if (normalized && !/^https?:\/\//i.test(normalized)) {
+      normalized = `https://${normalized}`
+    }
+    try {
+      // eslint-disable-next-line no-new
+      new URL(normalized)
+    } catch {
+      setCustomUrlError("Pegá un link válido, ej: https://ejemplo.com")
+      return
+    }
+
+    setSubmittingCustomUrl(true)
+    try {
+      const res = await fetch("/api/admin/theme-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId, url: normalized }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setCustomUrlError(data.error || "No se pudo enviar el pedido")
+        return
+      }
+      setCustomThemeRequest(data.custom_theme_request)
+      setCustomUrlDialogOpen(false)
+      setCustomUrl("")
+    } catch {
+      setCustomUrlError("No se pudo enviar el pedido, probá de nuevo")
+    } finally {
+      setSubmittingCustomUrl(false)
     }
   }
 
@@ -1044,7 +1098,31 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                   <div className="px-4 pb-4 pt-1">
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                       {pageDesigns.map((design) =>
-                                        design.comingSoon ? (
+                                        design.isCustom ? (
+                                          <div
+                                            key={design.id}
+                                            className="relative border-2 border-dashed rounded-xl p-2 transition-all text-left bg-white border-violet-300"
+                                          >
+                                            <div className="h-20 rounded-lg mb-2 bg-violet-50 flex items-center justify-center text-violet-400 text-2xl font-bold">
+                                              +
+                                            </div>
+                                            <p className="text-xs font-medium mb-0.5">{design.name}</p>
+                                            <p className="text-[9px] text-muted-foreground leading-tight mb-2">{design.subtitle}</p>
+                                            {customThemeRequest?.status === "pendiente" ? (
+                                              <p className="text-[9px] text-violet-600 font-medium text-center py-1.5">Lo estamos armando…</p>
+                                            ) : customThemeRequest?.status === "listo" ? (
+                                              <p className="text-[9px] text-green-600 font-medium text-center py-1.5">¡Listo! Ya está en tu lista</p>
+                                            ) : (
+                                              <button
+                                                type="button"
+                                                onClick={() => setCustomUrlDialogOpen(true)}
+                                                className="w-full text-xs py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
+                                              >
+                                                Crear desde un link
+                                              </button>
+                                            )}
+                                          </div>
+                                        ) : design.comingSoon ? (
                                           <div
                                             key={design.id}
                                             className="relative border-2 rounded-xl p-2 transition-all text-left border-border opacity-60 cursor-not-allowed bg-white"
@@ -1452,7 +1530,31 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {pageDesigns.map((design) =>
-                  design.comingSoon ? (
+                  design.isCustom ? (
+                    <div
+                      key={design.id}
+                      className="relative border-2 border-dashed rounded-xl p-2 transition-all text-left border-violet-300"
+                    >
+                      <div className="h-20 rounded-lg mb-2 bg-violet-50 flex items-center justify-center text-violet-400 text-2xl font-bold">
+                        +
+                      </div>
+                      <p className="text-xs font-medium mb-0.5">{design.name}</p>
+                      <p className="text-[9px] text-muted-foreground leading-tight mb-2">{design.subtitle}</p>
+                      {customThemeRequest?.status === "pendiente" ? (
+                        <p className="text-[9px] text-violet-600 font-medium text-center py-1.5">Lo estamos armando…</p>
+                      ) : customThemeRequest?.status === "listo" ? (
+                        <p className="text-[9px] text-green-600 font-medium text-center py-1.5">¡Listo! Ya está en tu lista</p>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setCustomUrlDialogOpen(true)}
+                          className="w-full text-xs py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
+                        >
+                          Crear desde un link
+                        </button>
+                      )}
+                    </div>
+                  ) : design.comingSoon ? (
                     <div
                       key={design.id}
                       className="relative border-2 rounded-xl p-2 transition-all text-left border-border opacity-60 cursor-not-allowed"
@@ -1563,6 +1665,36 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
               className="w-full h-[70vh] border-0"
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Popup: crear modelo nuevo pegando una URL */}
+      <Dialog open={customUrlDialogOpen} onOpenChange={(open) => { setCustomUrlDialogOpen(open); if (!open) setCustomUrlError("") }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Creá tu propio modelo</DialogTitle>
+            <DialogDescription>
+              Pegá el link de una tienda que te gusta. Armamos un modelo nuevo con ese estilo, usando tus productos y fotos.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              placeholder="https://ejemplo.com"
+              value={customUrl}
+              onChange={(e) => setCustomUrl(e.target.value)}
+              disabled={submittingCustomUrl}
+            />
+            {customUrlError && <p className="text-xs text-red-600">{customUrlError}</p>}
+            <Button
+              type="button"
+              className="w-full"
+              disabled={submittingCustomUrl || !customUrl.trim()}
+              onClick={handleSubmitCustomUrl}
+            >
+              {submittingCustomUrl ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Enviar
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     {trialModal && (
