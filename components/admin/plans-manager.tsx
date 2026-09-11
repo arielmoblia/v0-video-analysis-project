@@ -967,37 +967,122 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                             const totalDays = feature.trial_days || 7
                             const priceARS = getPriceARS(feature.price)
                             return (
-                              <div key={feature.code} className="flex items-center gap-3 px-4 py-3 bg-green-50 border-b border-green-100 last:border-b-0">
-                                <div className="w-9 h-9 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
-                                  <IconComponent className="h-4 w-4 text-green-700" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-green-900 text-sm">{feature.name}</p>
-                                  {isTrial && daysLeft > 0 ? (
-                                    <div className="flex items-center gap-2 mt-1">
-                                      <div className="flex-1 h-1.5 bg-green-200 rounded-full overflow-hidden max-w-24">
-                                        <div className="h-full bg-orange-400 rounded-full" style={{width: `${Math.max(5,(daysLeft/totalDays)*100)}%`}}></div>
+                              <div key={feature.code} className="bg-green-50 border-b border-green-100 last:border-b-0">
+                                <div className="flex items-center gap-3 px-4 py-3">
+                                  <div className="w-9 h-9 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                                    <IconComponent className="h-4 w-4 text-green-700" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-green-900 text-sm">{feature.name}</p>
+                                    {isTrial && daysLeft > 0 ? (
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <div className="flex-1 h-1.5 bg-green-200 rounded-full overflow-hidden max-w-24">
+                                          <div className="h-full bg-orange-400 rounded-full" style={{width: `${Math.max(5,(daysLeft/totalDays)*100)}%`}}></div>
+                                        </div>
+                                        <span className="text-xs text-orange-600">{daysLeft} días restantes</span>
                                       </div>
-                                      <span className="text-xs text-orange-600">{daysLeft} días restantes</span>
-                                    </div>
+                                    ) : (
+                                      <p className="text-xs text-green-600">✓ Pagado</p>
+                                    )}
+                                  </div>
+                                  {isTrial && daysLeft > 0 ? (
+                                    <button onClick={() => toggleFeature(feature.code)} className="text-xs bg-green-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-green-700">Comprar</button>
                                   ) : (
-                                    <p className="text-xs text-green-600">✓ Pagado</p>
+                                    <span className="text-sm font-medium text-green-700">${priceARS.toLocaleString("es-AR")}/mes</span>
                                   )}
+                                  <a
+                                    href={getLeerMasUrl(feature.code)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-xs text-green-700 hover:text-green-800 hover:underline whitespace-nowrap flex-shrink-0"
+                                  >
+                                    Leer más →
+                                  </a>
                                 </div>
-                                {isTrial && daysLeft > 0 ? (
-                                  <button onClick={() => toggleFeature(feature.code)} className="text-xs bg-green-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-green-700">Comprar</button>
-                                ) : (
-                                  <span className="text-sm font-medium text-green-700">${priceARS.toLocaleString("es-AR")}/mes</span>
+                                {feature.code === "modelos_templates" && (
+                                  <div className="px-4 pb-4 pt-1">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                      {pageDesigns.map((design) =>
+                                        design.comingSoon ? (
+                                          <div
+                                            key={design.id}
+                                            className="relative border-2 rounded-xl p-2 transition-all text-left border-border opacity-60 cursor-not-allowed bg-white"
+                                          >
+                                            <Badge className="absolute -top-2 -right-2 text-[10px] px-1.5 py-0.5 bg-amber-500">
+                                              Pronto
+                                            </Badge>
+                                            <div className="relative h-20 rounded-lg overflow-hidden mb-2 bg-muted">
+                                              <Image
+                                                src={design.image || "/images/placeholders/placeholder.svg"}
+                                                alt={design.name}
+                                                fill
+                                                className="object-cover grayscale"
+                                                sizes="150px"
+                                                loading="lazy"
+                                              />
+                                              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                                <Lock className="h-4 w-4 text-white" />
+                                              </div>
+                                            </div>
+                                            <div className="flex items-center gap-1 mb-0.5">
+                                              <Crown className="h-3 w-3 text-amber-500" />
+                                              <span className="text-xs font-medium">{design.name}</span>
+                                            </div>
+                                            <p className="text-[9px] text-muted-foreground leading-tight">{design.subtitle}</p>
+                                          </div>
+                                        ) : (
+                                          <div
+                                            key={design.id}
+                                            className={`relative border-2 rounded-xl p-2 transition-all text-left bg-white ${
+                                              activeTheme === design.id ? "border-violet-500 ring-2 ring-violet-200" : "border-border hover:border-violet-300"
+                                            }`}
+                                          >
+                                            {activeTheme === design.id && (
+                                              <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center z-10">
+                                                <Check className="h-3 w-3 text-white" />
+                                              </div>
+                                            )}
+                                            <button
+                                              type="button"
+                                              onClick={() => setPreviewDesign(design)}
+                                              className="relative h-20 w-full rounded-lg overflow-hidden mb-2 bg-muted group block"
+                                            >
+                                              <Image
+                                                src={design.image || "/images/placeholders/placeholder.svg"}
+                                                alt={design.name}
+                                                fill
+                                                className="object-cover object-top"
+                                                sizes="150px"
+                                                loading="lazy"
+                                              />
+                                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                                                <span className="hidden group-hover:flex items-center gap-1 text-white text-[10px] font-medium">
+                                                  <Eye className="h-3 w-3" />
+                                                  Ver demo
+                                                </span>
+                                              </div>
+                                            </button>
+                                            <p className="text-xs font-medium mb-0.5">{design.name}</p>
+                                            <p className="text-[9px] text-muted-foreground leading-tight mb-2">{design.subtitle}</p>
+                                            <button
+                                              type="button"
+                                              disabled={savingTheme}
+                                              onClick={() => handleChooseTheme(design.id)}
+                                              className={`w-full text-xs py-1.5 rounded-lg font-medium transition-colors ${
+                                                activeTheme === design.id
+                                                  ? "bg-violet-100 text-violet-700"
+                                                  : "bg-violet-500 hover:bg-violet-600 text-white"
+                                              }`}
+                                            >
+                                              {activeTheme === design.id ? "Elegido" : "Elegir"}
+                                            </button>
+                                          </div>
+                                        ),
+                                      )}
+                                    </div>
+                                  </div>
                                 )}
-                                <a
-                                  href={getLeerMasUrl(feature.code)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="text-xs text-green-700 hover:text-green-800 hover:underline whitespace-nowrap flex-shrink-0"
-                                >
-                                  Leer más →
-                                </a>
                               </div>
                             )
                           })}
