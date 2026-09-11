@@ -39,6 +39,7 @@ const FEATURE_NAMES: Record<string, string> = {
   whatsapp_chat: "WhatsApp",
   dropshipping: "Dropshipping",
   mayorista_minorista: "Mayorista / Minorista",
+  modelos_templates: "Modelos/Templates",
 }
 
 const FEATURE_TAB: Record<string, string> = {
@@ -53,6 +54,7 @@ const FEATURE_TAB: Record<string, string> = {
   whatsapp_chat: "whatsapp",
   dropshipping: "dropship",
   mayorista_minorista: "mayorista",
+  modelos_templates: "plans",
 }
 
 const COMING_SOON_LIST = ["Chat con AI", "Dominio propio", "Video de portada", "Quitar tol.ar", "Mayoristas"]
@@ -142,24 +144,31 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
     </div>
   )
 
-  const navActive = (tab: string, label: string) => (
+  const goToFeatureTab = (code: string, tab: string) => {
+    if (code === "modelos_templates") { setActiveTab("plans"); setPlansTab("modelos") }
+    else setActiveTab(tab)
+  }
+  const isFeatureTabCurrent = (code: string, tab: string) =>
+    code === "modelos_templates" ? activeTab === "plans" && plansTab === "modelos" : activeTab === tab
+
+  const navActive = (code: string, tab: string, label: string) => (
     <div
       key={tab}
-      onClick={() => setActiveTab(tab)}
+      onClick={() => goToFeatureTab(code, tab)}
       className={`flex items-center px-3 py-2 rounded-lg text-sm cursor-pointer mb-0.5 transition-colors border border-green-200 bg-green-50 ${
-        activeTab === tab ? "ring-1 ring-green-400" : "hover:bg-green-100"
+        isFeatureTabCurrent(code, tab) ? "ring-1 ring-green-400" : "hover:bg-green-100"
       }`}
     >
       <span className="text-green-800 font-medium">{label}</span>
     </div>
   )
 
-  const navTrial = (tab: string, label: string, daysLeft: number) => (
+  const navTrial = (code: string, tab: string, label: string, daysLeft: number) => (
     <div
       key={tab}
-      onClick={() => setActiveTab(tab)}
+      onClick={() => goToFeatureTab(code, tab)}
       className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm cursor-pointer mb-0.5 transition-colors border border-orange-200 bg-orange-50 ${
-        activeTab === tab ? "ring-1 ring-orange-400" : "hover:bg-orange-100"
+        isFeatureTabCurrent(code, tab) ? "ring-1 ring-orange-400" : "hover:bg-orange-100"
       }`}
     >
       <span className="text-orange-800 font-medium">{label}</span>
@@ -244,27 +253,19 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
             >
               Leer más →
             </a>
-            <div
-              onClick={() => { setActiveTab("plans"); setPlansTab("modelos") }}
-              className={`flex items-center px-3 py-2 rounded-lg text-sm cursor-pointer mt-1 transition-colors font-medium ${
-                activeTab === "plans" && plansTab === "modelos" ? "bg-orange-500 text-white" : "bg-orange-100 text-orange-700 hover:bg-orange-200"
-              }`}
-            >
-              ✦ Modelos/Templates
-            </div>
           </div>
 
           {activeCositas.length > 0 && (
             <div className="px-2 pb-1 border-t border-neutral-200 pt-2">
               {sectionLabel("Cositas activas", "text-green-700")}
-              {activeCositas.map(code => navActive(FEATURE_TAB[code], FEATURE_NAMES[code]))}
+              {activeCositas.map(code => navActive(code, FEATURE_TAB[code], FEATURE_NAMES[code]))}
             </div>
           )}
 
           {trialFeatures.length > 0 && (
             <div className="px-2 pb-1 border-t border-neutral-200 pt-2">
               {sectionLabel("En prueba", "text-orange-600")}
-              {trialFeatures.map(t => navTrial(FEATURE_TAB[t.code] || t.code, FEATURE_NAMES[t.code] || t.code, t.daysLeft))}
+              {trialFeatures.map(t => navTrial(t.code, FEATURE_TAB[t.code] || t.code, FEATURE_NAMES[t.code] || t.code, t.daysLeft))}
             </div>
           )}
 
