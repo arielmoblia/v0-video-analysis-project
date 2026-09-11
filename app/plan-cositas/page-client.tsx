@@ -44,7 +44,11 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-export default function PlanCositasPage() {
+interface Props {
+  brand?: "tol" | "tiendabasica"
+}
+
+export default function PlanCositasPage({ brand = "tol" }: Props) {
   const [features, setFeatures] = useState<StoreFeature[]>([])
   const [selected, setSelected] = useState<string[]>([])
   const [dolarRate, setDolarRate] = useState(1200)
@@ -100,7 +104,7 @@ export default function PlanCositasPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#ff9fc5]/20 via-white to-[#ca678e]/10">
-      <Header />
+      <Header brand={brand} />
       {isAdmin && (
         <div style={{ background: "linear-gradient(90deg, #62162f, #96305a)", color: "white", padding: "8px 20px", display: "flex", alignItems: "center", gap: "10px", fontSize: "13px" }}>
           <span style={{ background: "rgba(255,255,255,0.2)", borderRadius: "20px", padding: "2px 10px", fontSize: "11px", fontWeight: 700 }}>MODO EDICIÓN</span>
@@ -240,6 +244,16 @@ export default function PlanCositasPage() {
                                   Leer más →
                                 </a>
                               )}
+                              {cosita.code === "modelos_templates" && (
+                                <a
+                                  href="/plan-cositas/modelos-templates"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-block mt-2 mb-2 text-sm text-blue-600 hover:underline"
+                                >
+                                  Leer más →
+                                </a>
+                              )}
                               <div className="mt-4 p-4 bg-muted rounded-lg">
                                 <p className="text-2xl font-bold text-[#62162f]">
                                   {priceDisplay(cosita)}
@@ -330,7 +344,7 @@ export default function PlanCositasPage() {
           </a>
         </div>
       </section>
-      <Footer />
+      <Footer brand={brand} />
     </div>
   )
 }
