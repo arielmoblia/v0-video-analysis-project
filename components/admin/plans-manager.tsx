@@ -63,6 +63,7 @@ interface PlansManagerProps {
   initialActiveTheme?: string | null
   activeTab?: string
   onActiveTabChange?: (tab: string) => void
+  onGoToProducts?: () => void
 }
 
 const pageDesigns = [
@@ -224,7 +225,7 @@ const LEER_MAS_URLS: Record<string, string> = {
 
 const getLeerMasUrl = (code: string) => LEER_MAS_URLS[code] || `${APP_URL}/cositas#${code}`
 
-export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, activeTab: controlledActiveTab, onActiveTabChange }: PlansManagerProps) {
+export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts }: PlansManagerProps) {
   const [internalActiveTab, setInternalActiveTab] = useState("cositas")
   const activeTab = controlledActiveTab ?? internalActiveTab
   const setActiveTab = onActiveTabChange ?? setInternalActiveTab
@@ -1150,9 +1151,18 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                     )}
                                   </div>
                                 )}
+                                {expandedFeatures.has(feature.code) && feature.code === "multi_images" && (
+                                  <div className="px-4 pb-4 pt-1 space-y-2">
+                                    <p className="text-xs text-green-700">{feature.description}</p>
+                                    <Button size="sm" onClick={onGoToProducts}>
+                                      Ir a Productos <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                                    </Button>
+                                  </div>
+                                )}
                                 {expandedFeatures.has(feature.code) &&
                                   feature.code !== "modelos_templates" &&
                                   feature.code !== "mayorista_minorista" &&
+                                  feature.code !== "multi_images" &&
                                   feature.code !== "dolar_peso" && (
                                     <div className="px-4 pb-4 pt-1">
                                       <p className="text-xs text-green-700">{feature.description}</p>

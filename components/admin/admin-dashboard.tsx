@@ -412,6 +412,7 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
                 onFeaturePurchased={(code) => setPurchasedFeatures([...purchasedFeatures, code])}
                 activeTab={plansTab}
                 onActiveTabChange={setPlansTab}
+                onGoToProducts={() => setActiveTab("products")}
               />
               {(purchasedFeatures.includes("custom_variants") || store.template === "variants") && (
                 <div className="mt-8">

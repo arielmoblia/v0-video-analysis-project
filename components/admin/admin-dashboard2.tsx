@@ -314,6 +314,7 @@ export function AdminDashboard2({ store, subdomain }: AdminDashboardProps) {
               initialLinkedStoreLabel={store.linked_store_label}
               purchasedFeatures={purchasedFeatures}
               onFeaturePurchased={(code) => setPurchasedFeatures([...purchasedFeatures, code])}
+              onGoToProducts={() => setActiveTab("products")}
             />
             
             {/* Mostrar configurador de variantes si compraron la feature O si tienen template "variants" */}
