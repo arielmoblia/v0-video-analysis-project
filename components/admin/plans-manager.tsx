@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
@@ -27,8 +27,6 @@ import {
   Upload,
   DollarSign,
   Sparkles,
-  Users,
-  Calendar,
   ArrowRight,
   AlertCircle,
   FileText,
@@ -927,12 +925,6 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 w-full max-w-xl">
-          <TabsTrigger value="cositas">Plan Cositas</TabsTrigger>
-          <TabsTrigger value="socio">Plan Socio</TabsTrigger>
-          <TabsTrigger value="medida">Plan a Medida</TabsTrigger>
-        </TabsList>
-
         <TabsContent value="cositas" className="mt-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Columna izquierda: Lista de features */}
@@ -1522,94 +1514,6 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
           </Card>
         </TabsContent>
 
-        <TabsContent value="socio" className="mt-6">
-          <Card className="max-w-2xl mx-auto">
-            <CardHeader className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 text-white" />
-              </div>
-              <CardTitle className="text-2xl">Plan Socio</CardTitle>
-              <CardDescription>
-                Sin mensualidad fija. Pagás el 10% de tus ventas y nosotros invertimos en publicidad para tu tienda.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-slate-50 rounded-lg">
-                  <p className="text-3xl font-bold text-amber-600">10%</p>
-                  <p className="text-sm text-muted-foreground">de tus ventas</p>
-                </div>
-                <div className="text-center p-4 bg-slate-50 rounded-lg">
-                  <p className="text-3xl font-bold text-amber-600">$0</p>
-                  <p className="text-sm text-muted-foreground">mensualidad fija</p>
-                </div>
-                <div className="text-center p-4 bg-slate-50 rounded-lg">
-                  <p className="text-3xl font-bold text-amber-600">100%</p>
-                  <p className="text-sm text-muted-foreground">cositas incluidas</p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h4 className="font-medium">Incluye todo:</h4>
-                {availableFeatures.map((feature) => (
-                  <div key={feature.code} className="flex items-center gap-2 text-sm">
-                    <Check className="w-4 h-4 text-green-500" />
-                    <span>{feature.name}</span>
-                  </div>
-                ))}
-                <div className="flex items-center gap-2 text-sm">
-                  <Check className="w-4 h-4 text-green-500" />
-                  <span>Publicidad paga en redes sociales</span>
-                </div>
-              </div>
-
-              <Button className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700">
-                Solicitar Plan Socio
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="medida" className="mt-6">
-          <Card className="max-w-2xl mx-auto">
-            <CardHeader className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-slate-600 to-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Calendar className="w-8 h-8 text-white" />
-              </div>
-              <CardTitle className="text-2xl">Plan a Medida</CardTitle>
-              <CardDescription>
-                Agendá una videollamada con nuestro equipo para crear una solución personalizada para tu negocio.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-3">
-                <h4 className="font-medium">¿Qué incluye?</h4>
-                <div className="flex items-center gap-2 text-sm">
-                  <Check className="w-4 h-4 text-green-500" />
-                  <span>Consultoría personalizada</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Check className="w-4 h-4 text-green-500" />
-                  <span>Diseño exclusivo para tu tienda</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Check className="w-4 h-4 text-green-500" />
-                  <span>Integraciones especiales</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Check className="w-4 h-4 text-green-500" />
-                  <span>Soporte dedicado</span>
-                </div>
-              </div>
-
-              <Button className="w-full">
-                Agendar Videollamada
-                <Calendar className="w-4 h-4 ml-2" />
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
 
       {/* Modal de configuración */}

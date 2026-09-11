@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { LogOut, Lock } from "lucide-react"
+import { LogOut } from "lucide-react"
 import type { Store } from "@/lib/store-context"
 import { ProductsManager } from "./products-manager"
 import { CategoriesManager } from "./categories-manager"
@@ -56,8 +56,6 @@ const FEATURE_TAB: Record<string, string> = {
   mayorista_minorista: "mayorista",
   modelos_templates: "plans",
 }
-
-const COMING_SOON_LIST = ["Chat con AI", "Dominio propio", "Video de portada", "Quitar tol.ar", "Mayoristas"]
 
 interface AdminDashboardProps {
   store: Store
@@ -124,9 +122,6 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
   const activeCositas = cositaCodes.filter(code =>
     purchasedFeatures.includes(code) && !trialCodes.includes(code)
   )
-  const availableCositas = cositaCodes.filter(code =>
-    !purchasedFeatures.includes(code) && !trialCodes.includes(code)
-  )
 
   const sectionLabel = (text: string, color: string) => (
     <p className={`text-[10px] font-medium uppercase tracking-widest px-3 mb-1 mt-1 ${color}`}>{text}</p>
@@ -173,24 +168,6 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
     >
       <span className="text-orange-800 font-medium">{label}</span>
       <span className="text-xs text-orange-600">{daysLeft}d</span>
-    </div>
-  )
-
-  const navLocked = (label: string) => (
-    <div
-      key={label}
-      onClick={() => setActiveTab("plans")}
-      className="flex items-center justify-between px-3 py-2 rounded-lg text-sm cursor-pointer mb-0.5 transition-colors hover:bg-neutral-200"
-    >
-      <span className="text-neutral-500">{label}</span>
-      <Lock className="w-3 h-3 text-neutral-400" />
-    </div>
-  )
-
-  const navSoon = (label: string) => (
-    <div key={label} className="flex items-center justify-between px-3 py-2 rounded-lg text-sm mb-0.5 opacity-40 cursor-default">
-      <span className="text-neutral-400 text-xs">{label}</span>
-      <span className="text-[10px] text-neutral-400 bg-white border border-neutral-200 px-1.5 py-0.5 rounded">pronto</span>
     </div>
   )
 
@@ -268,28 +245,6 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
               {trialFeatures.map(t => navTrial(t.code, FEATURE_TAB[t.code] || t.code, FEATURE_NAMES[t.code] || t.code, t.daysLeft))}
             </div>
           )}
-
-          {availableCositas.length > 0 && (
-            <div className="px-2 pb-1 border-t border-neutral-200 pt-2">
-              {sectionLabel("Disponibles", "text-neutral-500")}
-              {availableCositas.map(code => navLocked(FEATURE_NAMES[code]))}
-            </div>
-          )}
-
-          <div className="px-2 pb-2 border-t border-neutral-200 pt-2">
-            {sectionLabel("Próximamente", "text-neutral-400")}
-            {COMING_SOON_LIST
-              .filter(name => !(name === "Chat con AI" && ADMIN_CHAT_SUBDOMAINS.includes(subdomain)))
-              .map(name => navSoon(name))}
-          </div>
-
-          <div className="px-2 pb-3 border-t border-neutral-200 pt-2">
-            {sectionLabel("Otros planes", "text-neutral-400")}
-            {navSoon("Plan Socio")}
-            {navSoon("Plan Mayorista")}
-            {navSoon("Plan a Medida")}
-          </div>
-
 
         </aside>
 
