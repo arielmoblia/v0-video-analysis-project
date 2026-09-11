@@ -1540,7 +1540,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
 
       {/* Preview grande del modelo */}
       <Dialog open={!!previewDesign} onOpenChange={(open) => !open && setPreviewDesign(null)}>
-        <DialogContent className="max-w-[800px] p-0 overflow-hidden">
+        <DialogContent className="max-w-[95vw] w-full p-0 overflow-hidden">
           <DialogHeader className="p-4 pb-0">
             <DialogTitle>{previewDesign?.name}</DialogTitle>
             <DialogDescription>{previewDesign?.description}</DialogDescription>
