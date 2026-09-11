@@ -4,14 +4,14 @@ import { useEffect, useState } from "react"
 import type { Store, Product, Category } from "@/lib/types"
 import { CartProvider } from "@/components/store/cart-provider"
 import { CartDrawer } from "@/components/store/cart-drawer"
-import { StoreHeaderModern } from "@/components/store/store-header-modern"
-import { StoreHeroModernEditable } from "@/components/store/store-hero-modern-editable"
-import { CategoryShowcaseModernEditable } from "@/components/store/category-showcase-modern-editable"
-import { ProductGridModern } from "@/components/store/product-grid-modern"
+import { StoreHeaderElegante } from "@/components/store/store-header-elegante"
+import { StoreHeroEleganteEditable } from "@/components/store/store-hero-elegante-editable"
+import { CategoryShowcaseEleganteEditable } from "@/components/store/category-showcase-elegante-editable"
+import { ProductGridElegante } from "@/components/store/product-grid-elegante"
 import { StoreFooter } from "@/components/store/store-footer"
 
-const STORAGE_KEY = "tol-disenio-preview-moderno-banner"
-const CATEGORIES_STORAGE_KEY = "tol-disenio-preview-moderno-categorias"
+const STORAGE_KEY = "tol-disenio-preview-elegante-banner"
+const CATEGORIES_STORAGE_KEY = "tol-disenio-preview-elegante-categorias"
 
 interface PreviewClientProps {
   store: Store
@@ -20,10 +20,10 @@ interface PreviewClientProps {
   accentColor: string
 }
 
-// Vidriera de solo lectura: muestra el diseño "Moderno" con datos de ejemplo
+// Vidriera de solo lectura: muestra el diseño "Elegante" con datos de ejemplo
 // (o los guardados antes en localStorage) para que el cliente vea cómo queda
 // el diseño elegido, sin poder editarlo desde acá.
-export function ModernoPreviewClient({ store, categories, products, accentColor }: PreviewClientProps) {
+export function ElegantePreviewClient({ store, categories, products, accentColor }: PreviewClientProps) {
   const [banner, setBanner] = useState({
     banner_image: store.banner_image || "",
     banner_title: store.banner_title || "",
@@ -45,9 +45,9 @@ export function ModernoPreviewClient({ store, categories, products, accentColor 
   return (
     <CartProvider country="AR">
       <div className="min-h-screen flex flex-col bg-white">
-        <StoreHeaderModern store={storeConEdicion} categories={categories} accentColor={accentColor} disableNav />
+        <StoreHeaderElegante store={storeConEdicion} categories={categories} accentColor={accentColor} disableNav />
         <main className="flex-1">
-          <StoreHeroModernEditable
+          <StoreHeroEleganteEditable
             store={storeConEdicion}
             accentColor={accentColor}
             editMode={false}
@@ -55,7 +55,7 @@ export function ModernoPreviewClient({ store, categories, products, accentColor 
             onChangeTitle={() => {}}
             onChangeSubtitle={() => {}}
           />
-          <CategoryShowcaseModernEditable
+          <CategoryShowcaseEleganteEditable
             categories={categories}
             images={categoryImages}
             editMode={false}
@@ -64,7 +64,7 @@ export function ModernoPreviewClient({ store, categories, products, accentColor 
           />
           <section id="productos" className="container mx-auto px-6 py-14">
             <h2 className="text-2xl font-bold text-neutral-900 mb-6">Destacados</h2>
-            <ProductGridModern products={products} subdomain={store.subdomain} accentColor={accentColor} country="AR" disableNav />
+            <ProductGridElegante products={products} subdomain={store.subdomain} accentColor={accentColor} country="AR" disableNav />
           </section>
         </main>
         <StoreFooter store={storeConEdicion} />
