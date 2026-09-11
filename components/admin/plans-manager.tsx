@@ -58,6 +58,8 @@ interface PlansManagerProps {
   initialLinkedStoreUrl?: string | null
   initialLinkedStoreLabel?: string | null
   initialActiveTheme?: string | null
+  activeTab?: string
+  onActiveTabChange?: (tab: string) => void
 }
 
 const pageDesigns = [
@@ -68,6 +70,15 @@ const pageDesigns = [
     description: "Diseño moderno con grillas amplias y tarjetas redondeadas, ideal para marcas actuales.",
     image: "/images/templates/moderno-saleor-store.jpg",
     previewUrl: "/disenio-preview/moderno",
+    comingSoon: false,
+  },
+  {
+    id: "elegante",
+    name: "Elegante",
+    subtitle: "Diseño premium",
+    description: "Franja superior, categorías circulares y hero a todo el ancho, ideal para marcas premium.",
+    image: "/images/templates/elegante-premium-store.jpg",
+    previewUrl: "/disenio-preview/elegante",
     comingSoon: false,
   },
   {
@@ -210,8 +221,10 @@ const LEER_MAS_URLS: Record<string, string> = {
 
 const getLeerMasUrl = (code: string) => LEER_MAS_URLS[code] || `${APP_URL}/cositas#${code}`
 
-export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme }: PlansManagerProps) {
-  const [activeTab, setActiveTab] = useState("cositas")
+export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, activeTab: controlledActiveTab, onActiveTabChange }: PlansManagerProps) {
+  const [internalActiveTab, setInternalActiveTab] = useState("cositas")
+  const activeTab = controlledActiveTab ?? internalActiveTab
+  const setActiveTab = onActiveTabChange ?? setInternalActiveTab
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
   const [purchasedFeatures, setPurchasedFeatures] = useState<string[]>([])
   const [purchasedDetails, setPurchasedDetails] = useState<any[]>([])
@@ -899,9 +912,8 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-4 w-full max-w-xl">
+        <TabsList className="grid grid-cols-3 w-full max-w-xl">
           <TabsTrigger value="cositas">Plan Cositas</TabsTrigger>
-          <TabsTrigger value="modelos">Modelos</TabsTrigger>
           <TabsTrigger value="socio">Plan Socio</TabsTrigger>
           <TabsTrigger value="medida">Plan a Medida</TabsTrigger>
         </TabsList>

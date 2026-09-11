@@ -65,6 +65,7 @@ interface AdminDashboardProps {
 export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("settings")
+  const [plansTab, setPlansTab] = useState("cositas")
   const [purchasedFeatures, setPurchasedFeatures] = useState<string[]>([])
   const [trialFeatures, setTrialFeatures] = useState<{ code: string; daysLeft: number }[]>([])
   const [customVariants, setCustomVariants] = useState<{ name: string; options: string[] }[]>([])
@@ -227,9 +228,9 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
           <div className="px-2 pb-2 border-t border-neutral-200 pt-3">
             {sectionLabel("Plan Cositas", "text-orange-500")}
             <div
-              onClick={() => setActiveTab("plans")}
+              onClick={() => { setActiveTab("plans"); setPlansTab("cositas") }}
               className={`flex items-center px-3 py-2 rounded-lg text-sm cursor-pointer mb-0.5 transition-colors font-medium ${
-                activeTab === "plans" ? "bg-orange-500 text-white" : "bg-orange-100 text-orange-700 hover:bg-orange-200"
+                activeTab === "plans" && plansTab === "cositas" ? "bg-orange-500 text-white" : "bg-orange-100 text-orange-700 hover:bg-orange-200"
               }`}
             >
               ✦ Todas las Cositas
@@ -243,6 +244,14 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
             >
               Leer más →
             </a>
+            <div
+              onClick={() => { setActiveTab("plans"); setPlansTab("modelos") }}
+              className={`flex items-center px-3 py-2 rounded-lg text-sm cursor-pointer mt-1 transition-colors font-medium ${
+                activeTab === "plans" && plansTab === "modelos" ? "bg-orange-500 text-white" : "bg-orange-100 text-orange-700 hover:bg-orange-200"
+              }`}
+            >
+              ✦ Modelos/Templates
+            </div>
           </div>
 
           {activeCositas.length > 0 && (
@@ -400,6 +409,8 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
                 initialActiveTheme={store.plan_features?.active_theme || null}
                 purchasedFeatures={purchasedFeatures}
                 onFeaturePurchased={(code) => setPurchasedFeatures([...purchasedFeatures, code])}
+                activeTab={plansTab}
+                onActiveTabChange={setPlansTab}
               />
               {(purchasedFeatures.includes("custom_variants") || store.template === "variants") && (
                 <div className="mt-8">
