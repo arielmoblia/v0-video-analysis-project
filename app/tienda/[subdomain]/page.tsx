@@ -16,6 +16,7 @@ import { StoreArtesanoLive } from "@/components/store/store-artesano-live"
 import { StoreLuxuryLive } from "@/components/store/store-luxury-live"
 import { StoreMinimalLive } from "@/components/store/store-minimal-live"
 import { StoreVintageLive } from "@/components/store/store-vintage-live"
+import { StoreBasicoLive } from "@/components/store/store-basico-live"
 
 const MODERNO_ACCENT = "#e8590c"
 const ELEGANTE_ACCENT = "#f7791e"
@@ -273,6 +274,24 @@ export default async function StorePage({ params }: StorePageProps) {
         exchangeRate={exchangeRate}
         isOwner={isOwner}
         initialCategoryImages={initialCategoryImages}
+      />
+    )
+  }
+
+  if (activeTheme === "basico") {
+    const cookieStore = await cookies()
+    const isOwner = cookieStore.get(`admin_${subdomain.toLowerCase()}`)?.value === "true"
+
+    return (
+      <StoreBasicoLive
+        store={store}
+        categories={categories}
+        products={products}
+        featuredProducts={featuredProducts}
+        subdomain={subdomain}
+        exchangeRate={exchangeRate}
+        isOwner={isOwner}
+        hasMayoristaMinorista={hasMayoristaMinorista}
       />
     )
   }
