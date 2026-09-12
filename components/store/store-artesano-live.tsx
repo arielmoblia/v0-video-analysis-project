@@ -118,6 +118,8 @@ export function StoreArtesanoLive({
           accentColor2={accentColor2}
           subdomain={subdomain}
           onChangeImage={(slug, url) => setCategoryImages((c) => ({ ...c, [slug]: url }))}
+          texts={templateTexts}
+          onChangeText={handleChangeText}
         />
 
         {featuredProducts.length > 0 && (

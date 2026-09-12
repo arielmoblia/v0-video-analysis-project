@@ -139,6 +139,8 @@ export function StoreBlinggLive({
           accentColor={accentColor}
           subdomain={subdomain}
           onChangeImage={(slug, url) => setCategoryImages((c) => ({ ...c, [slug]: url }))}
+          texts={templateTexts}
+          onChangeText={handleChangeText}
         />
 
         {featuredProducts.length > 0 && (

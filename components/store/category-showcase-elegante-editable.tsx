@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { ImagePlus, Loader2 } from "lucide-react"
 import type { Category } from "@/lib/store-context"
+import { EditableInline } from "./editable-inline"
 
 interface CategoryShowcaseEleganteEditableProps {
   categories: Category[]
@@ -13,6 +14,8 @@ interface CategoryShowcaseEleganteEditableProps {
   accentColor?: string
   onChangeImage: (slug: string, url: string) => void
   subdomain?: string
+  texts?: Record<string, string>
+  onChangeText?: (key: string, value: string) => void
 }
 
 const DEFAULT_IMAGES = [
@@ -31,6 +34,8 @@ export function CategoryShowcaseEleganteEditable({
   accentColor = "#f7791e",
   onChangeImage,
   subdomain,
+  texts = {},
+  onChangeText = () => {},
 }: CategoryShowcaseEleganteEditableProps) {
   const [basePath, setBasePath] = useState(subdomain ? `/tienda/${subdomain}` : "")
 
@@ -46,7 +51,13 @@ export function CategoryShowcaseEleganteEditable({
 
   return (
     <section className="container mx-auto px-6 py-12">
-      <h2 className="text-2xl font-bold text-neutral-900 mb-6 text-center">Categorías</h2>
+      <EditableInline
+        as="h2"
+        editMode={editMode}
+        className="text-2xl font-bold text-neutral-900 mb-6 text-center"
+        value={texts["categorias_title"] ?? "Categorías"}
+        onChange={(v) => onChangeText("categorias_title", v)}
+      />
       <div className="flex gap-6 overflow-x-auto pb-2 md:flex-wrap md:justify-center md:overflow-visible">
         {categories.slice(0, 10).map((cat, index) => (
           <CategoryCircle

@@ -6,6 +6,7 @@ import Image from "next/image"
 import { ImagePlus, Loader2 } from "lucide-react"
 import type { Category } from "@/lib/store-context"
 import { vintageHeading } from "@/lib/fonts/vintage"
+import { EditableInline } from "./editable-inline"
 
 interface CategoryShowcaseVintageEditableProps {
   categories: Category[]
@@ -13,6 +14,8 @@ interface CategoryShowcaseVintageEditableProps {
   editMode: boolean
   onChangeImage: (slug: string, url: string) => void
   subdomain?: string
+  texts?: Record<string, string>
+  onChangeText?: (key: string, value: string) => void
 }
 
 // Único asset real scrapeado es la foto del ramo de flores del hero: se
@@ -30,6 +33,8 @@ export function CategoryShowcaseVintageEditable({
   editMode,
   onChangeImage,
   subdomain,
+  texts = {},
+  onChangeText = () => {},
 }: CategoryShowcaseVintageEditableProps) {
   const [basePath, setBasePath] = useState(subdomain ? `/tienda/${subdomain}` : "")
 
@@ -49,8 +54,20 @@ export function CategoryShowcaseVintageEditable({
     <section className="bg-[#fff6f5] py-16">
       <div className="container mx-auto px-6">
         <div className="text-center mb-10">
-          <h2 className={`${vintageHeading.className} text-2xl md:text-3xl text-[#4a4632]`}>Nuestras flores</h2>
-          <p className="mt-2 text-sm text-[#7c7669]">Cada arreglo hace el día de alguien más lindo</p>
+          <EditableInline
+            as="h2"
+            editMode={editMode}
+            className={`${vintageHeading.className} text-2xl md:text-3xl text-[#4a4632]`}
+            value={texts["categorias_title"] ?? "Nuestras flores"}
+            onChange={(v) => onChangeText("categorias_title", v)}
+          />
+          <EditableInline
+            as="p"
+            editMode={editMode}
+            className="mt-2 text-sm text-[#7c7669]"
+            value={texts["categorias_subtitle"] ?? "Cada arreglo hace el día de alguien más lindo"}
+            onChange={(v) => onChangeText("categorias_subtitle", v)}
+          />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {items.map((cat) => (

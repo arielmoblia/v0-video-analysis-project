@@ -131,6 +131,8 @@ export function StoreLuxuryLive({
           editMode={editMode}
           subdomain={subdomain}
           onChangeImage={(slug, url) => setCategoryImages((c) => ({ ...c, [slug]: url }))}
+          texts={templateTexts}
+          onChangeText={handleChangeText}
         />
 
         <BenefitsBannerLuxury editMode={editMode} texts={templateTexts} onChangeText={handleChangeText} />

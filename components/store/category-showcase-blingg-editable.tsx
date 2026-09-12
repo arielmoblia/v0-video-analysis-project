@@ -6,6 +6,7 @@ import Image from "next/image"
 import { ImagePlus, Loader2 } from "lucide-react"
 import { blinggHeading } from "@/lib/fonts/blingg"
 import type { Category } from "@/lib/store-context"
+import { EditableInline } from "./editable-inline"
 
 interface CategoryShowcaseBlinggEditableProps {
   categories: Category[]
@@ -14,6 +15,8 @@ interface CategoryShowcaseBlinggEditableProps {
   accentColor?: string
   onChangeImage: (slug: string, url: string) => void
   subdomain?: string
+  texts?: Record<string, string>
+  onChangeText?: (key: string, value: string) => void
 }
 
 // Fotos reales de joyas sacadas de la demo scrapeada (no fotos inventadas),
@@ -35,6 +38,8 @@ export function CategoryShowcaseBlinggEditable({
   accentColor = "#6EC1E4",
   onChangeImage,
   subdomain,
+  texts = {},
+  onChangeText = () => {},
 }: CategoryShowcaseBlinggEditableProps) {
   const [basePath, setBasePath] = useState(subdomain ? `/tienda/${subdomain}` : "")
 
@@ -50,7 +55,13 @@ export function CategoryShowcaseBlinggEditable({
 
   return (
     <section className="container mx-auto px-6 py-14">
-      <h2 className={`${blinggHeading.className} text-2xl font-bold text-[#54595F] mb-6 text-center`}>Categorías</h2>
+      <EditableInline
+        as="h2"
+        editMode={editMode}
+        className={`${blinggHeading.className} text-2xl font-bold text-[#54595F] mb-6 text-center`}
+        value={texts["categorias_title"] ?? "Categorías"}
+        onChange={(v) => onChangeText("categorias_title", v)}
+      />
       <div className="flex gap-5 overflow-x-auto pb-2 md:flex-wrap md:justify-center md:overflow-visible">
         {categories.slice(0, 10).map((cat, index) => (
           <CategoryCard

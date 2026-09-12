@@ -6,6 +6,7 @@ import Image from "next/image"
 import { ImagePlus, Loader2 } from "lucide-react"
 import type { Category } from "@/lib/store-context"
 import { luxuryHeading } from "@/lib/fonts/luxury"
+import { EditableInline } from "./editable-inline"
 
 interface CategoryShowcaseLuxuryEditableProps {
   categories: Category[]
@@ -13,6 +14,8 @@ interface CategoryShowcaseLuxuryEditableProps {
   editMode: boolean
   onChangeImage: (slug: string, url: string) => void
   subdomain?: string
+  texts?: Record<string, string>
+  onChangeText?: (key: string, value: string) => void
 }
 
 const DEFAULT_IMAGES = [
@@ -31,6 +34,8 @@ export function CategoryShowcaseLuxuryEditable({
   editMode,
   onChangeImage,
   subdomain,
+  texts = {},
+  onChangeText = () => {},
 }: CategoryShowcaseLuxuryEditableProps) {
   const [basePath, setBasePath] = useState(subdomain ? `/tienda/${subdomain}` : "")
 
@@ -50,7 +55,13 @@ export function CategoryShowcaseLuxuryEditable({
     <section className="bg-white py-16">
       <div className="container mx-auto px-6">
         <div className="text-center mb-10">
-          <h2 className={`${luxuryHeading.className} text-2xl md:text-3xl uppercase tracking-wide text-neutral-900`}>Colecciones</h2>
+          <EditableInline
+            as="h2"
+            editMode={editMode}
+            className={`${luxuryHeading.className} text-2xl md:text-3xl uppercase tracking-wide text-neutral-900`}
+            value={texts["categorias_title"] ?? "Colecciones"}
+            onChange={(v) => onChangeText("categorias_title", v)}
+          />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-auto md:h-[520px]">
           {items[0] && (
@@ -62,6 +73,8 @@ export function CategoryShowcaseLuxuryEditable({
                 editMode={editMode}
                 onChangeImage={(url) => onChangeImage(items[0].slug, url)}
                 href={subdomain ? `${basePath}/categoria/${items[0].slug}` : undefined}
+                ctaText={texts["categorias_cta"] ?? "Comprar ahora"}
+                onChangeCta={(v) => onChangeText("categorias_cta", v)}
               />
             </div>
           )}
@@ -75,6 +88,8 @@ export function CategoryShowcaseLuxuryEditable({
                   editMode={editMode}
                   onChangeImage={(url) => onChangeImage(cat.slug, url)}
                   href={subdomain ? `${basePath}/categoria/${cat.slug}` : undefined}
+                  ctaText={texts["categorias_cta"] ?? "Comprar ahora"}
+                  onChangeCta={(v) => onChangeText("categorias_cta", v)}
                 />
               </div>
             ))}
@@ -92,6 +107,8 @@ function CategoryTile({
   editMode,
   onChangeImage,
   href,
+  ctaText = "Comprar ahora",
+  onChangeCta = () => {},
 }: {
   slug: string
   image: string
@@ -99,6 +116,8 @@ function CategoryTile({
   editMode: boolean
   onChangeImage: (url: string) => void
   href?: string
+  ctaText?: string
+  onChangeCta?: (value: string) => void
 }) {
   const [hover, setHover] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -132,7 +151,13 @@ function CategoryTile({
       <div className="absolute inset-0 bg-black/20" />
       <div className="absolute bottom-6 left-6">
         <h3 className="text-white text-xl uppercase tracking-widest font-semibold">{name}</h3>
-        <span className="mt-1 inline-block text-xs uppercase tracking-widest text-white/80 border-b border-white/60">Comprar ahora</span>
+        <EditableInline
+          as="span"
+          editMode={editMode}
+          className="mt-1 inline-block text-xs uppercase tracking-widest text-white/80 border-b border-white/60"
+          value={ctaText}
+          onChange={onChangeCta}
+        />
       </div>
 
       {editMode && (

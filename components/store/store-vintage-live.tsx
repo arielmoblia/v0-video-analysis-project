@@ -124,6 +124,8 @@ export function StoreVintageLive({
           editMode={editMode}
           subdomain={subdomain}
           onChangeImage={(slug, url) => setCategoryImages((c) => ({ ...c, [slug]: url }))}
+          texts={templateTexts}
+          onChangeText={handleChangeText}
         />
 
         <TestimonialsVintage editMode={editMode} texts={templateTexts} onChangeText={handleChangeText} />

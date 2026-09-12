@@ -6,6 +6,7 @@ import Image from "next/image"
 import { ImagePlus, Loader2 } from "lucide-react"
 import type { Category } from "@/lib/store-context"
 import { artesanoHeading } from "@/lib/fonts/artesano"
+import { EditableInline } from "./editable-inline"
 
 interface CategoryShowcaseArtesanoEditableProps {
   categories: Category[]
@@ -15,6 +16,8 @@ interface CategoryShowcaseArtesanoEditableProps {
   accentColor2?: string
   onChangeImage: (slug: string, url: string) => void
   subdomain?: string
+  texts?: Record<string, string>
+  onChangeText?: (key: string, value: string) => void
 }
 
 const DEFAULT_IMAGES = [
@@ -36,6 +39,8 @@ export function CategoryShowcaseArtesanoEditable({
   accentColor2 = "#4A3427",
   onChangeImage,
   subdomain,
+  texts = {},
+  onChangeText = () => {},
 }: CategoryShowcaseArtesanoEditableProps) {
   const [basePath, setBasePath] = useState(subdomain ? `/tienda/${subdomain}` : "")
 
@@ -53,7 +58,13 @@ export function CategoryShowcaseArtesanoEditable({
     <section className="bg-[#FAF6F1] py-16">
       <div className="container mx-auto px-6">
         <div className="text-center mb-10">
-          <h2 className={`${artesanoHeading.className} text-2xl md:text-3xl text-[#3a2c22]`}>Categorías</h2>
+          <EditableInline
+            as="h2"
+            editMode={editMode}
+            className={`${artesanoHeading.className} text-2xl md:text-3xl text-[#3a2c22]`}
+            value={texts["categorias_title"] ?? "Categorías"}
+            onChange={(v) => onChangeText("categorias_title", v)}
+          />
           <div className="mx-auto mt-3 h-[2px] w-12" style={{ backgroundColor: accentColor }} />
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">

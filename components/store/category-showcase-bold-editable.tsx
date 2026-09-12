@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { ImagePlus, Loader2 } from "lucide-react"
 import type { Category } from "@/lib/store-context"
+import { EditableInline } from "./editable-inline"
 
 interface CategoryShowcaseBoldEditableProps {
   categories: Category[]
@@ -14,6 +15,8 @@ interface CategoryShowcaseBoldEditableProps {
   accentColor2?: string
   onChangeImage: (slug: string, url: string) => void
   subdomain?: string
+  texts?: Record<string, string>
+  onChangeText?: (key: string, value: string) => void
 }
 
 const DEFAULT_IMAGES = [
@@ -36,6 +39,8 @@ export function CategoryShowcaseBoldEditable({
   accentColor2 = "#22c55e",
   onChangeImage,
   subdomain,
+  texts = {},
+  onChangeText = () => {},
 }: CategoryShowcaseBoldEditableProps) {
   const [basePath, setBasePath] = useState(subdomain ? `/tienda/${subdomain}` : "")
 
@@ -51,7 +56,13 @@ export function CategoryShowcaseBoldEditable({
 
   return (
     <section className="container mx-auto px-6 py-14">
-      <h2 className="text-2xl md:text-3xl font-extrabold text-neutral-900 mb-6 text-center">Categorías</h2>
+      <EditableInline
+        as="h2"
+        editMode={editMode}
+        className="text-2xl md:text-3xl font-extrabold text-neutral-900 mb-6 text-center"
+        value={texts["categorias_title"] ?? "Categorías"}
+        onChange={(v) => onChangeText("categorias_title", v)}
+      />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
         {categories.slice(0, 8).map((cat, index) => (
           <CategoryTile
