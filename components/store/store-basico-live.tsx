@@ -5,8 +5,10 @@ import { Pencil, Check, Loader2 } from "lucide-react"
 import type { Store, Product, Category } from "@/lib/store-context"
 import { StoreHeader } from "@/components/store/store-header"
 import { StoreHeroBasicoEditable } from "@/components/store/store-hero-basico-editable"
+import { CategoryShowcaseBasicoEditable } from "@/components/store/category-showcase-basico-editable"
 import { ProductGrid } from "@/components/store/product-grid"
 import { StoreFooter } from "@/components/store/store-footer"
+import { EditableInline } from "@/components/store/editable-inline"
 
 interface StoreBasicoLiveProps {
   store: Store
@@ -17,6 +19,7 @@ interface StoreBasicoLiveProps {
   exchangeRate: number
   isOwner: boolean
   hasMayoristaMinorista: boolean
+  initialCategoryImages: Record<string, string>
 }
 
 // Temple "Básico": el diseño clásico de siempre (StoreHeader/StoreHero/
@@ -31,6 +34,7 @@ export function StoreBasicoLive({
   exchangeRate,
   isOwner,
   hasMayoristaMinorista,
+  initialCategoryImages,
 }: StoreBasicoLiveProps) {
   const [banner, setBanner] = useState({
     banner_image: store.banner_image || "",
@@ -38,12 +42,22 @@ export function StoreBasicoLive({
     banner_subtitle: store.banner_subtitle || "",
   })
   const [savedBanner, setSavedBanner] = useState(banner)
+  const [categoryImages, setCategoryImages] = useState<Record<string, string>>(initialCategoryImages)
+  const [savedCategoryImages, setSavedCategoryImages] = useState(initialCategoryImages)
+  const initialTemplateTexts = (store.plan_features?.template_texts as Record<string, string>) || {}
+  const [templateTexts, setTemplateTexts] = useState<Record<string, string>>(initialTemplateTexts)
+  const [savedTemplateTexts, setSavedTemplateTexts] = useState(initialTemplateTexts)
   const [editMode, setEditMode] = useState(false)
   const [saving, setSaving] = useState(false)
   const [justSaved, setJustSaved] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
-  const dirty = JSON.stringify(banner) !== JSON.stringify(savedBanner)
+  const dirty =
+    JSON.stringify(banner) !== JSON.stringify(savedBanner) ||
+    JSON.stringify(categoryImages) !== JSON.stringify(savedCategoryImages) ||
+    JSON.stringify(templateTexts) !== JSON.stringify(savedTemplateTexts)
+
+  const handleChangeText = (key: string, value: string) => setTemplateTexts((t) => ({ ...t, [key]: value }))
 
   const handleSave = async () => {
     setSaving(true)
@@ -52,7 +66,7 @@ export function StoreBasicoLive({
       const res = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ storeId: store.id, ...banner }),
+        body: JSON.stringify({ storeId: store.id, ...banner, category_images: categoryImages, template_texts: templateTexts }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -60,6 +74,8 @@ export function StoreBasicoLive({
         return
       }
       setSavedBanner(banner)
+      setSavedCategoryImages(categoryImages)
+      setSavedTemplateTexts(templateTexts)
       setJustSaved(true)
       setTimeout(() => setJustSaved(false), 2000)
     } finally {
@@ -81,12 +97,34 @@ export function StoreBasicoLive({
           onChangeSubtitle={(value) => setBanner((b) => ({ ...b, banner_subtitle: value }))}
         />
 
+        <CategoryShowcaseBasicoEditable
+          categories={categories}
+          images={categoryImages}
+          editMode={editMode}
+          subdomain={subdomain}
+          onChangeImage={(slug, url) => setCategoryImages((c) => ({ ...c, [slug]: url }))}
+          texts={templateTexts}
+          onChangeText={handleChangeText}
+        />
+
         {featuredProducts.length > 0 && (
           <section className="py-20 px-6">
             <div className="container mx-auto">
               <div className="text-center mb-14">
-                <p className="text-xs tracking-[0.3em] uppercase text-neutral-500 mb-3">Lo mejor</p>
-                <h2 className="text-3xl font-light tracking-wide">Productos Destacados</h2>
+                <EditableInline
+                  as="p"
+                  editMode={editMode}
+                  className="text-xs tracking-[0.3em] uppercase text-neutral-500 mb-3"
+                  value={templateTexts["destacados_eyebrow"] ?? "Lo mejor"}
+                  onChange={(v) => handleChangeText("destacados_eyebrow", v)}
+                />
+                <EditableInline
+                  as="h2"
+                  editMode={editMode}
+                  className="text-3xl font-light tracking-wide"
+                  value={templateTexts["destacados_title"] ?? "Productos Destacados"}
+                  onChange={(v) => handleChangeText("destacados_title", v)}
+                />
               </div>
               <ProductGrid products={featuredProducts} subdomain={subdomain} exchangeRate={exchangeRate} country={store.country} />
             </div>
@@ -96,8 +134,20 @@ export function StoreBasicoLive({
         <section id="productos" className="py-20 px-6 bg-neutral-50">
           <div className="container mx-auto">
             <div className="text-center mb-14">
-              <p className="text-xs tracking-[0.3em] uppercase text-neutral-500 mb-3">Explorar</p>
-              <h2 className="text-3xl font-light tracking-wide">Todos los Productos</h2>
+              <EditableInline
+                as="p"
+                editMode={editMode}
+                className="text-xs tracking-[0.3em] uppercase text-neutral-500 mb-3"
+                value={templateTexts["todos_eyebrow"] ?? "Explorar"}
+                onChange={(v) => handleChangeText("todos_eyebrow", v)}
+              />
+              <EditableInline
+                as="h2"
+                editMode={editMode}
+                className="text-3xl font-light tracking-wide"
+                value={templateTexts["todos_title"] ?? "Todos los Productos"}
+                onChange={(v) => handleChangeText("todos_title", v)}
+              />
             </div>
             {products.length > 0 ? (
               <ProductGrid products={products} subdomain={subdomain} exchangeRate={exchangeRate} country={store.country} />
