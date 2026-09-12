@@ -113,7 +113,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const cookieStore = await cookies()
   const isOwner = cookieStore.get(`admin_${subdomain.toLowerCase()}`)?.value === "true"
-  const canEditProduct = isOwner && ["moderno", "elegante", "bold"].includes(store.plan_features?.active_theme || "")
+  const canEditProduct = isOwner
 
   // JSON-LD Product schema automatico
   const categoryMap: Record<string, string> = {

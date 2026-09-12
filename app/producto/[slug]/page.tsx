@@ -111,7 +111,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   const cookieStore = await cookies()
   const isOwner = cookieStore.get(`admin_${subdomain.toLowerCase()}`)?.value === "true"
-  const canEditProduct = isOwner && ["moderno", "elegante", "bold", "blingg", "artesano"].includes(store.plan_features?.active_theme || "")
+  const canEditProduct = isOwner
 
   // Categoria Google Merchant Center segun el template de la tienda
   const categoryMap: Record<string, string> = {
