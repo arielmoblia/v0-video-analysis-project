@@ -1195,22 +1195,13 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                             ) : customThemeRequest?.status === "listo" ? (
                                               <p className="text-[9px] text-green-600 font-medium text-center py-1.5">¡Listo! Ya está en tu lista</p>
                                             ) : (
-                                              <div className="space-y-1.5">
-                                                <button
-                                                  type="button"
-                                                  onClick={() => setCustomUrlDialogOpen(true)}
-                                                  className="w-full text-xs py-1.5 rounded-lg font-medium bg-green-600 hover:bg-green-700 text-white"
-                                                >
-                                                  Comprar
-                                                </button>
-                                                <button
-                                                  type="button"
-                                                  onClick={() => setCustomUrlDialogOpen(true)}
-                                                  className="w-full text-xs py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
-                                                >
-                                                  Crear desde un link
-                                                </button>
-                                              </div>
+                                              <button
+                                                type="button"
+                                                onClick={() => setCustomUrlDialogOpen(true)}
+                                                className="w-full text-xs py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
+                                              >
+                                                Crear desde un link
+                                              </button>
                                             )}
                                           </div>
                                         ) : design.comingSoon ? (
@@ -1645,22 +1636,13 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                       ) : customThemeRequest?.status === "listo" ? (
                         <p className="text-[9px] text-green-600 font-medium text-center py-1.5">¡Listo! Ya está en tu lista</p>
                       ) : (
-                        <div className="space-y-1.5">
-                          <button
-                            type="button"
-                            onClick={() => setCustomUrlDialogOpen(true)}
-                            className="w-full text-xs py-1.5 rounded-lg font-medium bg-green-600 hover:bg-green-700 text-white"
-                          >
-                            Comprar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setCustomUrlDialogOpen(true)}
-                            className="w-full text-xs py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
-                          >
-                            Crear desde un link
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setCustomUrlDialogOpen(true)}
+                          className="w-full text-xs py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
+                        >
+                          Crear desde un link
+                        </button>
                       )}
                     </div>
                   ) : design.comingSoon ? (
