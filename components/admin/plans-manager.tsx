@@ -67,6 +67,15 @@ interface PlansManagerProps {
 
 const pageDesigns = [
   {
+    id: "basico",
+    name: "Básico",
+    subtitle: "Diseño clásico",
+    description: "El diseño de siempre, con hero, productos destacados y catálogo completo. Es el que ya trae tu tienda.",
+    image: "/images/templates/basico-classic-store.jpg",
+    previewUrl: "/disenio-preview/basico",
+    comingSoon: false,
+  },
+  {
     id: "moderno",
     name: "Moderno",
     subtitle: "Inspirado en Saleor",
