@@ -1180,19 +1180,37 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                               +
                                             </div>
                                             <p className="text-xs font-medium mb-0.5">{design.name}</p>
-                                            <p className="text-[9px] text-muted-foreground leading-tight mb-2">{design.subtitle}</p>
+                                            <p className="text-[9px] text-muted-foreground leading-tight mb-1">{design.subtitle}</p>
+                                            <a
+                                              href={getLeerMasUrl(design.id)}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              onClick={(e) => e.stopPropagation()}
+                                              className="block text-[9px] text-green-600 hover:text-green-700 hover:underline mb-2"
+                                            >
+                                              Leer más →
+                                            </a>
                                             {customThemeRequest?.status === "pendiente" ? (
                                               <p className="text-[9px] text-violet-600 font-medium text-center py-1.5">Lo estamos armando…</p>
                                             ) : customThemeRequest?.status === "listo" ? (
                                               <p className="text-[9px] text-green-600 font-medium text-center py-1.5">¡Listo! Ya está en tu lista</p>
                                             ) : (
-                                              <button
-                                                type="button"
-                                                onClick={() => setCustomUrlDialogOpen(true)}
-                                                className="w-full text-xs py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
-                                              >
-                                                Crear desde un link
-                                              </button>
+                                              <div className="space-y-1.5">
+                                                <button
+                                                  type="button"
+                                                  onClick={() => setCustomUrlDialogOpen(true)}
+                                                  className="w-full text-xs py-1.5 rounded-lg font-medium bg-green-600 hover:bg-green-700 text-white"
+                                                >
+                                                  Comprar
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => setCustomUrlDialogOpen(true)}
+                                                  className="w-full text-xs py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
+                                                >
+                                                  Crear desde un link
+                                                </button>
+                                              </div>
                                             )}
                                           </div>
                                         ) : design.comingSoon ? (
@@ -1612,19 +1630,37 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                         +
                       </div>
                       <p className="text-xs font-medium mb-0.5">{design.name}</p>
-                      <p className="text-[9px] text-muted-foreground leading-tight mb-2">{design.subtitle}</p>
+                      <p className="text-[9px] text-muted-foreground leading-tight mb-1">{design.subtitle}</p>
+                      <a
+                        href={getLeerMasUrl(design.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="block text-[9px] text-green-600 hover:text-green-700 hover:underline mb-2"
+                      >
+                        Leer más →
+                      </a>
                       {customThemeRequest?.status === "pendiente" ? (
                         <p className="text-[9px] text-violet-600 font-medium text-center py-1.5">Lo estamos armando…</p>
                       ) : customThemeRequest?.status === "listo" ? (
                         <p className="text-[9px] text-green-600 font-medium text-center py-1.5">¡Listo! Ya está en tu lista</p>
                       ) : (
-                        <button
-                          type="button"
-                          onClick={() => setCustomUrlDialogOpen(true)}
-                          className="w-full text-xs py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
-                        >
-                          Crear desde un link
-                        </button>
+                        <div className="space-y-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setCustomUrlDialogOpen(true)}
+                            className="w-full text-xs py-1.5 rounded-lg font-medium bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            Comprar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCustomUrlDialogOpen(true)}
+                            className="w-full text-xs py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
+                          >
+                            Crear desde un link
+                          </button>
+                        </div>
                       )}
                     </div>
                   ) : design.comingSoon ? (
