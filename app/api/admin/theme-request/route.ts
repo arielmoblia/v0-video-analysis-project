@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js"
 
 export async function POST(request: NextRequest) {
   try {
-    const { storeId, url } = await request.json()
+    const { storeId, url, paypalOrderId, amountUsd } = await request.json()
 
     if (!storeId) {
       return NextResponse.json({ error: "Store ID requerido" }, { status: 400 })
@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
       url: parsed.toString(),
       status: "pendiente",
       requested_at: new Date().toISOString(),
+      ...(paypalOrderId ? { paypal_order_id: paypalOrderId, amount_usd: amountUsd ?? null } : {}),
     }
 
     const nextPlanFeatures = { ...(currentStore?.plan_features || {}), custom_theme_request }

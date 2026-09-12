@@ -292,6 +292,10 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   const [customUrl, setCustomUrl] = useState("")
   const [customUrlError, setCustomUrlError] = useState("")
   const [submittingCustomUrl, setSubmittingCustomUrl] = useState(false)
+  const [customThemePriceUSD, setCustomThemePriceUSD] = useState(5)
+  const customUrlPaypalMountedRef = useRef(false)
+  const customUrlPaypalButtonRef = useRef<HTMLDivElement>(null)
+  const normalizedCustomUrlRef = useRef<string | null>(null)
 
   const toggleExpanded = (code: string) => {
     setExpandedFeatures((prev) => {
@@ -318,9 +322,13 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
         const res = await fetch(`/api/admin/features?storeId=${storeId}&includeAvailable=true`)
         if (res.ok) {
           const data = await res.json()
+          const allFeatures: DbFeature[] = data.availableFeatures || []
+          const customThemeFeature = allFeatures.find((f) => f.code === "theme_custom_url")
           setPurchasedFeatures(data.features || [])
           setPurchasedDetails(data.purchasedDetails || [])
-          setAvailableFeatures(data.availableFeatures || [])
+          // "theme_custom_url" no se muestra como cosita genérica: se cobra desde el popup de "Nuevo/Propio"
+          setAvailableFeatures(allFeatures.filter((f) => f.code !== "theme_custom_url"))
+          if (customThemeFeature) setCustomThemePriceUSD(customThemeFeature.price)
           if (data.exchangeRate) {
             setExchangeRate(data.exchangeRate)
           }
@@ -383,39 +391,52 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
     }
   }
 
-  const handleSubmitCustomUrl = async () => {
-    setCustomUrlError("")
-    let normalized = customUrl.trim()
-    if (normalized && !/^https?:\/\//i.test(normalized)) {
+  const getNormalizedCustomUrl = (raw: string): string | null => {
+    let normalized = raw.trim()
+    if (!normalized) return null
+    if (!/^https?:\/\//i.test(normalized)) {
       normalized = `https://${normalized}`
     }
     try {
-      // eslint-disable-next-line no-new
-      new URL(normalized)
+      return new URL(normalized).toString()
     } catch {
-      setCustomUrlError("Pegá un link válido, ej: https://ejemplo.com")
-      return
+      return null
     }
+  }
 
+  const handleCustomUrlPaymentApprove = async (normalized: string, paypalOrderId: string) => {
     setSubmittingCustomUrl(true)
+    setCustomUrlError("")
     try {
+      await fetch("/api/admin/features/purchase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          storeId,
+          features: ["theme_custom_url"],
+          paymentMethod: "paypal",
+          paypalOrderId,
+        }),
+      })
+
       const res = await fetch("/api/admin/theme-request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ storeId, url: normalized }),
+        body: JSON.stringify({ storeId, url: normalized, paypalOrderId, amountUsd: customThemePriceUSD }),
       })
       const data = await res.json()
       if (!res.ok) {
-        setCustomUrlError(data.error || "No se pudo enviar el pedido")
+        setCustomUrlError(data.error || "El pago se acreditó pero no pudimos guardar el pedido, escribinos por soporte")
         return
       }
       setCustomThemeRequest(data.custom_theme_request)
       setCustomUrlDialogOpen(false)
       setCustomUrl("")
     } catch {
-      setCustomUrlError("No se pudo enviar el pedido, probá de nuevo")
+      setCustomUrlError("El pago se acreditó pero hubo un error al guardar el pedido, escribinos por soporte")
     } finally {
       setSubmittingCustomUrl(false)
+      customUrlPaypalMountedRef.current = false
     }
   }
 
@@ -507,6 +528,58 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       setPaypalRendered(false)
     }
   }, [selectedFeatures.length])
+
+  const normalizedCustomUrl = getNormalizedCustomUrl(customUrl)
+  const hasValidCustomUrl = !!normalizedCustomUrl
+  normalizedCustomUrlRef.current = normalizedCustomUrl
+
+  useEffect(() => {
+    if (!customUrlDialogOpen || !hasValidCustomUrl || !paypalLoaded) {
+      customUrlPaypalMountedRef.current = false
+      return
+    }
+    if (customUrlPaypalMountedRef.current) return
+
+    // Espera a que la URL deje de cambiar antes de montar el botón. Si se monta en cada
+    // tecla (o en el "parpadeo" de limpiar+pegar), el SDK de PayPal se queda a mitad de
+    // un render() async justo cuando el contenedor se vuelve a limpiar, y tira
+    // "container removed from DOM". Con el debounce solo se monta una vez, ya estable.
+    const timer = setTimeout(() => {
+      if (customUrlPaypalMountedRef.current || !customUrlPaypalButtonRef.current || !(window as any).paypal) return
+      customUrlPaypalMountedRef.current = true
+      customUrlPaypalButtonRef.current.innerHTML = ""
+      ;(window as any).paypal
+        .Buttons({
+          style: { layout: "vertical", color: "gold", shape: "rect", label: "paypal", height: 40 },
+          createOrder: (data: any, actions: any) => {
+            return actions.order.create({
+              purchase_units: [
+                {
+                  amount: {
+                    value: customThemePriceUSD.toFixed(2),
+                    currency_code: "USD",
+                  },
+                  description: `Modelo a medida tol.ar (por link) - Tienda: ${storeName || subdomain}`,
+                },
+              ],
+            })
+          },
+          onApprove: async (data: any, actions: any) => {
+            const order = await actions.order.capture()
+            const urlToSubmit = normalizedCustomUrlRef.current
+            if (!urlToSubmit) return
+            await handleCustomUrlPaymentApprove(urlToSubmit, order.id)
+          },
+          onError: (err: any) => {
+            console.error("PayPal Error:", err)
+            setCustomUrlError("Error al procesar el pago, probá de nuevo")
+          },
+        })
+        .render(customUrlPaypalButtonRef.current)
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [customUrlDialogOpen, hasValidCustomUrl, paypalLoaded, customThemePriceUSD, storeId, storeName, subdomain])
 
   const startTrial = async (feature: any) => {
     if (!feature.trial_days || feature.trial_days === 0) return
@@ -1669,7 +1742,17 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       </Dialog>
 
       {/* Popup: crear modelo nuevo pegando una URL */}
-      <Dialog open={customUrlDialogOpen} onOpenChange={(open) => { setCustomUrlDialogOpen(open); if (!open) setCustomUrlError("") }}>
+      <Dialog
+        open={customUrlDialogOpen}
+        onOpenChange={(open) => {
+          setCustomUrlDialogOpen(open)
+          if (!open) {
+            setCustomUrlError("")
+            setCustomUrl("")
+            customUrlPaypalMountedRef.current = false
+          }
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Creá tu propio modelo</DialogTitle>
@@ -1681,19 +1764,31 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
             <Input
               placeholder="https://ejemplo.com"
               value={customUrl}
-              onChange={(e) => setCustomUrl(e.target.value)}
+              onChange={(e) => {
+                setCustomUrl(e.target.value)
+                setCustomUrlError("")
+              }}
               disabled={submittingCustomUrl}
             />
             {customUrlError && <p className="text-xs text-red-600">{customUrlError}</p>}
-            <Button
-              type="button"
-              className="w-full"
-              disabled={submittingCustomUrl || !customUrl.trim()}
-              onClick={handleSubmitCustomUrl}
-            >
-              {submittingCustomUrl ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              Enviar
-            </Button>
+            <div className={`rounded-lg border border-violet-200 bg-violet-50 p-3 space-y-2 ${normalizedCustomUrl ? "" : "hidden"}`}>
+              <p className="text-xs text-violet-800">
+                Este diseño a medida cuesta <span className="font-semibold">USD {customThemePriceUSD}</span> (~$
+                {Math.round(customThemePriceUSD * exchangeRate).toLocaleString("es-AR")} ARS), pago único. Se cobra
+                ahora y lo armamos en los próximos días.
+              </p>
+              {submittingCustomUrl && (
+                <div className="flex items-center justify-center py-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-violet-600" />
+                </div>
+              )}
+              <div className={submittingCustomUrl ? "hidden" : ""}>
+                {/* Este div nunca se desmonta mientras el popup está abierto: si se saca del DOM
+                    a mitad de un toggle de estado, el SDK de PayPal tira "container removed from DOM". */}
+                <div ref={customUrlPaypalButtonRef} className="min-h-[40px]" />
+                {!paypalLoaded && <p className="text-[11px] text-muted-foreground">Cargando botón de pago…</p>}
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
