@@ -292,7 +292,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   const [customUrl, setCustomUrl] = useState("")
   const [customUrlError, setCustomUrlError] = useState("")
   const [submittingCustomUrl, setSubmittingCustomUrl] = useState(false)
-  const [customThemePriceUSD, setCustomThemePriceUSD] = useState(5)
+  const [customThemePriceUSD, setCustomThemePriceUSD] = useState(10)
   const customUrlPaypalMountedRef = useRef(false)
   const customUrlPaypalButtonRef = useRef<HTMLDivElement>(null)
   const normalizedCustomUrlRef = useRef<string | null>(null)
@@ -1773,14 +1773,11 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Creá tu propio modelo</DialogTitle>
-            <DialogDescription>
-              Pegá el link de una tienda que te gusta. Armamos un modelo nuevo con ese estilo, usando tus productos y fotos.
-            </DialogDescription>
+            <DialogTitle>Creá tu modelo a partir de un link</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <Input
-              placeholder="https://ejemplo.com"
+              placeholder="xxxxxx.com"
               value={customUrl}
               onChange={(e) => {
                 setCustomUrl(e.target.value)
@@ -1789,24 +1786,44 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
               disabled={submittingCustomUrl}
             />
             {customUrlError && <p className="text-xs text-red-600">{customUrlError}</p>}
-            <div className={`rounded-lg border border-violet-200 bg-violet-50 p-3 space-y-2 ${normalizedCustomUrl ? "" : "hidden"}`}>
-              <p className="text-xs text-violet-800">
-                Este diseño a medida cuesta <span className="font-semibold">USD {customThemePriceUSD}</span> (~$
-                {Math.round(customThemePriceUSD * exchangeRate).toLocaleString("es-AR")} ARS), pago único. Se cobra
-                ahora y lo armamos en los próximos días.
-              </p>
-              {submittingCustomUrl && (
-                <div className="flex items-center justify-center py-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-violet-600" />
+
+            <ol className="space-y-3 text-sm">
+              <li className="flex gap-2">
+                <span className="font-semibold text-violet-700">1)</span>
+                <span>Pegá el link de la página que te guste</span>
+              </li>
+              <li className="space-y-2">
+                <div className="flex gap-2">
+                  <span className="font-semibold text-violet-700">2)</span>
+                  <span>
+                    Aboná los <span className="font-semibold">USD {customThemePriceUSD}</span> (~$
+                    {Math.round(customThemePriceUSD * exchangeRate).toLocaleString("es-AR")} ARS), pago único. Se
+                    cobra ahora y lo armamos en los próximos días.
+                  </span>
                 </div>
-              )}
-              <div className={submittingCustomUrl ? "hidden" : ""}>
-                {/* Este div nunca se desmonta mientras el popup está abierto: si se saca del DOM
-                    a mitad de un toggle de estado, el SDK de PayPal tira "container removed from DOM". */}
-                <div ref={customUrlPaypalButtonRef} className="min-h-[40px]" />
-                {!paypalLoaded && <p className="text-[11px] text-muted-foreground">Cargando botón de pago…</p>}
-              </div>
-            </div>
+                <div className={`rounded-lg border border-violet-200 bg-violet-50 p-3 space-y-2 ${normalizedCustomUrl ? "" : "hidden"}`}>
+                  {submittingCustomUrl && (
+                    <div className="flex items-center justify-center py-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-violet-600" />
+                    </div>
+                  )}
+                  <div className={submittingCustomUrl ? "hidden" : ""}>
+                    {/* Este div nunca se desmonta mientras el popup está abierto: si se saca del DOM
+                        a mitad de un toggle de estado, el SDK de PayPal tira "container removed from DOM". */}
+                    <div ref={customUrlPaypalButtonRef} className="min-h-[40px]" />
+                    {!paypalLoaded && <p className="text-[11px] text-muted-foreground">Cargando botón de pago…</p>}
+                  </div>
+                </div>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-semibold text-violet-700">3)</span>
+                <span>
+                  Personalizá fotos y texto{" "}
+                  {/* Falta el link del video: pendiente hasta que se grabe y suba al canal de YouTube */}
+                  <span className="text-muted-foreground">(video próximamente)</span>
+                </span>
+              </li>
+            </ol>
           </div>
         </DialogContent>
       </Dialog>
