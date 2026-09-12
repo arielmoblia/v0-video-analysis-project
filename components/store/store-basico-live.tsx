@@ -5,7 +5,6 @@ import { Pencil, Check, Loader2 } from "lucide-react"
 import type { Store, Product, Category } from "@/lib/store-context"
 import { StoreHeader } from "@/components/store/store-header"
 import { StoreHeroBasicoEditable } from "@/components/store/store-hero-basico-editable"
-import { CategoryShowcaseBasicoEditable } from "@/components/store/category-showcase-basico-editable"
 import { ProductGrid } from "@/components/store/product-grid"
 import { StoreFooter } from "@/components/store/store-footer"
 import { EditableInline } from "@/components/store/editable-inline"
@@ -19,7 +18,6 @@ interface StoreBasicoLiveProps {
   exchangeRate: number
   isOwner: boolean
   hasMayoristaMinorista: boolean
-  initialCategoryImages: Record<string, string>
 }
 
 // Temple "Básico": el diseño clásico de siempre (StoreHeader/StoreHero/
@@ -34,7 +32,6 @@ export function StoreBasicoLive({
   exchangeRate,
   isOwner,
   hasMayoristaMinorista,
-  initialCategoryImages,
 }: StoreBasicoLiveProps) {
   const [banner, setBanner] = useState({
     banner_image: store.banner_image || "",
@@ -42,8 +39,6 @@ export function StoreBasicoLive({
     banner_subtitle: store.banner_subtitle || "",
   })
   const [savedBanner, setSavedBanner] = useState(banner)
-  const [categoryImages, setCategoryImages] = useState<Record<string, string>>(initialCategoryImages)
-  const [savedCategoryImages, setSavedCategoryImages] = useState(initialCategoryImages)
   const initialTemplateTexts = (store.plan_features?.template_texts as Record<string, string>) || {}
   const [templateTexts, setTemplateTexts] = useState<Record<string, string>>(initialTemplateTexts)
   const [savedTemplateTexts, setSavedTemplateTexts] = useState(initialTemplateTexts)
@@ -54,7 +49,6 @@ export function StoreBasicoLive({
 
   const dirty =
     JSON.stringify(banner) !== JSON.stringify(savedBanner) ||
-    JSON.stringify(categoryImages) !== JSON.stringify(savedCategoryImages) ||
     JSON.stringify(templateTexts) !== JSON.stringify(savedTemplateTexts)
 
   const handleChangeText = (key: string, value: string) => setTemplateTexts((t) => ({ ...t, [key]: value }))
@@ -66,7 +60,7 @@ export function StoreBasicoLive({
       const res = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ storeId: store.id, ...banner, category_images: categoryImages, template_texts: templateTexts }),
+        body: JSON.stringify({ storeId: store.id, ...banner, template_texts: templateTexts }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -74,7 +68,6 @@ export function StoreBasicoLive({
         return
       }
       setSavedBanner(banner)
-      setSavedCategoryImages(categoryImages)
       setSavedTemplateTexts(templateTexts)
       setJustSaved(true)
       setTimeout(() => setJustSaved(false), 2000)
@@ -95,16 +88,6 @@ export function StoreBasicoLive({
           onChangeImage={(url) => setBanner((b) => ({ ...b, banner_image: url }))}
           onChangeTitle={(value) => setBanner((b) => ({ ...b, banner_title: value }))}
           onChangeSubtitle={(value) => setBanner((b) => ({ ...b, banner_subtitle: value }))}
-        />
-
-        <CategoryShowcaseBasicoEditable
-          categories={categories}
-          images={categoryImages}
-          editMode={editMode}
-          subdomain={subdomain}
-          onChangeImage={(slug, url) => setCategoryImages((c) => ({ ...c, [slug]: url }))}
-          texts={templateTexts}
-          onChangeText={handleChangeText}
         />
 
         {featuredProducts.length > 0 && (

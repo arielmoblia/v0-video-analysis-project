@@ -281,7 +281,6 @@ export default async function StorePage({ params }: StorePageProps) {
   if (activeTheme === "basico") {
     const cookieStore = await cookies()
     const isOwner = cookieStore.get(`admin_${subdomain.toLowerCase()}`)?.value === "true"
-    const initialCategoryImages = store.plan_features?.category_images || {}
 
     return (
       <StoreBasicoLive
@@ -293,7 +292,6 @@ export default async function StorePage({ params }: StorePageProps) {
         exchangeRate={exchangeRate}
         isOwner={isOwner}
         hasMayoristaMinorista={hasMayoristaMinorista}
-        initialCategoryImages={initialCategoryImages}
       />
     )
   }
