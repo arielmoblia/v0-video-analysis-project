@@ -53,6 +53,9 @@ export function StoreArtesanoLive({
   const [savedBanner, setSavedBanner] = useState(banner)
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>(initialCategoryImages)
   const [savedCategoryImages, setSavedCategoryImages] = useState(initialCategoryImages)
+  const initialTemplateTexts = (store.plan_features?.template_texts as Record<string, string>) || {}
+  const [templateTexts, setTemplateTexts] = useState<Record<string, string>>(initialTemplateTexts)
+  const [savedTemplateTexts, setSavedTemplateTexts] = useState(initialTemplateTexts)
   const [editMode, setEditMode] = useState(false)
   const [saving, setSaving] = useState(false)
   const [justSaved, setJustSaved] = useState(false)
@@ -60,7 +63,10 @@ export function StoreArtesanoLive({
 
   const dirty =
     JSON.stringify(banner) !== JSON.stringify(savedBanner) ||
-    JSON.stringify(categoryImages) !== JSON.stringify(savedCategoryImages)
+    JSON.stringify(categoryImages) !== JSON.stringify(savedCategoryImages) ||
+    JSON.stringify(templateTexts) !== JSON.stringify(savedTemplateTexts)
+
+  const handleChangeText = (key: string, value: string) => setTemplateTexts((t) => ({ ...t, [key]: value }))
 
   const handleSave = async () => {
     setSaving(true)
@@ -69,7 +75,7 @@ export function StoreArtesanoLive({
       const res = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ storeId: store.id, ...banner, category_images: categoryImages }),
+        body: JSON.stringify({ storeId: store.id, ...banner, category_images: categoryImages, template_texts: templateTexts }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -78,6 +84,7 @@ export function StoreArtesanoLive({
       }
       setSavedBanner(banner)
       setSavedCategoryImages(categoryImages)
+      setSavedTemplateTexts(templateTexts)
       setJustSaved(true)
       setTimeout(() => setJustSaved(false), 2000)
     } finally {
@@ -130,7 +137,13 @@ export function StoreArtesanoLive({
           </section>
         )}
 
-        <BenefitsBannerArtesano accentColor={accentColor} accentColor2={accentColor2} />
+        <BenefitsBannerArtesano
+          accentColor={accentColor}
+          accentColor2={accentColor2}
+          editMode={editMode}
+          texts={templateTexts}
+          onChangeText={handleChangeText}
+        />
 
         <section id={featuredProducts.length > 0 ? undefined : "productos"} className="bg-white">
           <div className="container mx-auto px-6 py-16">

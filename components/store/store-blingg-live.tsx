@@ -9,6 +9,7 @@ import { StoreHeroBlinggEditable } from "@/components/store/store-hero-blingg-ed
 import { CategoryShowcaseBlinggEditable } from "@/components/store/category-showcase-blingg-editable"
 import { ProductGridBlingg } from "@/components/store/product-grid-blingg"
 import { StoreFooter } from "@/components/store/store-footer"
+import { EditableInline } from "@/components/store/editable-inline"
 import { blinggBody, blinggHeading } from "@/lib/fonts/blingg"
 
 interface StoreBlinggLiveProps {
@@ -25,12 +26,13 @@ interface StoreBlinggLiveProps {
 }
 
 // Íconos reales de la demo scrapeada (sección "Free Shipping / Secure
-// Payments / Order Tracking / Big Discounts" de la página real).
+// Payments / Order Tracking / Big Discounts" de la página real). El texto de
+// cada badge es editable (texts["trust_badges.<key>"]).
 const TRUST_BADGES = [
-  { icon: "/design-assets/blingg-jewelry/icon-01.png", label: "Envío gratis" },
-  { icon: "/design-assets/blingg-jewelry/icon-02.png", label: "Pagos seguros" },
-  { icon: "/design-assets/blingg-jewelry/icon-03.png", label: "Seguimiento de pedido" },
-  { icon: "/design-assets/blingg-jewelry/icon-04.png", label: "Grandes descuentos" },
+  { icon: "/design-assets/blingg-jewelry/icon-01.png", key: "envio", label: "Envío gratis" },
+  { icon: "/design-assets/blingg-jewelry/icon-02.png", key: "pagos", label: "Pagos seguros" },
+  { icon: "/design-assets/blingg-jewelry/icon-03.png", key: "seguimiento", label: "Seguimiento de pedido" },
+  { icon: "/design-assets/blingg-jewelry/icon-04.png", key: "descuentos", label: "Grandes descuentos" },
 ]
 
 // Temple "Blingg" para tiendas de joyería: paleta real celeste/gris/verde y
@@ -58,6 +60,9 @@ export function StoreBlinggLive({
   const [savedBanner, setSavedBanner] = useState(banner)
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>(initialCategoryImages)
   const [savedCategoryImages, setSavedCategoryImages] = useState(initialCategoryImages)
+  const initialTemplateTexts = (store.plan_features?.template_texts as Record<string, string>) || {}
+  const [templateTexts, setTemplateTexts] = useState<Record<string, string>>(initialTemplateTexts)
+  const [savedTemplateTexts, setSavedTemplateTexts] = useState(initialTemplateTexts)
   const [editMode, setEditMode] = useState(false)
   const [saving, setSaving] = useState(false)
   const [justSaved, setJustSaved] = useState(false)
@@ -65,7 +70,10 @@ export function StoreBlinggLive({
 
   const dirty =
     JSON.stringify(banner) !== JSON.stringify(savedBanner) ||
-    JSON.stringify(categoryImages) !== JSON.stringify(savedCategoryImages)
+    JSON.stringify(categoryImages) !== JSON.stringify(savedCategoryImages) ||
+    JSON.stringify(templateTexts) !== JSON.stringify(savedTemplateTexts)
+
+  const handleChangeText = (key: string, value: string) => setTemplateTexts((t) => ({ ...t, [key]: value }))
 
   const handleSave = async () => {
     setSaving(true)
@@ -74,7 +82,7 @@ export function StoreBlinggLive({
       const res = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ storeId: store.id, ...banner, category_images: categoryImages }),
+        body: JSON.stringify({ storeId: store.id, ...banner, category_images: categoryImages, template_texts: templateTexts }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -83,6 +91,7 @@ export function StoreBlinggLive({
       }
       setSavedBanner(banner)
       setSavedCategoryImages(categoryImages)
+      setSavedTemplateTexts(templateTexts)
       setJustSaved(true)
       setTimeout(() => setJustSaved(false), 2000)
     } finally {
@@ -109,9 +118,15 @@ export function StoreBlinggLive({
         <section className="border-y border-[#e5f2f8] bg-[#FAFDFE]">
           <div className="container mx-auto px-6 py-8 grid grid-cols-2 md:grid-cols-4 gap-6">
             {TRUST_BADGES.map((badge) => (
-              <div key={badge.label} className="flex flex-col items-center gap-2 text-center">
+              <div key={badge.key} className="flex flex-col items-center gap-2 text-center">
                 <Image src={badge.icon} alt="" width={40} height={30} className="opacity-80" />
-                <span className="text-xs font-medium text-[#7A7A7A]">{badge.label}</span>
+                <EditableInline
+                  as="span"
+                  editMode={editMode}
+                  className="text-xs font-medium text-[#7A7A7A] text-center"
+                  value={templateTexts[`trust_badges.${badge.key}`] ?? badge.label}
+                  onChange={(v) => handleChangeText(`trust_badges.${badge.key}`, v)}
+                />
               </div>
             ))}
           </div>
