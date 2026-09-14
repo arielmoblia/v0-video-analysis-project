@@ -124,7 +124,7 @@ export default function PlanCositasPage({ brand = "tol" }: Props) {
             </span>
           </h1>
           <p className="text-2xl font-semibold text-slate-700 mb-4">
-            Funcionalidades para tu tienda online
+            Hacé tu Plan Gratis y vas agregándole las cositas que necesitás
           </p>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-4">
             Más ventas. Sin pagar de más. Activás solo lo que necesitás — galería de fotos, SEO profesional, precios en dólares y más.
