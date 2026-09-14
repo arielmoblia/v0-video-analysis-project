@@ -123,7 +123,7 @@ export default function PlanCositasPage({ brand = "tol" }: Props) {
               Plan Cositas
             </span>
           </h1>
-          <div className="max-w-2xl mx-auto mb-4 bg-[#ff9fc5]/10 rounded-2xl px-6 py-5">
+          <div className="max-w-2xl mx-auto mb-4 px-6 py-5">
             <p className="text-xl md:text-2xl font-bold text-slate-800 mb-2">
               Hacé tu tienda gratis y andá agregándole "cositas" cuando las necesites
             </p>
@@ -131,7 +131,7 @@ export default function PlanCositasPage({ brand = "tol" }: Props) {
               sin pagar de más. Activá las que necesites.
             </p>
           </div>
-          <div className="max-w-2xl mx-auto bg-[#ff9fc5]/25 rounded-2xl px-6 py-5">
+          <div className="max-w-2xl mx-auto px-6 py-5">
             <p className="text-lg font-bold text-[#62162f] mb-1">
               Cada "cosita" te cuesta ${Math.round(dolarRate).toLocaleString("es-AR")} por mes.
             </p>
