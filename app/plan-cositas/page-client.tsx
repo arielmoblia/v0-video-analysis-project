@@ -123,15 +123,25 @@ export default function PlanCositasPage({ brand = "tol" }: Props) {
               Plan Cositas
             </span>
           </h1>
-          <p className="text-2xl font-semibold text-slate-700 mb-4">
-            Hacé tu Plan Gratis y vas agregándole las cositas que necesitás
-          </p>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-4">
-            Más ventas. Sin pagar de más. Activás solo lo que necesitás — galería de fotos, SEO profesional, precios en dólares y más.
-          </p>
-          <p className="text-lg text-[#96305a] font-medium">
-            Desde <strong>${Math.round(dolarRate).toLocaleString("es-AR")}</strong> por mes. Sin paquetes cerrados. Sin letra chica.
-          </p>
+          <div className="max-w-2xl mx-auto mb-4 bg-[#ff9fc5]/10 rounded-2xl px-6 py-5">
+            <p className="text-xl md:text-2xl font-bold text-slate-800 mb-2">
+              Hacé tu tienda gratis y andá agregándole "cositas" cuando las necesites
+            </p>
+            <p className="text-lg text-slate-700">
+              sin pagar de más. Activá las que necesites.
+            </p>
+          </div>
+          <div className="max-w-2xl mx-auto bg-[#ff9fc5]/25 rounded-2xl px-6 py-5">
+            <p className="text-lg font-bold text-[#62162f] mb-1">
+              Cada "cosita" te cuesta ${Math.round(dolarRate).toLocaleString("es-AR")} por mes.
+            </p>
+            <p className="text-base text-slate-700">
+              Sin paquetes cerrados
+            </p>
+            <p className="text-base text-[#96305a] font-medium">
+              Sin letra chica (todo super claro)
+            </p>
+          </div>
         </div>
       </section>
 
