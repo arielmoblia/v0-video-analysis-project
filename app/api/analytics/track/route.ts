@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
         if (geo.country) { country = geo.country; city = geo.city || null }
       } catch {}
     }
-    await supabase.from("page_views").insert({
+    const { data } = await supabase.from("page_views").insert({
       store_id: storeId,
       page_path: pagePath,
       visitor_id: visitorId,
@@ -34,8 +34,8 @@ export async function POST(request: NextRequest) {
       referrer: referrer || null,
       country,
       city,
-    })
-    return NextResponse.json({ success: true })
+    }).select("id").single()
+    return NextResponse.json({ success: true, id: data?.id })
   } catch (error) {
     console.error("Error tracking page view:", error)
     return NextResponse.json({ error: "Failed to track" }, { status: 500 })
