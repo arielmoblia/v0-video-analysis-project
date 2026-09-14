@@ -137,6 +137,9 @@ export default function PlanCositasPage({ brand = "tol" }: Props) {
 
       <section className="py-10 bg-white">
         <div className="container mx-auto px-4 max-w-3xl">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-6">
+            ¿Por qué pagar de más?
+          </h2>
           <p className="text-muted-foreground mb-4">
             Cada plataforma te vende un paquete cerrado. Pagás por diez cosas aunque uses tres. Con tol.ar es distinto.
           </p>
