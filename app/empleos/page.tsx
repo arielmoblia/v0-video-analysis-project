@@ -5,6 +5,7 @@ import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { SeoExtraBlock } from "@/components/seo-extra-block"
 import { MapPin, Clock, Briefcase } from "lucide-react"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Puestos de Trabajo",
@@ -35,10 +36,11 @@ const PUESTOS = [
   },
 ]
 
-export default function EmpleosPage() {
+export default async function EmpleosPage() {
+  const brand = await getBrand()
   return (
     <>
-      <Header />
+      <Header brand={brand} />
       <main className="min-h-screen bg-slate-50">
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-3xl mx-auto">
@@ -67,7 +69,7 @@ export default function EmpleosPage() {
         </div>
       </main>
       <SeoExtraBlock page="empleos" />
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

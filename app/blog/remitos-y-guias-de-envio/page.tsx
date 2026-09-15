@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { SeoExtraBlock } from "@/components/seo-extra-block"
 import RemitosYGuiasClient from "./page-client"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Remito y Guía de Envío desde el Pedido, sin Salir de tol.ar (2026)",
@@ -37,7 +38,8 @@ const breadcrumbJsonLd = {
   ],
 }
 
-export default function RemitosYGuiasPage() {
+export default async function RemitosYGuiasPage() {
+  const brand = await getBrand()
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -70,7 +72,7 @@ export default function RemitosYGuiasPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
-      <RemitosYGuiasClient />
+      <RemitosYGuiasClient brand={brand} />
       <SeoExtraBlock page="blog-remitos-y-guias-de-envio" />
     </>
   )

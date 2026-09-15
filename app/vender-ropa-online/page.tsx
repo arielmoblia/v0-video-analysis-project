@@ -4,6 +4,7 @@ import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { RubroCta } from "@/components/landing/rubro-cta"
 import { Check, ExternalLink } from "lucide-react"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Cómo Vender Ropa Online en Argentina: Creá tu Tienda Gratis (2026)",
@@ -96,13 +97,14 @@ const breadcrumbLd = {
   ],
 }
 
-export default function VenderRopaOnline() {
+export default async function VenderRopaOnline() {
+  const brand = await getBrand()
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
-      <Header />
+      <Header brand={brand} />
       <main className="min-h-screen">
         <section className="bg-gradient-to-b from-green-50 to-white py-16 px-4">
           <div className="max-w-3xl mx-auto">
@@ -327,6 +329,18 @@ export default function VenderRopaOnline() {
               </p>
             </div>
 
+            <div className="not-prose my-8 rounded-xl border border-green-200 bg-green-50 p-6">
+              <p className="text-sm font-semibold text-green-800 mb-2">Guía específica</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">¿Vas a vender ropa deportiva?</h3>
+              <p className="text-gray-700">
+                Escribimos una guía aparte sobre talles y niveles de compresión, telas técnicas y variantes
+                de color y estampado:{" "}
+                <Link href="/vender-ropa-online/ropa-deportiva" className="text-green-700 hover:underline font-medium">
+                  cómo vender ropa deportiva online en Argentina
+                </Link>.
+              </p>
+            </div>
+
             <h2 id="checklist">Checklist final antes de publicar tu tienda de ropa</h2>
             <div className="not-prose my-6 rounded-xl border border-gray-200 bg-white p-6 space-y-3">
               {[
@@ -408,7 +422,7 @@ export default function VenderRopaOnline() {
           </div>
         </section>
       </main>
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

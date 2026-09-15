@@ -34,7 +34,7 @@ export default async function CheckoutPage() {
   }
 
   return (
-    <CartProvider>
+    <CartProvider country={store.country}>
       <div className="min-h-screen bg-background">
         <header className="border-b">
           <div className="container mx-auto px-4 py-4">

@@ -78,12 +78,16 @@ const FAQS = [
   },
 ]
 
-export default function TiendaOnlinePage() {
+interface Props {
+  brand?: "tol" | "tiendabasica"
+}
+
+export default function TiendaOnlinePage({ brand = "tol" }: Props) {
   const [showSignup, setShowSignup] = useState(false)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <Header />
+      <Header brand={brand} />
 
       {/* Hero */}
       <section className="py-16 md:py-28">
@@ -297,7 +301,7 @@ export default function TiendaOnlinePage() {
         </div>
       </section>
 
-      <Footer />
+      <Footer brand={brand} />
       <SignupModal isOpen={showSignup} onClose={() => setShowSignup(false)} />
     </div>
   )

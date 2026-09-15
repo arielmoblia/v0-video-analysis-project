@@ -8,12 +8,18 @@ import { EditableText, usePageContent } from "@/components/editable-text"
 const SignupModal = lazy(() => import("@/components/landing/signup-modal").then(m => ({ default: m.SignupModal })))
 const VideoPopup = dynamic(() => import("@/components/landing/video-popup").then(m => ({ default: m.VideoPopup })), { ssr: false, loading: () => null })
 
-export function Hero() {
+interface HeroProps {
+  brand?: "tol" | "tiendabasica"
+}
+
+export function Hero({ brand = "tol" }: HeroProps) {
+  const isTiendaBasica = brand === "tiendabasica"
+  const pageKey = isTiendaBasica ? "home-tiendabasica" : "home"
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isVideoOpen, setIsVideoOpen] = useState(false)
-  const { isAdmin, get } = usePageContent("home")
+  const { isAdmin, get } = usePageContent(pageKey)
   const ET = (field: string, fallback: string, tag = "span", className = "") => (
-    <EditableText page="home" field={field} defaultValue={get(field, fallback)} isAdmin={isAdmin} tag={tag} className={className} accentColor="#f59e0b" />
+    <EditableText page={pageKey} field={field} defaultValue={get(field, fallback)} isAdmin={isAdmin} tag={tag} className={className} accentColor="#f59e0b" />
   )
 
   return (
@@ -38,7 +44,7 @@ export function Hero() {
         >
           <Image
             src="/images/heroes/hero-woman-video.png"
-            alt="Ver video tutorial - Cómo hacer una tienda en tol.ar"
+            alt={isTiendaBasica ? "Ver video tutorial - Cómo hacer tu tienda" : "Ver video tutorial - Cómo hacer una tienda en tol.ar"}
             fill
             className="object-contain object-bottom"
             priority
@@ -48,17 +54,25 @@ export function Hero() {
         </button>
         <div className="flex-1 text-center pb-8 pt-8 ml-0 md:ml-[40px]">
           <h1 className="text-4xl md:text-5xl mb-2 text-balance">
-            <span className="font-bold">{ET("hero_h1", "Creá tu Tienda Online Gratis y Sin Comisiones en Argentina")}</span>
+            <span className="font-bold">
+              {isTiendaBasica
+                ? ET("hero_h1", "Creá tu Tienda Online Gratis y Sin Comisiones")
+                : ET("hero_h1", "Creá tu Tienda Online Gratis y Sin Comisiones en Argentina")}
+            </span>
             <span className="block text-xl md:text-2xl font-semibold mt-2">
-              {ET("hero_subtitulo", "con tol.ar en 2 minutos")}
+              {isTiendaBasica ? ET("hero_subtitulo", "en 2 minutos") : ET("hero_subtitulo", "con tol.ar en 2 minutos")}
             </span>
           </h1>
           <p className="text-muted-foreground mb-5 text-base max-w-md mx-auto">
-            {ET("hero_desc", "La plataforma más fácil para vender por internet en Argentina. Sin conocimientos técnicos. Con MercadoPago integrado.")}
+            {isTiendaBasica
+              ? ET("hero_desc", "La plataforma más fácil para vender por internet. Sin conocimientos técnicos.")
+              : ET("hero_desc", "La plataforma más fácil para vender por internet en Argentina. Sin conocimientos técnicos. Con MercadoPago integrado.")}
           </p>
           <Button
             size="lg"
-            className="bg-green-600 hover:bg-green-600 text-white px-8 py-5 text-base rounded-full"
+            className={isTiendaBasica
+              ? "bg-black hover:bg-black text-white px-8 py-5 text-base rounded-full"
+              : "bg-green-600 hover:bg-green-600 text-white px-8 py-5 text-base rounded-full"}
             onClick={() => setIsModalOpen(true)}
             aria-label="Crear tu tienda online gratis ahora"
           >

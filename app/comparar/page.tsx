@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { ArrowRight, ExternalLink } from "lucide-react"
+import { getBrand } from "@/lib/get-brand"
 
 // Esta página no se pre-genera estática: lee el JSON de precios en cada visita,
 // así si el chequeo semanal (verificar-precios-competencia.js) actualiza el
@@ -194,7 +195,8 @@ function CeldaTabla({ celda }: { celda: Celda }) {
   )
 }
 
-export default function Comparar() {
+export default async function Comparar() {
+  const brand = await getBrand()
   const precios = leerPreciosCompetencia()
   const filas = filasComparativa(precios)
   const fechasVerificado = [
@@ -216,7 +218,7 @@ export default function Comparar() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
-      <Header />
+      <Header brand={brand} />
       <main className="min-h-screen">
 
         <section className="bg-gradient-to-b from-amber-50 to-white py-16 px-4">
@@ -279,7 +281,8 @@ export default function Comparar() {
             </p>
             <p>
               Tiendanube tiene sentido si necesitás funciones más avanzadas de gestión y estás
-              dispuesto a pagar un plan mensual a medida que crece el negocio.
+              dispuesto a pagar un plan mensual a medida que crece el negocio.{" "}
+              <Link href="/vs-tiendanube">Ver la comparación completa con Tiendanube →</Link>
             </p>
             <p>
               Shopify conviene si tu negocio ya vende o planea vender fuerte al exterior, porque
@@ -311,7 +314,7 @@ export default function Comparar() {
         </section>
 
       </main>
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

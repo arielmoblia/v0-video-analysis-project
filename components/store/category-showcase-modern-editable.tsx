@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { ImagePlus, Loader2 } from "lucide-react"
 import type { Category } from "@/lib/store-context"
+import { EditableText } from "@/components/editable-text"
 
 interface CategoryShowcaseModernEditableProps {
   categories: Category[]
@@ -13,6 +14,8 @@ interface CategoryShowcaseModernEditableProps {
   accentColor?: string
   onChangeImage: (slug: string, url: string) => void
   subdomain?: string
+  content?: Record<string, string>
+  isAdmin?: boolean
 }
 
 const DEFAULT_IMAGES = [
@@ -32,6 +35,8 @@ export function CategoryShowcaseModernEditable({
   accentColor = "#111827",
   onChangeImage,
   subdomain,
+  content = {},
+  isAdmin = false,
 }: CategoryShowcaseModernEditableProps) {
   const [basePath, setBasePath] = useState(subdomain ? `/tienda/${subdomain}` : "")
 
@@ -47,7 +52,7 @@ export function CategoryShowcaseModernEditable({
 
   return (
     <section className="container mx-auto px-6 py-14">
-      <h2 className="text-2xl font-bold text-neutral-900 mb-6">Categorías</h2>
+      <EditableText page="template-moderno" field="categorias_title" defaultValue={content.categorias_title || "Categorías"} isAdmin={isAdmin} tag="h2" className="text-2xl font-bold text-neutral-900 mb-6" accentColor={accentColor} endpoint="/api/store-page-content" extraBody={{ subdomain }} />
       <div className="flex gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-4 md:overflow-visible">
         {categories.slice(0, 8).map((cat, index) => (
           <CategoryTile

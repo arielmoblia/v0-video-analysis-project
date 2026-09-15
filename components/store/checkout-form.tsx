@@ -12,11 +12,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ArrowLeft, CreditCard, Banknote, Building2, Smartphone, Wallet, Truck, CheckCircle, Loader2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { formatPrice as formatPriceForCountry } from "@/lib/currency"
 
 interface CheckoutStore {
   id: string
   site_title: string
   subdomain: string
+  country?: string | null
 }
 
 export function CheckoutForm({ store }: { store: CheckoutStore }) {
@@ -151,7 +153,7 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
   }, [clearCart])
 
   const formatPrice = (price: number) => {
-    return `$${price.toLocaleString('es-AR')}`
+    return formatPriceForCountry(price, store.country)
   }
   // Precio del envío derivado directo del option seleccionado
   const envioPrice = selectedShippingOption && selectedShippingOption.price > 0
@@ -542,6 +544,9 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
                     onChange={(e) => setOrderData({ ...orderData, email: e.target.value })}
                     placeholder="tu@email.com"
                   />
+                  {orderData.email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderData.email.trim()) && (
+                    <p className="text-xs text-red-600">Ingresá un email válido (ejemplo: tu@email.com)</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -559,7 +564,8 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
                   const hasDelivery = !!(shippingConfig?.own_delivery_enabled || shippingConfig?.andreani_enabled || shippingConfig?.enviamelo_enabled)
                   const showRadios = hasPickup && hasDelivery
                   const showAddress = (deliveryChoice === "delivery") || (!hasPickup && hasDelivery)
-                  const contactOk = !!(orderData.name && orderData.email && orderData.phone)
+                  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderData.email.trim())
+                  const contactOk = !!(orderData.name && orderData.email && emailValid && orderData.phone)
                   const choiceOk = showRadios ? deliveryChoice !== null : true
                   const addressOk = showAddress
                     ? !!(orderData.dni && orderData.province && orderData.address && orderData.streetNumber && orderData.city && orderData.postalCode)
@@ -690,6 +696,7 @@ export function CheckoutForm({ store }: { store: CheckoutStore }) {
                   city={orderData.city}
                   deliveryChoice={deliveryChoice}
                   cartTotal={total}
+                  country={store.country}
                   onSelect={(option) => {
                     if (option) {
                       setSelectedShippingOption(option)

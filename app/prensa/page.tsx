@@ -4,6 +4,7 @@ import Image from "next/image"
 import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { ArrowRight } from "lucide-react"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Sala de Prensa — tol.ar | Información para Medios y Periodistas",
@@ -57,11 +58,12 @@ const citas = [
   },
 ]
 
-export default function PrensaPage() {
+export default async function PrensaPage() {
+  const brand = await getBrand()
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <Header />
+      <Header brand={brand} />
       <main className="min-h-screen">
 
         <section className="bg-gradient-to-b from-slate-50 to-white py-16 px-4">
@@ -169,7 +171,7 @@ export default function PrensaPage() {
         </section>
 
       </main>
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

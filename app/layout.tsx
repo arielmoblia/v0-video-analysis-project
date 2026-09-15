@@ -7,6 +7,7 @@ import Script from "next/script"
 import { ChatFlotante } from "@/components/chat-flotante"
 import { UtmTracker } from "@/components/utm-tracker"
 import { PageTracker } from "@/components/store/page-tracker"
+import { BrandProvider, type Brand } from "@/lib/brand-context"
 import "./globals.css"
 
 const geistSans = Geist({ 
@@ -29,7 +30,7 @@ export const viewport: Viewport = {
   themeColor: "#ffffff",
 }
 
-export const metadata: Metadata = {
+const TOL_METADATA: Metadata = {
   metadataBase: new URL("https://tol.ar"),
   title: {
     default: "tol.ar - Tienda Online Gratis en Argentina | 0% comisión",
@@ -119,6 +120,30 @@ export const metadata: Metadata = {
     generator: 'v0.app'
 }
 
+// tiendabasica.com es el mismo código, otra marca: título y favicon propios,
+// sin pisar el resto de la metadata (SEO, JSON-LD) que sigue pensada para tol.ar.
+const TIENDABASICA_METADATA: Metadata = {
+  ...TOL_METADATA,
+  metadataBase: new URL("https://tiendabasica.com"),
+  title: {
+    default: "tiendabasica.com - Tienda Online Gratis",
+    template: "%s | tiendabasica.com"
+  },
+  alternates: {
+    canonical: "https://tiendabasica.com",
+  },
+  icons: {
+    icon: [{ url: "/tiendabasica-icon-32x32.png" }],
+    apple: "/tiendabasica-apple-icon.png",
+  },
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const headersList = await headers()
+  const hostname = (headersList.get("host") || "").split(":")[0]
+  return hostname.includes("tiendabasica.com") ? TIENDABASICA_METADATA : TOL_METADATA
+}
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -126,6 +151,8 @@ export default async function RootLayout({
 }>) {
   const headersList = await headers()
   const isStoreSubdomain = Boolean(headersList.get("x-store-subdomain"))
+  const hostname = (headersList.get("host") || "").split(":")[0]
+  const brand: Brand = hostname.includes("tiendabasica.com") ? "tiendabasica" : "tol"
   return (
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable}`}>
       <head>
@@ -284,7 +311,9 @@ export default async function RootLayout({
       </head>
       <body className="font-sans antialiased">
       {!isStoreSubdomain && <PageTracker storeId="a921029f-9dc7-40ed-ae14-732491c37eee" />}
-        {children}
+        <BrandProvider brand={brand}>
+          {children}
+        </BrandProvider>
         <Suspense fallback={null}><UtmTracker /></Suspense>
         <ChatFlotante />
                 {/* Google Analytics 4 - ID: G-BRLNYVV46F */}

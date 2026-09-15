@@ -47,7 +47,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           </p>
 
           {products.length > 0 ? (
-            <ProductGrid products={products} subdomain={subdomain} />
+            <ProductGrid products={products} subdomain={subdomain} country={store.country} />
           ) : (
             <div className="text-center py-16">
               <p className="text-neutral-500">No hay productos en esta categoría</p>

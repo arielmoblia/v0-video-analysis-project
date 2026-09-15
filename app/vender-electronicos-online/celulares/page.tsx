@@ -4,6 +4,7 @@ import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { RubroCta } from "@/components/landing/rubro-cta"
 import { Check, ExternalLink } from "lucide-react"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Cómo Vender Celulares Online en Argentina: Creá tu Tienda Gratis (2026)",
@@ -97,13 +98,14 @@ const breadcrumbLd = {
   ],
 }
 
-export default function VenderCelularesOnline() {
+export default async function VenderCelularesOnline() {
+  const brand = await getBrand()
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
-      <Header />
+      <Header brand={brand} />
       <main className="min-h-screen">
         <section className="bg-gradient-to-b from-green-50 to-white py-16 px-4">
           <div className="max-w-3xl mx-auto">
@@ -313,7 +315,7 @@ export default function VenderCelularesOnline() {
           </div>
         </section>
       </main>
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

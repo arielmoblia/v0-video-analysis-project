@@ -32,7 +32,11 @@ const READ_FIELDS = [
   "faq1_a", "faq2_a", "faq3_a",
 ]
 
-export default function IaNoHaceMilagrosClient() {
+interface Props {
+  brand?: "tol" | "tiendabasica"
+}
+
+export default function IaNoHaceMilagrosClient({ brand = "tol" }: Props) {
   const { isAdmin, get } = usePageContent(PAGE)
 
   const ET = (field: string, fallback: string, tag = "p", className = "") => (
@@ -78,7 +82,7 @@ export default function IaNoHaceMilagrosClient() {
 
   return (
     <>
-      <Header />
+      <Header brand={brand} />
       {isAdmin && (
         <div style={{ background: "linear-gradient(90deg, #7c2d12, #ea580c)", color: "white", padding: "8px 20px", display: "flex", alignItems: "center", gap: "10px", fontSize: "13px" }}>
           <span style={{ background: "rgba(255,255,255,0.2)", borderRadius: "20px", padding: "2px 10px", fontSize: "11px", fontWeight: 700 }}>MODO EDICIÓN</span>
@@ -167,7 +171,7 @@ export default function IaNoHaceMilagrosClient() {
         </section>
 
       </main>
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

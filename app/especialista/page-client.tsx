@@ -60,7 +60,11 @@ const CATEGORIAS: Categoria[] = [
 
 const ALL_SERVICIOS = CATEGORIAS.flatMap(c => c.items)
 
-export default function EspecialistaPage() {
+interface Props {
+  brand?: "tol" | "tiendabasica"
+}
+
+export default function EspecialistaPage({ brand = "tol" }: Props) {
   const [selected, setSelected] = useState<string[]>([])
   const [dolarRate, setDolarRate] = useState(1200)
 
@@ -103,7 +107,7 @@ export default function EspecialistaPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1e3a5f]/10 via-white to-[#2563eb]/5">
-      <Header />
+      <Header brand={brand} />
 
       {/* Hero */}
       <section className="py-16 md:py-24">
@@ -310,7 +314,7 @@ export default function EspecialistaPage() {
       )}
 
       <div className="mb-24" />
-      <Footer />
+      <Footer brand={brand} />
     </div>
   )
 }

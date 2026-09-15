@@ -10,6 +10,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const { storeId, items, total, customer, shipping, paymentMethod } = body
+    if (customer?.email) customer.email = String(customer.email).trim()
 
     // Verificar stock y precio real (contra la base de datos, nunca el del navegador)
     // antes de crear el pedido

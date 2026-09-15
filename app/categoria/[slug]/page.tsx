@@ -40,7 +40,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   ])
 
   return (
-    <CartProvider>
+    <CartProvider country={store.country}>
       <PageTracker storeId={store.id} />
       <div className="min-h-screen flex flex-col bg-white">
         <StoreHeader store={store} categories={categories} hasMayoristaMinorista={hasMayoristaMinorista} />
@@ -52,7 +52,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                 <h1 className="text-3xl font-light tracking-wide">{category.name}</h1>
               </div>
               {products.length > 0 ? (
-                <ProductGrid products={products} subdomain={subdomain} />
+                <ProductGrid products={products} subdomain={subdomain} country={store.country} />
               ) : (
                 <div className="text-center py-20">
                   <p className="text-neutral-500 text-lg font-light">No hay productos en esta categoría.</p>

@@ -4,6 +4,7 @@ import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { ArrowRight } from "lucide-react"
 import { RelatedArticles } from "@/components/blog/related-articles"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Cómo Vender Online Sin Comisiones en Argentina (2026)",
@@ -89,13 +90,14 @@ const breadcrumbLd = {
   ],
 }
 
-export default function VenderOnlineSinComisionesArgentina() {
+export default async function VenderOnlineSinComisionesArgentina() {
+  const brand = await getBrand()
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
-      <Header />
+      <Header brand={brand} />
       <main className="min-h-screen">
 
         <section className="bg-gradient-to-b from-purple-50 to-white py-16 px-4">
@@ -322,7 +324,7 @@ export default function VenderOnlineSinComisionesArgentina() {
 
       </main>
       <RelatedArticles currentSlug="vender-online-sin-comisiones-argentina" />
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

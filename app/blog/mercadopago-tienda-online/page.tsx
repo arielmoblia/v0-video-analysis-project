@@ -5,6 +5,7 @@ import { Footer } from "@/components/landing/footer"
 import { SeoExtraBlock } from "@/components/seo-extra-block"
 import { ArrowRight } from "lucide-react"
 import { RelatedArticles } from "@/components/blog/related-articles"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Cómo Integrar MercadoPago en tu Tienda Online Argentina",
@@ -35,7 +36,8 @@ const breadcrumbJsonLd_mercadopago_tienda_online = {
 }
 
 
-export default function MercadoPagoTiendaOnline() {
+export default async function MercadoPagoTiendaOnline() {
+  const brand = await getBrand()
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -89,7 +91,7 @@ export default function MercadoPagoTiendaOnline() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd_mercadopago_tienda_online) }} />
-      <Header />
+      <Header brand={brand} />
       <main className="min-h-screen">
 
         <section className="bg-gradient-to-b from-blue-50 to-white py-16 px-4">
@@ -273,7 +275,7 @@ export default function MercadoPagoTiendaOnline() {
       </main>
       <SeoExtraBlock page="blog-mercadopago-tienda-online" />
       <RelatedArticles currentSlug="mercadopago-tienda-online" />
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

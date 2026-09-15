@@ -89,7 +89,11 @@ const faqItems = [
   },
 ]
 
-export default function QueEsElDropshippingClient() {
+interface Props {
+  brand?: "tol" | "tiendabasica"
+}
+
+export default function QueEsElDropshippingClient({ brand = "tol" }: Props) {
   const { isAdmin, get } = usePageContent("blog-que-es-el-dropshipping")
 
   const ET = (field: string, fallback: string, tag = "span", className = "") => (
@@ -98,7 +102,7 @@ export default function QueEsElDropshippingClient() {
 
   return (
     <>
-      <Header />
+      <Header brand={brand} />
       {isAdmin && (
         <div style={{ background: "linear-gradient(90deg, #1e3a8a, #2563eb)", color: "white", padding: "8px 20px", display: "flex", alignItems: "center", gap: "10px", fontSize: "13px" }}>
           <span style={{ background: "rgba(255,255,255,0.2)", borderRadius: "20px", padding: "2px 10px", fontSize: "11px", fontWeight: 700 }}>MODO EDICIÓN</span>
@@ -225,7 +229,7 @@ export default function QueEsElDropshippingClient() {
           </div>
         </div>
       </main>
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

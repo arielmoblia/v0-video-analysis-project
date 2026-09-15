@@ -4,6 +4,7 @@ import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { RubroCta } from "@/components/landing/rubro-cta"
 import { Check, ExternalLink } from "lucide-react"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Cómo Vender Cosméticos Online en Argentina: Creá tu Tienda Gratis (2026)",
@@ -96,13 +97,14 @@ const breadcrumbLd = {
   ],
 }
 
-export default function VenderCosmeticosOnline() {
+export default async function VenderCosmeticosOnline() {
+  const brand = await getBrand()
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
-      <Header />
+      <Header brand={brand} />
       <main className="min-h-screen">
         <section className="bg-gradient-to-b from-green-50 to-white py-16 px-4">
           <div className="max-w-3xl mx-auto">
@@ -324,6 +326,19 @@ export default function VenderCosmeticosOnline() {
               Los precios de competidores pueden haber variado desde la fecha de verificación indicada.
             </p>
 
+            <div className="not-prose my-8 rounded-xl border border-green-200 bg-green-50 p-6">
+              <p className="text-sm font-semibold text-green-800 mb-2">Guía específica</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">¿Vas a vender perfumes?</h3>
+              <p className="text-gray-700">
+                Escribimos una guía aparte con por qué no se pueden mandar por Correo Argentino, cómo
+                enviarlos igual, el registro sanitario ante ANMAT y las variantes de concentración y
+                tamaño:{" "}
+                <Link href="/vender-cosmeticos-online/perfumes" className="text-green-700 hover:underline font-medium">
+                  cómo vender perfumes online en Argentina
+                </Link>.
+              </p>
+            </div>
+
             <h2 id="checklist">Checklist final antes de publicar tu tienda de cosméticos</h2>
             <div className="not-prose my-6 rounded-xl border border-gray-200 bg-white p-6 space-y-3">
               {[
@@ -405,7 +420,7 @@ export default function VenderCosmeticosOnline() {
           </div>
         </section>
       </main>
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

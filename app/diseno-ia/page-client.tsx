@@ -32,7 +32,11 @@ const BENEFITS = [
   "Funciona con cualquier sitio web público",
 ]
 
-export default function DisenoIAPage() {
+interface Props {
+  brand?: "tol" | "tiendabasica"
+}
+
+export default function DisenoIAPage({ brand = "tol" }: Props) {
   const [demoUrl, setDemoUrl] = useState("")
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const { isAdmin, get } = usePageContent("diseno-ia")
@@ -51,7 +55,7 @@ export default function DisenoIAPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-purple-50">
-      <Header />
+      <Header brand={brand} />
       {isAdmin && (
         <div style={{ background: "linear-gradient(90deg, #5b21b6, #7c3aed)", color: "white", padding: "8px 20px", display: "flex", alignItems: "center", gap: "10px", fontSize: "13px" }}>
           <span style={{ background: "rgba(255,255,255,0.2)", borderRadius: "20px", padding: "2px 10px", fontSize: "11px", fontWeight: 700 }}>MODO EDICIÓN</span>
@@ -165,7 +169,7 @@ export default function DisenoIAPage() {
         </div>
       </section>
 
-      <Footer />
+      <Footer brand={brand} />
     </div>
   )
 }

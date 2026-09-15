@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { MapPin, Clock, ArrowLeft, Send } from "lucide-react"
+import { getBrand } from "@/lib/get-brand"
 
 const PUESTOS: Record<string, any> = {
   "agente-comercial": {
@@ -91,6 +92,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export default async function PuestoPage({ params }: { params: Promise<{ slug: string }> }) {
+  const brand = await getBrand()
   const { slug } = await params
   const puesto = PUESTOS[slug]
   if (!puesto) notFound()
@@ -122,7 +124,7 @@ export default async function PuestoPage({ params }: { params: Promise<{ slug: s
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <Header />
+      <Header brand={brand} />
       <main className="min-h-screen bg-slate-50">
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-3xl mx-auto">
@@ -166,7 +168,7 @@ export default async function PuestoPage({ params }: { params: Promise<{ slug: s
           </div>
         </div>
       </main>
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

@@ -2,6 +2,7 @@ import { Metadata } from "next"
 import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import Link from "next/link"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Mayorista / Minorista — Dos tiendas conectadas, un solo negocio",
@@ -14,10 +15,11 @@ export const metadata: Metadata = {
   }
 }
 
-export default function MayoristaMinoristaPage() {
+export default async function MayoristaMinoristaPage() {
+  const brand = await getBrand()
   return (
     <div className="min-h-screen bg-white">
-      <Header />
+      <Header brand={brand} />
 
       {/* HERO */}
       <section className="py-16 md:py-24 text-center border-b border-slate-100">
@@ -159,7 +161,7 @@ export default function MayoristaMinoristaPage() {
         </div>
       </section>
 
-      <Footer />
+      <Footer brand={brand} />
     </div>
   )
 }

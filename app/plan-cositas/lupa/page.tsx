@@ -3,6 +3,7 @@ import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { SeoExtraBlock } from "@/components/seo-extra-block"
 import Link from "next/link"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Lupa — Grabá sesiones de tu tienda online",
@@ -15,10 +16,11 @@ export const metadata: Metadata = {
   }
 }
 
-export default function LupaPage() {
+export default async function LupaPage() {
+  const brand = await getBrand()
   return (
     <div className="min-h-screen bg-white">
-      <Header />
+      <Header brand={brand} />
 
       {/* HERO */}
       <section className="py-16 md:py-24 text-center border-b border-slate-100">
@@ -168,7 +170,7 @@ export default function LupaPage() {
       </section>
 
       <SeoExtraBlock page="plan-cositas-lupa" />
-      <Footer />
+      <Footer brand={brand} />
     </div>
   )
 }

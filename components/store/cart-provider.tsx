@@ -27,6 +27,7 @@ interface CartContextType {
   isLoaded: boolean
   showPriceAlert: boolean
   dismissPriceAlert: () => void
+  country?: string | null
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -52,7 +53,11 @@ function getSubdomainFromUrl(): string {
   return "default"
 }
 
-export function CartProvider({ children, storeId }: { children: ReactNode; storeId?: string }) {
+export function CartProvider({
+  children,
+  storeId,
+  country,
+}: { children: ReactNode; storeId?: string; country?: string | null }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [cartOpen, setCartOpen] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
@@ -180,6 +185,7 @@ export function CartProvider({ children, storeId }: { children: ReactNode; store
         isLoaded,
         showPriceAlert,
         dismissPriceAlert,
+        country,
       }}
     >
       {children}

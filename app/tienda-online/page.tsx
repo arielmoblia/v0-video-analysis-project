@@ -1,4 +1,5 @@
 import TiendaOnlinePage from "./page-client"
+import { getBrand } from "@/lib/get-brand"
 
 // Schema.org: WebPage + FAQ para "tienda online"
 const jsonLd = {
@@ -90,14 +91,15 @@ const jsonLd = {
   ],
 }
 
-export default function Page() {
+export default async function Page() {
+  const brand = await getBrand()
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <TiendaOnlinePage />
+      <TiendaOnlinePage brand={brand} />
     </>
   )
 }

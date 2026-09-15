@@ -29,7 +29,11 @@ const NOT_INCLUDED_DEFAULTS = [
   "Soporte prioritario",
 ]
 
-export default function PlanGratisPage() {
+interface Props {
+  brand?: "tol" | "tiendabasica"
+}
+
+export default function PlanGratisPage({ brand = "tol" }: Props) {
   const [showSignup, setShowSignup] = useState(false)
   const { content, isAdmin, get } = usePageContent("plan-gratis")
   const ET = (field: string, fallback: string, tag = "span", className = "") => (
@@ -38,7 +42,7 @@ export default function PlanGratisPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <Header />
+      <Header brand={brand} />
       {isAdmin && (
         <div style={{ background: "linear-gradient(90deg, #14532d, #16a34a)", color: "white", padding: "8px 20px", display: "flex", alignItems: "center", gap: "10px", fontSize: "13px" }}>
           <span style={{ background: "rgba(255,255,255,0.2)", borderRadius: "20px", padding: "2px 10px", fontSize: "11px", fontWeight: 700 }}>MODO EDICIÓN</span>
@@ -191,7 +195,7 @@ export default function PlanGratisPage() {
           </a>
         </div>
       </section>
-      <Footer />
+      <Footer brand={brand} />
       <SignupModal isOpen={showSignup} onClose={() => setShowSignup(false)} />
     </div>
   )

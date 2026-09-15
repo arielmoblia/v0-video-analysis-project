@@ -9,7 +9,11 @@ import { CheckCircle2, Send, ImagePlus, X } from "lucide-react"
 import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 
-export default function TestimonioForm() {
+interface Props {
+  brand?: "tol" | "tiendabasica"
+}
+
+export default function TestimonioForm({ brand = "tol" }: Props) {
   const [formData, setFormData] = useState({ nombre: "", tienda: "", rubro: "", texto: "" })
   const [foto, setFoto] = useState<File | null>(null)
   const [fotoPreview, setFotoPreview] = useState<string>("")
@@ -60,7 +64,7 @@ export default function TestimonioForm() {
 
   return (
     <div className="min-h-screen">
-      <Header />
+      <Header brand={brand} />
       <section className="bg-emerald-500 py-16 px-4">
         <div className="container mx-auto max-w-2xl text-center">
           <h1 className="text-4xl md:text-5xl font-black text-white mb-4 uppercase tracking-tight">
@@ -155,7 +159,7 @@ export default function TestimonioForm() {
           )}
         </div>
       </section>
-      <Footer />
+      <Footer brand={brand} />
     </div>
   )
 }

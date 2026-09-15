@@ -4,12 +4,14 @@ import Link from "next/link"
 import Image from "next/image"
 import type { Product } from "@/lib/store-context"
 import { AddToCartButton } from "@/components/store/add-to-cart-button"
+import { formatPrice } from "@/lib/currency"
 import { useEffect, useState } from "react"
 
 interface ProductGridProps {
   products: Product[]
   subdomain: string
   exchangeRate?: number
+  country?: string | null
 }
 
 // Imagenes de fallback para productos por categoria
@@ -51,7 +53,7 @@ function getProductFallbackImage(subdomain: string, index: number): string {
   return images[index % images.length]
 }
 
-export function ProductGrid({ products, subdomain, exchangeRate = 0 }: ProductGridProps) {
+export function ProductGrid({ products, subdomain, exchangeRate = 0, country }: ProductGridProps) {
   const [basePath, setBasePath] = useState(`/tienda/${subdomain}`)
 
   useEffect(() => {
@@ -77,13 +79,13 @@ export function ProductGrid({ products, subdomain, exchangeRate = 0 }: ProductGr
         
         return (
         <div key={product.id} className="group">
-          <div className="aspect-[3/4] relative overflow-hidden bg-white mb-4">
+          <div className="aspect-[3/4] relative overflow-hidden bg-neutral-100 mb-4">
             <Link href={`${basePath}/producto/${product.slug}`}>
               <Image
                 src={productImage || "/images/placeholders/placeholder.svg"}
                 alt={product.name}
                 fill
-                className="object-contain p-6 md:p-8 group-hover:scale-105 transition-transform duration-500"
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
                 sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 loading="lazy"
                 quality={80}
@@ -114,14 +116,14 @@ export function ProductGrid({ products, subdomain, exchangeRate = 0 }: ProductGr
             </Link>
             <div className="flex items-center justify-center gap-3">
               {exchangeRate > 0 ? (
-                <span className="text-sm">${(product.price * exchangeRate).toLocaleString("es-AR", { maximumFractionDigits: 0 })}</span>
+                <span className="text-sm">{formatPrice(product.price * exchangeRate, country)}</span>
               ) : (
                 <>
                   {product.compare_price && product.compare_price > product.price && (
-                    <span className="text-sm text-neutral-400 line-through">${product.compare_price.toLocaleString("es-AR")}</span>
+                    <span className="text-sm text-neutral-400 line-through">{formatPrice(product.compare_price, country)}</span>
                   )}
                   <span className={`text-sm ${product.compare_price && product.compare_price > product.price ? "text-red-600" : ""}`}>
-                    ${product.price.toLocaleString("es-AR")}
+                    {formatPrice(product.price, country)}
                   </span>
                 </>
               )}

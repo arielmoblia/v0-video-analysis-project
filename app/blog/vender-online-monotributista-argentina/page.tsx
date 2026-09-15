@@ -4,6 +4,7 @@ import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { ArrowRight } from "lucide-react"
 import { RelatedArticles } from "@/components/blog/related-articles"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Cómo Vender Online Siendo Monotributista en Argentina (2026)",
@@ -90,7 +91,8 @@ const faqLd = {
   ],
 }
 
-export default function MonotributistaOnlinePage() {
+export default async function MonotributistaOnlinePage() {
+  const brand = await getBrand()
   return (
     <>
       <script
@@ -101,7 +103,7 @@ export default function MonotributistaOnlinePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
-      <Header />
+      <Header brand={brand} />
       <main className="min-h-screen bg-white">
         <div className="max-w-3xl mx-auto px-4 py-16">
           <div className="mb-8">
@@ -259,7 +261,7 @@ export default function MonotributistaOnlinePage() {
         </div>
       </main>
       <RelatedArticles currentSlug="vender-online-monotributista-argentina" />
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

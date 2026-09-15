@@ -5,6 +5,7 @@ import { Footer } from "@/components/landing/footer"
 import { SeoExtraBlock } from "@/components/seo-extra-block"
 import { ArrowRight } from "lucide-react"
 import { RelatedArticles } from "@/components/blog/related-articles"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "10 Errores Comunes al Crear una Tienda Online en Argentina (2026)",
@@ -34,7 +35,8 @@ const breadcrumbJsonLd_errores_comunes = {
   ],
 }
 
-export default function ErroresComunesTiendaOnline() {
+export default async function ErroresComunesTiendaOnline() {
+  const brand = await getBrand()
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -88,7 +90,7 @@ export default function ErroresComunesTiendaOnline() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd_errores_comunes) }} />
-      <Header />
+      <Header brand={brand} />
       <main className="min-h-screen">
 
         <section className="bg-gradient-to-b from-blue-50 to-white py-16 px-4">
@@ -246,7 +248,7 @@ export default function ErroresComunesTiendaOnline() {
       </main>
       <SeoExtraBlock page="blog-errores-comunes-tienda-online-argentina" />
       <RelatedArticles currentSlug="errores-comunes-tienda-online-argentina" />
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

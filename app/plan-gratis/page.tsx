@@ -1,5 +1,6 @@
 import PageClient from "./page-client"
 import { SeoExtraBlock } from "@/components/seo-extra-block"
+import { getBrand } from "@/lib/get-brand"
 
 // Schema.org: WebPage + FAQ + Offer para plan gratuito permanente
 const jsonLd = {
@@ -109,14 +110,15 @@ const jsonLd = {
   ],
 }
 
-export default function Page() {
+export default async function Page() {
+  const brand = await getBrand()
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <PageClient />
+      <PageClient brand={brand} />
       <SeoExtraBlock page="plan-gratis" />
     </>
   )

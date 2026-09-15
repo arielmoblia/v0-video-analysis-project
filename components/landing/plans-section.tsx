@@ -7,12 +7,12 @@ interface PlansSectionProps {
   basePath?: string
 }
 
-const PLANS = [
+export const PLANS = [
   {
     name: "Plan Gratis",
     price: "$0",
-    period: "",
-    features: ["100% gratis para siempre", "Productos ilimitados", "Todo lo basico para vender"],
+    period: "para siempre",
+    features: ["Dominio propio (tunombre.tol.ar)", "Productos ilimitados", "Envíos", "Formas de pago", "Atención al cliente"],
     href: "/plan-gratis",
     buttonStyle: "default",
     highlight: false,
@@ -25,21 +25,21 @@ const PLANS = [
     features: ["Empezás gratis", "Sumás funciones cuando querés", "Pagás solo lo que usás"],
     href: "/plan-cositas",
     buttonStyle: "default",
-    highlight: false,
+    highlight: true,
   },
   {
     name: "Plan Socio",
-    price: "10%",
-    period: "por venta",
+    price: "%",
+    period: "de la venta",
     features: ["Todo incluido", "Sin mensualidad", "Nosotros invertimos en publicidad"],
     href: "/plan-socio",
     buttonStyle: "green",
-    highlight: true,
+    highlight: false,
   },
   {
     name: "Plan Personalizado",
     price: "A medida",
-    period: "",
+    period: "a cotizar",
     features: ["Tienda 100% a tu medida", "Nuestro equipo hace tu SEO", "Asesoramiento completo"],
     href: "/plan-a-medida",
     buttonStyle: "default",

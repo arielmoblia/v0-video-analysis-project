@@ -3,8 +3,15 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Instagram, Facebook, Youtube, Twitter } from "lucide-react"
+import { useBrand } from "@/lib/brand-context"
 
-export function Footer() {
+interface FooterProps {
+  brand?: "tol" | "tiendabasica"
+}
+
+export function Footer({ brand }: FooterProps) {
+  const brandFromContext = useBrand()
+  const isTiendaBasica = (brand ?? brandFromContext) === "tiendabasica"
   const [paginasFooter, setPaginasFooter] = useState<{slug: string; nombreLink: string}[]>([])
   const [seoPagesFooter, setSeoPagesFooter] = useState<{url: string; nav_label: string}[]>([])
   useEffect(() => {
@@ -28,20 +35,26 @@ export function Footer() {
           {/* Logo y descripcion */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Image 
-                src="/tol-logo.png" 
-                alt="tol.ar" 
-                width={28} 
+              <Image
+                src={isTiendaBasica ? "/tiendabasica-logo.png" : "/tol-logo.png"}
+                alt={isTiendaBasica ? "tiendabasica.com" : "tol.ar"}
+                width={28}
                 height={28}
                 loading="lazy"
                 quality={90}
               />
               <span className="text-xl">
-                <span className="font-bold">tol</span><span className="font-normal text-slate-400">.ar</span>
+                {isTiendaBasica ? (
+                  <><span className="font-normal">tienda</span><span className="font-bold">basica</span><span className="font-normal text-slate-400">.com</span></>
+                ) : (
+                  <><span className="font-bold">tol</span><span className="font-normal text-slate-400">.ar</span></>
+                )}
               </span>
             </div>
             <p className="text-sm text-slate-300">
-              La forma mas facil de crear tu tienda online en Argentina. Sin conocimientos tecnicos, sin complicaciones.
+              {isTiendaBasica
+                ? "La forma mas facil de crear tu tienda online. Sin conocimientos tecnicos, sin complicaciones."
+                : "La forma mas facil de crear tu tienda online en Argentina. Sin conocimientos tecnicos, sin complicaciones."}
             </p>
             {/* Redes sociales */}
             <div className="flex gap-4 pt-2">
@@ -96,7 +109,7 @@ export function Footer() {
 
         {/* Copyright */}
         <div className="border-t border-slate-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
-          <p>&copy; {new Date().getFullYear()} tol.ar - Todos los derechos reservados</p>
+          <p>&copy; {new Date().getFullYear()} {isTiendaBasica ? "tiendabasica.com" : "tol.ar"} - Todos los derechos reservados</p>
           <div className="flex gap-4">
             <Link href="/terminos" className="hover:text-slate-300 transition-colors">Términos</Link>
             <Link href="/privacidad" className="hover:text-slate-300 transition-colors">Privacidad</Link>

@@ -3,6 +3,7 @@ import Link from "next/link"
 import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { ArrowRight } from "lucide-react"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Alternativa a Mi Página (ex Mercado Shops) en Argentina",
@@ -87,13 +88,14 @@ const breadcrumbLd = {
   ],
 }
 
-export default function AlternativaMercadoShops() {
+export default async function AlternativaMercadoShops() {
+  const brand = await getBrand()
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
-      <Header />
+      <Header brand={brand} />
       <main className="min-h-screen">
 
         <section className="bg-gradient-to-b from-amber-50 to-white py-16 px-4">
@@ -205,7 +207,7 @@ export default function AlternativaMercadoShops() {
         </section>
 
       </main>
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

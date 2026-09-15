@@ -91,7 +91,11 @@ const faqItems = [
   },
 ]
 
-export default function CosasLegalesScrapingClient() {
+interface Props {
+  brand?: "tol" | "tiendabasica"
+}
+
+export default function CosasLegalesScrapingClient({ brand = "tol" }: Props) {
   const { isAdmin, get } = usePageContent("blog-cosas-legales-antes-de-usar-scraping")
 
   const ET = (field: string, fallback: string, tag = "span", className = "") => (
@@ -100,7 +104,7 @@ export default function CosasLegalesScrapingClient() {
 
   return (
     <>
-      <Header />
+      <Header brand={brand} />
       {isAdmin && (
         <div style={{ background: "linear-gradient(90deg, #1e3a8a, #2563eb)", color: "white", padding: "8px 20px", display: "flex", alignItems: "center", gap: "10px", fontSize: "13px" }}>
           <span style={{ background: "rgba(255,255,255,0.2)", borderRadius: "20px", padding: "2px 10px", fontSize: "11px", fontWeight: 700 }}>MODO EDICIÓN</span>
@@ -184,7 +188,7 @@ export default function CosasLegalesScrapingClient() {
           </div>
         </div>
       </main>
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

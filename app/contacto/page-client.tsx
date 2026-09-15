@@ -30,7 +30,11 @@ const FAQ_COMERCIALES = [
   { qk:"faqc6_q", qd:"Tienen soporte en español?", ak:"faqc6_a", ad:"Si! Somos un equipo argentino y todo nuestro soporte es en español." },
 ]
 
-export default function ContactoPage() {
+interface Props {
+  brand?: "tol" | "tiendabasica"
+}
+
+export default function ContactoPage({ brand = "tol" }: Props) {
   const [formData, setFormData] = useState({ name:"", email:"", phone:"", subject:"", message:"", tipo:"tecnico" })
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
@@ -75,7 +79,7 @@ export default function ContactoPage() {
 
   return (
     <div className="min-h-screen">
-      <Header />
+      <Header brand={brand} />
       {isAdmin && (
         <div style={{ background: "linear-gradient(90deg, #065f46, #10b981)", color: "white", padding: "8px 20px", display: "flex", alignItems: "center", gap: "10px", fontSize: "13px" }}>
           <span style={{ background: "rgba(255,255,255,0.2)", borderRadius: "20px", padding: "2px 10px", fontSize: "11px", fontWeight: 700 }}>MODO EDICIÓN</span>
@@ -270,7 +274,7 @@ export default function ContactoPage() {
       <div className="flex h-3">
         <div className="flex-1 bg-fuchsia-500" /><div className="flex-1 bg-cyan-400" /><div className="flex-1 bg-yellow-400" /><div className="flex-1 bg-black" />
       </div>
-      <Footer />
+      <Footer brand={brand} />
     </div>
   )
 }

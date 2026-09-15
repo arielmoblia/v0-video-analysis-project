@@ -4,6 +4,7 @@ import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { ArrowRight } from "lucide-react"
 import { RelatedArticles } from "@/components/blog/related-articles"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "¿Cuánto Cuesta una Tienda Online en Argentina en 2026? Precios Reales",
@@ -89,13 +90,14 @@ const breadcrumbLd = {
   ],
 }
 
-export default function CuantoCuestaTiendaOnlineArgentina() {
+export default async function CuantoCuestaTiendaOnlineArgentina() {
+  const brand = await getBrand()
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
-      <Header />
+      <Header brand={brand} />
       <main className="min-h-screen">
 
         <section className="bg-gradient-to-b from-orange-50 to-white py-16 px-4">
@@ -313,7 +315,7 @@ export default function CuantoCuestaTiendaOnlineArgentina() {
 
       </main>
       <RelatedArticles currentSlug="cuanto-cuesta-tienda-online-argentina" />
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

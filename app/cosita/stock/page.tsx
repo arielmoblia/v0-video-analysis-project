@@ -3,6 +3,7 @@ import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { SeoExtraBlock } from "@/components/seo-extra-block"
 import StockPageClient from "./page-client"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Stock — Le vendiste algo que no tenías",
@@ -10,13 +11,14 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-export default function StockPage() {
+export default async function StockPage() {
+  const brand = await getBrand()
   return (
     <>
-      <Header />
+      <Header brand={brand} />
       <StockPageClient />
       <SeoExtraBlock page="cosita-stock" />
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

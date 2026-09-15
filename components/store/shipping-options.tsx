@@ -5,6 +5,7 @@ import Image from "next/image"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Loader2, Truck, MapPin, Package, Store, Bike } from "lucide-react"
+import { formatPrice } from "@/lib/currency"
 
 interface ShippingOption {
   id: string
@@ -24,6 +25,7 @@ interface ShippingOptionsProps {
   cartWeight?: number
   onSelect: (option: ShippingOption | null) => void
   selectedOption?: ShippingOption | null
+  country?: string | null
 }
 
 // Match de zona de envío propio: ciudad o CP/rango. Vacío = siempre muestra.
@@ -66,6 +68,7 @@ export function ShippingOptions({
   cartWeight = 1000,
   onSelect,
   selectedOption,
+  country,
 }: ShippingOptionsProps) {
   const [options, setOptions] = useState<ShippingOption[]>([])
   const [loading, setLoading] = useState(false)
@@ -289,7 +292,7 @@ export function ShippingOptions({
             {option.price === 0 ? (
               <span className="text-green-600 font-medium">Gratis</span>
             ) : (
-              <span className="font-medium">${option.price.toLocaleString("es-AR")}</span>
+              <span className="font-medium">{formatPrice(option.price, country)}</span>
             )}
           </div>
         </div>

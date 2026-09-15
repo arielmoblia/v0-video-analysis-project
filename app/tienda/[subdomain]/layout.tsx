@@ -28,7 +28,7 @@ export default async function StoreLayout({
   const whatsappNumber = store?.social_whatsapp || store?.whatsapp_number
 
   return (
-    <CartProvider>
+    <CartProvider country={store?.country}>
       {store && <PageTracker storeId={store.id} />}
       <TrackingPixels
         metaPixelId={pixels.meta_pixel_id}

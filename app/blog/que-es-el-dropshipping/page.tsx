@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { SeoExtraBlock } from "@/components/seo-extra-block"
 import QueEsElDropshippingClient from "./page-client"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "¿Qué es el Dropshipping? Explicado Fácil, Sin Vueltas (2026)",
@@ -38,7 +39,8 @@ const breadcrumbJsonLd = {
   ],
 }
 
-export default function QueEsElDropshipping() {
+export default async function QueEsElDropshipping() {
+  const brand = await getBrand()
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -70,7 +72,7 @@ export default function QueEsElDropshipping() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
-      <QueEsElDropshippingClient />
+      <QueEsElDropshippingClient brand={brand} />
       <SeoExtraBlock page="blog-que-es-el-dropshipping" />
     </>
   )

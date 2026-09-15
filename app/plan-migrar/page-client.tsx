@@ -102,7 +102,11 @@ const PASOS = [
   },
 ]
 
-export default function PlanMigrarPage() {
+interface Props {
+  brand?: "tol" | "tiendabasica"
+}
+
+export default function PlanMigrarPage({ brand = "tol" }: Props) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -136,7 +140,7 @@ export default function PlanMigrarPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
-      <Header />
+      <Header brand={brand} />
 
       {/* Hero */}
       <section className="py-16 md:py-24">
@@ -431,7 +435,7 @@ export default function PlanMigrarPage() {
         </div>
       </section>
 
-      <Footer />
+      <Footer brand={brand} />
     </div>
   )
 }

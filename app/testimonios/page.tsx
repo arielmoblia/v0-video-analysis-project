@@ -3,6 +3,7 @@ import Link from "next/link"
 import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { ArrowRight, Store } from "lucide-react"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Testimonios y Tiendas Reales — tol.ar",
@@ -55,11 +56,12 @@ const tiendas = [
   { nombre: "aithiana", rubro: "Calzado", url: "https://aithiana.tol.ar", creada: "mayo 2026" },
 ]
 
-export default function TestimoniosPage() {
+export default async function TestimoniosPage() {
+  const brand = await getBrand()
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <Header />
+      <Header brand={brand} />
       <main className="min-h-screen">
 
         <section className="bg-gradient-to-b from-slate-50 to-white py-16 px-4">
@@ -143,7 +145,7 @@ export default function TestimoniosPage() {
         </section>
 
       </main>
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

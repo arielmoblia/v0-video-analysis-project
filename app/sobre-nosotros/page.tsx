@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { SeoExtraBlock } from "@/components/seo-extra-block"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Sobre Nosotros — tol.ar, la tienda online sin comisiones de Argentina",
@@ -60,14 +61,15 @@ const jsonLd = {
   ],
 }
 
-export default function SobreNosotrosPage() {
+export default async function SobreNosotrosPage() {
+  const brand = await getBrand()
   return (
     <div className="min-h-screen flex flex-col">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Header />
+      <Header brand={brand} />
 
       <main className="flex-1">
         {/* Hero */}
@@ -185,6 +187,11 @@ export default function SobreNosotrosPage() {
             </p>
             <p style={{ fontSize: "1.05rem", lineHeight: 1.75, color: "#374151" }}>
               tol.ar no cobra comisión por venta. El 100% de cada transacción es tuyo.
+            </p>
+            <p style={{ fontSize: "1.05rem", lineHeight: 1.75, marginTop: "16px" }}>
+              <a href="/quienes-somos" style={{ color: "#4338ca", fontWeight: 600, textDecoration: "none" }}>
+                Conocé los departamentos que operan tol.ar →
+              </a>
             </p>
           </section>
 
@@ -309,7 +316,7 @@ export default function SobreNosotrosPage() {
       </main>
 
       <SeoExtraBlock page="sobre-nosotros" />
-      <Footer />
+      <Footer brand={brand} />
     </div>
   )
 }

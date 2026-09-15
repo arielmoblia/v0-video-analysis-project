@@ -6,6 +6,7 @@ import type { Product } from "@/lib/store-context"
 import { AddToCartButton } from "@/components/store/add-to-cart-button"
 import { formatPrice } from "@/lib/currency"
 import { useEffect, useState } from "react"
+import { EditableText } from "@/components/editable-text"
 
 interface ProductGridModernProps {
   products: Product[]
@@ -14,6 +15,8 @@ interface ProductGridModernProps {
   country?: string | null
   accentColor?: string
   disableNav?: boolean
+  content?: Record<string, string>
+  isAdmin?: boolean
 }
 
 const PRODUCT_FALLBACKS: Record<string, string[]> = {
@@ -42,7 +45,7 @@ function getProductFallbackImage(subdomain: string, index: number): string {
   return images[index % images.length]
 }
 
-export function ProductGridModern({ products, subdomain, exchangeRate = 0, country, accentColor = "#111827", disableNav = false }: ProductGridModernProps) {
+export function ProductGridModern({ products, subdomain, exchangeRate = 0, country, accentColor = "#111827", disableNav = false, content = {}, isAdmin = false }: ProductGridModernProps) {
   const [basePath, setBasePath] = useState(`/tienda/${subdomain}`)
 
   useEffect(() => {
@@ -93,7 +96,7 @@ export function ProductGridModern({ products, subdomain, exchangeRate = 0, count
                   className="absolute top-3 left-3 text-white text-xs font-bold px-2.5 py-1 rounded-full"
                   style={{ backgroundColor: accentColor }}
                 >
-                  Oferta
+                  <EditableText page="template-moderno" field="sale_badge" defaultValue={content.sale_badge || "Oferta"} isAdmin={isAdmin} tag="span" accentColor={accentColor} endpoint="/api/store-page-content" extraBody={{ subdomain }} />
                 </span>
               )}
             </div>
@@ -122,14 +125,14 @@ export function ProductGridModern({ products, subdomain, exchangeRate = 0, count
                 {product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0 ? (
                   disableNav ? (
                     <span className="block w-full text-center py-2.5 rounded-full text-xs font-semibold border border-neutral-900">
-                      Elegir talle
+                      <EditableText page="template-moderno" field="choose_size_button" defaultValue={content.choose_size_button || "Elegir talle"} isAdmin={isAdmin} tag="span" accentColor={accentColor} endpoint="/api/store-page-content" extraBody={{ subdomain }} />
                     </span>
                   ) : (
                     <Link
                       href={`${basePath}/producto/${product.slug}`}
                       className="block w-full text-center py-2.5 rounded-full text-xs font-semibold border border-neutral-900 hover:bg-neutral-900 hover:text-white transition-colors"
                     >
-                      Elegir talle
+                      <EditableText page="template-moderno" field="choose_size_button" defaultValue={content.choose_size_button || "Elegir talle"} isAdmin={isAdmin} tag="span" accentColor={accentColor} endpoint="/api/store-page-content" extraBody={{ subdomain }} />
                     </Link>
                   )
                 ) : (

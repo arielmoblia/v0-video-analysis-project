@@ -5,6 +5,7 @@ import { Footer } from "@/components/landing/footer"
 import { SeoExtraBlock } from "@/components/seo-extra-block"
 import { ArrowRight, Check } from "lucide-react"
 import { RelatedArticles } from "@/components/blog/related-articles"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "¿Qué Necesito para Vender Online en Argentina? Guía 2026",
@@ -74,7 +75,8 @@ const breadcrumbJsonLd_que_necesito_para_vender_online_argentina = {
 }
 
 
-export default function QueNecesitoParaVenderOnlineArgentina() {
+export default async function QueNecesitoParaVenderOnlineArgentina() {
+  const brand = await getBrand()
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -136,7 +138,7 @@ export default function QueNecesitoParaVenderOnlineArgentina() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd_que_necesito_para_vender_online_argentina) }} />
-      <Header />
+      <Header brand={brand} />
       <main className="min-h-screen bg-white">
         <div className="max-w-3xl mx-auto px-4 py-16">
           <nav className="text-sm text-gray-500 mb-8">
@@ -256,7 +258,7 @@ export default function QueNecesitoParaVenderOnlineArgentina() {
       </main>
       <SeoExtraBlock page="blog-que-necesito-para-vender-online-argentina" />
       <RelatedArticles currentSlug="que-necesito-para-vender-online-argentina" />
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

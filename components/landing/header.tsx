@@ -4,10 +4,12 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect, useRef } from "react"
 import { ChevronDown, Shirt, Footprints, Smartphone, Sparkles } from "lucide-react"
+import { useBrand } from "@/lib/brand-context"
 
 interface HeaderProps {
   fullMenu?: boolean  // true = muestra todo, false = solo plan gratis y contacto
   basePath?: string   // para el modo desarrollo (ej: /arielmobilia)
+  brand?: "tol" | "tiendabasica"
 }
 
 const RUBROS = [
@@ -17,7 +19,9 @@ const RUBROS = [
   { id: "cosmetics", label: "Cosméticos", icon: Sparkles, href: "/vender-cosmeticos-online" },
 ]
 
-export function Header({ fullMenu = false, basePath = "" }: HeaderProps) {
+export function Header({ fullMenu = false, basePath = "", brand }: HeaderProps) {
+  const brandFromContext = useBrand()
+  const isTiendaBasica = (brand ?? brandFromContext) === "tiendabasica"
   const [paginasMenu, setPaginasMenu] = useState<{slug: string; nombreLink: string}[] | null>(null)
   const [seoPagesMenu, setSeoPagesMenu] = useState<{url: string; nav_label: string}[]>([])
   const [rubroMenuOpen, setRubroMenuOpen] = useState(false)
@@ -50,11 +54,11 @@ export function Header({ fullMenu = false, basePath = "" }: HeaderProps) {
   return (
     <header className="border-b border-border bg-card">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link href={basePath || "/"} className="flex items-center gap-2" aria-label="Ir al inicio de tol.ar">
-          <Image 
-            src="/tol-logo.png" 
-            alt="tol.ar logo" 
-            width={28} 
+        <Link href={basePath || "/"} className="flex items-center gap-2" aria-label={isTiendaBasica ? "Ir al inicio de tiendabasica.com" : "Ir al inicio de tol.ar"}>
+          <Image
+            src={isTiendaBasica ? "/tiendabasica-logo.png" : "/tol-logo.png"}
+            alt={isTiendaBasica ? "tiendabasica.com logo" : "tol.ar logo"}
+            width={28}
             height={28}
             priority
             quality={80}
@@ -62,10 +66,14 @@ export function Header({ fullMenu = false, basePath = "" }: HeaderProps) {
             loading="eager"
           />
           <span className="text-xl">
-            <span className="font-bold">tol</span><span className="font-normal text-gray-500">.ar</span>
+            {isTiendaBasica ? (
+              <><span className="font-normal">tienda</span><span className="font-bold">basica</span><span className="font-normal text-gray-500">.com</span></>
+            ) : (
+              <><span className="font-bold">tol</span><span className="font-normal text-gray-500">.ar</span></>
+            )}
           </span>
         </Link>
-        <nav className="hidden md:flex items-center gap-6 text-sm" aria-label="Navegacion principal de tol.ar" suppressHydrationWarning>
+        <nav className="hidden md:flex items-center gap-6 text-sm" aria-label={isTiendaBasica ? "Navegacion principal de tiendabasica.com" : "Navegacion principal de tol.ar"} suppressHydrationWarning>
           <div className="relative" ref={rubroMenuRef}>
             <button
               type="button"
@@ -93,6 +101,9 @@ export function Header({ fullMenu = false, basePath = "" }: HeaderProps) {
               </div>
             )}
           </div>
+          <Link href={`${basePath}/planes`} className="text-muted-foreground hover:text-foreground transition-colors">
+            Planes
+          </Link>
           {paginasMenu && paginasMenu.map(p => (
             <Link key={p.slug} href={`/${p.slug}`} className="text-muted-foreground hover:text-foreground transition-colors">
               {p.nombreLink}

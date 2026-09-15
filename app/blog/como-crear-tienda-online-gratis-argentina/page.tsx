@@ -4,6 +4,7 @@ import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { ArrowRight, Check } from "lucide-react"
 import { RelatedArticles } from "@/components/blog/related-articles"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Cómo Crear una Tienda Online Gratis en Argentina: Guía Completa (2026)",
@@ -185,14 +186,15 @@ const breadcrumbLd = {
   ],
 }
 
-export default function ComoCrearTiendaOnlineGratisArgentina() {
+export default async function ComoCrearTiendaOnlineGratisArgentina() {
+  const brand = await getBrand()
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
-      <Header />
+      <Header brand={brand} />
       <main className="min-h-screen">
 
         <section className="bg-gradient-to-b from-green-50 to-white py-16 px-4">
@@ -599,7 +601,7 @@ export default function ComoCrearTiendaOnlineGratisArgentina() {
 
       </main>
       <RelatedArticles currentSlug="como-crear-tienda-online-gratis-argentina" />
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

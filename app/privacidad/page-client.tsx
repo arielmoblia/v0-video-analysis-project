@@ -3,7 +3,11 @@ import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { EditableText, usePageContent } from "@/components/editable-text"
 
-export default function PrivacidadPage() {
+interface Props {
+  brand?: "tol" | "tiendabasica"
+}
+
+export default function PrivacidadPage({ brand = "tol" }: Props) {
   const { isAdmin, get } = usePageContent("privacidad")
   const ET = (field: string, fallback: string) => (
     <EditableText page="privacidad" field={field} defaultValue={get(field, fallback)} isAdmin={isAdmin} accentColor="#6366f1" />
@@ -24,7 +28,7 @@ export default function PrivacidadPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <Header brand={brand} />
       {isAdmin && (
         <div style={{ background: "linear-gradient(90deg, #4338ca, #6366f1)", color: "white", padding: "8px 20px", display: "flex", alignItems: "center", gap: "10px", fontSize: "13px" }}>
           <span style={{ background: "rgba(255,255,255,0.2)", borderRadius: "20px", padding: "2px 10px", fontSize: "11px", fontWeight: 700 }}>MODO EDICIÓN</span>
@@ -45,7 +49,7 @@ export default function PrivacidadPage() {
           </div>
         </div>
       </main>
-      <Footer />
+      <Footer brand={brand} />
     </div>
   )
 }

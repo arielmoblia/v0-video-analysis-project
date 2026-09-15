@@ -4,11 +4,15 @@ import { useRef, useState } from "react"
 import Image from "next/image"
 import { ImagePlus, Loader2, Pencil } from "lucide-react"
 import type { Store } from "@/lib/store-context"
+import { EditableText } from "@/components/editable-text"
 
 interface StoreHeroModernEditableProps {
   store: Store
   accentColor?: string
   editMode: boolean
+  content?: Record<string, string>
+  isAdmin?: boolean
+  subdomain?: string
   onChangeImage: (url: string) => void
   onChangeTitle: (value: string) => void
   onChangeSubtitle: (value: string) => void
@@ -24,6 +28,9 @@ export function StoreHeroModernEditable({
   store,
   accentColor = "#111827",
   editMode,
+  content = {},
+  isAdmin = false,
+  subdomain,
   onChangeImage,
   onChangeTitle,
   onChangeSubtitle,
@@ -60,12 +67,9 @@ export function StoreHeroModernEditable({
     <section className="bg-neutral-50">
       <div className="container mx-auto px-6 py-14 md:py-20 grid md:grid-cols-2 gap-10 items-center">
         <div>
-          <p
-            className="inline-block text-xs font-semibold uppercase tracking-wide px-3 py-1 rounded-full mb-5"
-            style={{ backgroundColor: `${accentColor}1a`, color: accentColor }}
-          >
-            Nueva colección
-          </p>
+          <span className="inline-block px-3 py-1 rounded-full mb-5" style={{ backgroundColor: `${accentColor}1a`, color: accentColor }}>
+            <EditableText page="template-moderno" field="hero_eyebrow" defaultValue={content.hero_eyebrow || "Nueva colección"} isAdmin={isAdmin} tag="span" className="text-xs font-semibold uppercase tracking-wide" accentColor={accentColor} endpoint="/api/store-page-content" extraBody={{ subdomain }} />
+          </span>
 
           {editMode && editingTitle ? (
             <textarea
@@ -121,7 +125,7 @@ export function StoreHeroModernEditable({
               className="inline-flex items-center justify-center rounded-full px-8 py-4 text-sm font-semibold text-white transition-transform hover:scale-[1.03]"
               style={{ backgroundColor: accentColor }}
             >
-              Ver productos
+              <EditableText page="template-moderno" field="hero_cta" defaultValue={content.hero_cta || "Ver productos"} isAdmin={isAdmin} tag="span" accentColor={accentColor} endpoint="/api/store-page-content" extraBody={{ subdomain }} />
             </a>
           )}
         </div>

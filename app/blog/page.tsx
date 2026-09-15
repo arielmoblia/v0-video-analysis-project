@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Calendar } from "lucide-react"
 import { articulos } from "@/lib/blog-articulos"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Blog de Ecommerce para Emprendedores Argentinos",
@@ -32,7 +33,8 @@ const faqItems = [
   },
 ]
 
-export default function BlogPage() {
+export default async function BlogPage() {
+  const brand = await getBrand()
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Blog",
@@ -69,7 +71,7 @@ export default function BlogPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
-      <Header />
+      <Header brand={brand} />
       
       {/* Hero */}
       <section className="py-16 bg-gradient-to-b from-slate-50 to-white">
@@ -170,7 +172,7 @@ export default function BlogPage() {
         </div>
       </section>
 
-      <Footer />
+      <Footer brand={brand} />
     </main>
   )
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { SeoExtraBlock } from "@/components/seo-extra-block"
 import NotaDePrensa1Client from "./page-client"
+import { getBrand } from "@/lib/get-brand"
 
 const SLUG = "nota-de-prensa1"
 
@@ -45,12 +46,13 @@ const jsonLd = {
   mainEntityOfPage: { "@type": "WebPage", "@id": `https://tol.ar/blog/${SLUG}` },
 }
 
-export default function NotaDePrensa1Page() {
+export default async function NotaDePrensa1Page() {
+  const brand = await getBrand()
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
-      <NotaDePrensa1Client />
+      <NotaDePrensa1Client brand={brand} />
       <SeoExtraBlock page={`blog-${SLUG}`} />
     </>
   )

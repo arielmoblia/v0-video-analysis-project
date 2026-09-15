@@ -50,7 +50,7 @@ const CONTENT = ${JSON.stringify(contenido, null, 2)}
 export default function Page() {
   return (
     <main className="min-h-screen flex flex-col bg-background">
-      <Header fullMenu={true} />
+      <Header fullMenu={true} brand="tol" />
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-4xl text-center">
           <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
@@ -96,7 +96,7 @@ export default function Page() {
           </div>
         </div>
       </section>
-      <Footer />
+      <Footer brand="tol" />
     </main>
   )
 }`

@@ -218,4 +218,11 @@ export const articulos: ArticuloBlog[] = [
     categoria: "Comparativas",
     fecha: "2026-07-28",
   },
+  {
+    slug: "cuanto-cobra-tiendanube-de-comision-argentina",
+    titulo: "Cuánto Cobra Tiendanube de Comisión: la Cuenta en Pesos (2026)",
+    descripcion: "Cuánto te descuenta Tiendanube por costo de transacción en cada venta, con un ejemplo real en pesos, comparado con tol.ar que no cobra comisión.",
+    categoria: "Comparativas",
+    fecha: "2026-09-11",
+  },
 ]

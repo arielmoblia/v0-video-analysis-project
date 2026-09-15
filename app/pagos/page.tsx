@@ -22,6 +22,7 @@ import {
 import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { SeoExtraBlock } from "@/components/seo-extra-block"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Medios de Pago para tu Tienda Online | Mercado Pago, MODO, Ualá",
@@ -116,12 +117,13 @@ const breadcrumbJsonLd = {
   ],
 }
 
-export default function PagosPage() {
+export default async function PagosPage() {
+  const brand = await getBrand()
   return (
     <div className="min-h-screen bg-background">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(videoJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
-      <Header />
+      <Header brand={brand} />
       
       <main>
         {/* Hero Section */}
@@ -334,7 +336,7 @@ export default function PagosPage() {
       </main>
 
       <SeoExtraBlock page="pagos" />
-      <Footer />
+      <Footer brand={brand} />
     </div>
   )
 }

@@ -357,6 +357,15 @@ tol.ar: 2 minutos para crear la tienda, sin conocimientos técnicos. Diseño gen
 - Dominio Propio para tu Tienda tol.ar: Guía Paso a Paso (2026): https://tol.ar/blog/dominio-propio
 - Nueva plataforma para tiendas online realmente gratis para emprendedores: https://tol.ar/blog/${SLUG}
 - tol.ar suma el Plan Cositas: pagás solo por las funciones que tu tienda usa: https://tol.ar/blog/${SLUG}
+- Nueva plataforma para tiendas online realmente gratis para emprendedores: https://tol.ar/blog/${SLUG}
+- tol.ar suma el Plan Cositas: pagás solo por las funciones que tu tienda usa: https://tol.ar/blog/${SLUG}
+- Tienda Básica: llevar el sistema de tol.ar a toda Latinoamérica (2026): https://tol.ar/blog/tiendabasica
+- Nueva plataforma para tiendas online realmente gratis para emprendedores: https://tol.ar/blog/${SLUG}
+- tol.ar suma el Plan Cositas: pagás solo por las funciones que tu tienda usa: https://tol.ar/blog/${SLUG}
+- Nueva plataforma para tiendas online realmente gratis para emprendedores: https://tol.ar/blog/nota-de-prensa1
+- tol.ar suma el Plan Cositas: pagás solo por las funciones que tu tienda usa: https://tol.ar/blog/nota-de-prensa2
+- tol.ar suma nuevas funciones para que cualquier tienda online cumpla con la ley y venda con más opciones de pago: https://tol.ar/blog/nota-de-prensa3
+- Cuánto Cobra Tiendanube de Comisión: la Cuenta en Pesos (2026): https://tol.ar/blog/cuanto-cobra-tiendanube-de-comision-argentina
 ---
 
 ## Última actualización

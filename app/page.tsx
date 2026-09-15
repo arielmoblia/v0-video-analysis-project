@@ -79,7 +79,7 @@ export default async function Home() {
         }
 
         return (
-          <CartProvider>
+          <CartProvider country={store.country}>
             <PageTracker storeId={store.id} />
             <script
               type="application/ld+json"
@@ -97,7 +97,7 @@ export default async function Home() {
                         <p className="text-xs tracking-[0.3em] uppercase text-neutral-500 mb-3">Lo mejor</p>
                         <h2 className="text-3xl font-light tracking-wide">Productos Destacados</h2>
                       </div>
-                      <ProductGrid products={featuredProducts} subdomain={subdomain} />
+                      <ProductGrid products={featuredProducts} subdomain={subdomain} country={store.country} />
                     </div>
                   </section>
                 )}
@@ -109,7 +109,7 @@ export default async function Home() {
                       <h2 className="text-3xl font-light tracking-wide">Todos los Productos</h2>
                     </div>
                     {products.length > 0 ? (
-                      <ProductGrid products={products} subdomain={subdomain} />
+                      <ProductGrid products={products} subdomain={subdomain} country={store.country} />
                     ) : (
                       <div className="text-center py-20">
                         <p className="text-neutral-500 text-lg font-light">Esta tienda aún no tiene productos.</p>
@@ -324,65 +324,83 @@ export default async function Home() {
     ],
   }
 
+  const brand = host.includes("tiendabasica.com") ? "tiendabasica" : "tol"
+  const isTiendaBasica = brand === "tiendabasica"
+
   return (
     <main className="min-h-screen flex flex-col">
-      <script
-        type="application/ld+json"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD for SEO
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <Header />
-      <Hero />
-      <HowItWorks />
-      <Benefits />
-      <TestimonialsSection />
+      {!isTiendaBasica && (
+        <script
+          type="application/ld+json"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD for SEO
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+      <Header brand={brand} />
+      <Hero brand={brand} />
+      {!isTiendaBasica && (
+        <>
+          <HowItWorks />
+          <Benefits />
+          <TestimonialsSection />
+        </>
+      )}
       <PlansSection />
-      <GeoSnippets />
-      <FAQSection />
-      <section className="py-10 px-4 bg-slate-50 border-t border-slate-200">
-        <div className="container mx-auto max-w-4xl">
-          <h2 className="text-base font-semibold text-slate-600 mb-4 text-center">Recursos para emprendedores argentinos</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <a href="/tienda-online-gratis-argentina" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
-              <p className="text-xs font-medium text-slate-700">Tienda online gratis en Argentina</p>
-            </a>
-            <a href="/crear-tienda-online-argentina" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
-              <p className="text-xs font-medium text-slate-700">Crear tienda online en Argentina</p>
-            </a>
-            <a href="/donde-abrir-tienda-online-argentina" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
-              <p className="text-xs font-medium text-slate-700">¿Dónde abrir mi tienda online?</p>
-            </a>
-            <a href="/blog/mejor-plataforma-tienda-online-argentina" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
-              <p className="text-xs font-medium text-slate-700">¿Cuál es la mejor plataforma de ecommerce?</p>
-            </a>
-            <a href="/tienda-online-gratis" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
-              <p className="text-xs font-medium text-slate-700">Tienda online gratis sin comisiones</p>
-            </a>
-            <a href="/crear-tienda-online" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
-              <p className="text-xs font-medium text-slate-700">Crear tienda online con IA</p>
-            </a>
-            <a href="/vender-online-argentina" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
-              <p className="text-xs font-medium text-slate-700">Cómo vender online en Argentina</p>
-            </a>
-            <a href="/alternativa-mercado-shops" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
-              <p className="text-xs font-medium text-slate-700">Alternativa a Mi Página (ex Mercado Shops)</p>
-            </a>
-            <a href="/blog" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
-              <p className="text-xs font-medium text-slate-700">Blog: guías para vender online</p>
-            </a>
-            <a href="/blog/plataformas-ecommerce-argentina-2026" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
-              <p className="text-xs font-medium text-slate-700">Mejor plataforma ecommerce Argentina 2026</p>
-            </a>
-            <a href="/blog/como-crear-tienda-online-gratis-argentina" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
-              <p className="text-xs font-medium text-slate-700">Cómo crear una tienda online en Argentina</p>
-            </a>
-            <a href="/comparar" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
-              <p className="text-xs font-medium text-slate-700">Comparar plataformas de ecommerce</p>
-            </a>
+      {!isTiendaBasica && (
+        <>
+          <GeoSnippets />
+          <FAQSection />
+        </>
+      )}
+      {!isTiendaBasica && (
+        <section className="py-10 px-4 bg-slate-50 border-t border-slate-200">
+          <div className="container mx-auto max-w-4xl">
+            <h2 className="text-base font-semibold text-slate-600 mb-4 text-center">Recursos para emprendedores argentinos</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <a href="/tienda-online-gratis-argentina" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+                <p className="text-xs font-medium text-slate-700">Tienda online gratis en Argentina</p>
+              </a>
+              <a href="/crear-tienda-online-argentina" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+                <p className="text-xs font-medium text-slate-700">Crear tienda online en Argentina</p>
+              </a>
+              <a href="/donde-abrir-tienda-online-argentina" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+                <p className="text-xs font-medium text-slate-700">¿Dónde abrir mi tienda online?</p>
+              </a>
+              <a href="/blog/mejor-plataforma-tienda-online-argentina" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+                <p className="text-xs font-medium text-slate-700">¿Cuál es la mejor plataforma de ecommerce?</p>
+              </a>
+              <a href="/tienda-online-gratis" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+                <p className="text-xs font-medium text-slate-700">Tienda online gratis sin comisiones</p>
+              </a>
+              <a href="/crear-tienda-online" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+                <p className="text-xs font-medium text-slate-700">Crear tienda online con IA</p>
+              </a>
+              <a href="/vender-online-argentina" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+                <p className="text-xs font-medium text-slate-700">Cómo vender online en Argentina</p>
+              </a>
+              <a href="/alternativa-mercado-shops" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+                <p className="text-xs font-medium text-slate-700">Alternativa a Mi Página (ex Mercado Shops)</p>
+              </a>
+              <a href="/blog" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+                <p className="text-xs font-medium text-slate-700">Blog: guías para vender online</p>
+              </a>
+              <a href="/blog/plataformas-ecommerce-argentina-2026" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+                <p className="text-xs font-medium text-slate-700">Mejor plataforma ecommerce Argentina 2026</p>
+              </a>
+              <a href="/blog/como-crear-tienda-online-gratis-argentina" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+                <p className="text-xs font-medium text-slate-700">Cómo crear una tienda online en Argentina</p>
+              </a>
+              <a href="/comparar" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+                <p className="text-xs font-medium text-slate-700">Comparar plataformas de ecommerce</p>
+              </a>
+              <a href="/vs-tiendanube" className="bg-white rounded-lg p-3 border border-slate-200 hover:border-amber-300 transition-colors text-center">
+                <p className="text-xs font-medium text-slate-700">tol.ar vs Tiendanube: comparativa y migración gratis</p>
+              </a>
+            </div>
           </div>
-        </div>
-      </section>
-      <Footer />
+        </section>
+      )}
+      <Footer brand={brand} />
     </main>
   )
 }

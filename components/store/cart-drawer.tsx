@@ -5,13 +5,14 @@ import { Minus, Plus, X, ShoppingBag } from "lucide-react"
 import { useCart } from "./cart-provider"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { formatPrice as formatPriceForCountry } from "@/lib/currency"
 
 export function CartDrawer() {
-  const { items, cartOpen, setCartOpen, removeItem, updateQuantity, total, clearCart, showPriceAlert, dismissPriceAlert } = useCart()
+  const { items, cartOpen, setCartOpen, removeItem, updateQuantity, total, clearCart, showPriceAlert, dismissPriceAlert, country } = useCart()
   const router = useRouter()
 
   const formatPrice = (price: number) => {
-    return `$${price.toLocaleString()}`
+    return formatPriceForCountry(price, country)
   }
 
   const handleCheckout = () => {

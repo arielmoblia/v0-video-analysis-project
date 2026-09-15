@@ -5,14 +5,14 @@
       "texto": "Plan gratis disponible; planes pagos desde $26.999/mes",
       "fuente": "https://www.tiendanube.com/planes-y-precios",
       "chequeo": "26.999",
-      "verificado": "2026-08-31",
+      "verificado": "2026-09-14",
       "alerta": false
     },
     "transaccion": {
       "texto": "Sin comisión propia, pero cobra costo por transacción (0,7% a 2% según plan y medio de pago)",
       "fuente": "https://ayuda.tiendanube.com/es_ES/123484-costos-por-transaccion/que-son-los-costos-por-transaccion-de-tiendanube",
       "chequeo": "0,7%",
-      "verificado": "2026-08-31",
+      "verificado": "2026-09-14",
       "alerta": false
     }
   },
@@ -21,7 +21,7 @@
       "texto": "Sin plan gratis; desde USD 29/mes (pago anual) o USD 39/mes (pago mensual). Tiene una promo de entrada de USD 1/mes durante los primeros 3 meses (tras un trial gratis de 3 días); después se cobra el precio de lista.",
       "fuente": "https://www.shopify.com/pricing",
       "chequeo": "$1/month for 3 months",
-      "verificado": "2026-08-31",
+      "verificado": "2026-09-14",
       "alerta": false
     },
     "comisionExterna": {
@@ -37,7 +37,7 @@
       "texto": "Gratis los primeros 3 meses; después $15.999/mes según informa Mercado Libre",
       "fuente": "https://www.mercadolibre.com.ar/landing/mi-pagina",
       "chequeo": "15.999",
-      "verificado": "2026-08-31",
+      "verificado": "2026-09-14",
       "alerta": false
     },
     "comision": {

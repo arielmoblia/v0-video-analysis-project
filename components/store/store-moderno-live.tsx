@@ -8,6 +8,7 @@ import { StoreHeroModernEditable } from "@/components/store/store-hero-modern-ed
 import { CategoryShowcaseModernEditable } from "@/components/store/category-showcase-modern-editable"
 import { ProductGridModern } from "@/components/store/product-grid-modern"
 import { StoreFooter } from "@/components/store/store-footer"
+import { EditableText, useStorePageContent } from "@/components/editable-text"
 
 interface StoreModernoLiveProps {
   store: Store
@@ -36,6 +37,7 @@ export function StoreModernoLive({
   isOwner,
   initialCategoryImages,
 }: StoreModernoLiveProps) {
+  const { content } = useStorePageContent(subdomain, "template-moderno")
   const [banner, setBanner] = useState({
     banner_image: store.banner_image || "",
     banner_title: store.banner_title || "",
@@ -86,6 +88,9 @@ export function StoreModernoLive({
           store={storeConEdicion}
           accentColor={accentColor}
           editMode={editMode}
+          content={content}
+          isAdmin={isOwner}
+          subdomain={subdomain}
           onChangeImage={(url) => setBanner((b) => ({ ...b, banner_image: url }))}
           onChangeTitle={(value) => setBanner((b) => ({ ...b, banner_title: value }))}
           onChangeSubtitle={(value) => setBanner((b) => ({ ...b, banner_subtitle: value }))}
@@ -96,25 +101,29 @@ export function StoreModernoLive({
           editMode={editMode}
           accentColor={accentColor}
           subdomain={subdomain}
+          content={content}
+          isAdmin={isOwner}
           onChangeImage={(slug, url) => setCategoryImages((c) => ({ ...c, [slug]: url }))}
         />
 
         {featuredProducts.length > 0 && (
           <section className="container mx-auto px-6 py-14">
-            <h2 className="text-2xl font-bold text-neutral-900 mb-6">Destacados</h2>
+            <EditableText page="template-moderno" field="destacados_title" defaultValue={content.destacados_title || "Destacados"} isAdmin={isOwner} tag="h2" className="text-2xl font-bold text-neutral-900 mb-6" accentColor={accentColor} endpoint="/api/store-page-content" extraBody={{ subdomain }} />
             <ProductGridModern
               products={featuredProducts}
               subdomain={subdomain}
               exchangeRate={exchangeRate}
               country={store.country}
               accentColor={accentColor}
+              content={content}
+              isAdmin={isOwner}
             />
           </section>
         )}
 
         <section id="productos" className="bg-neutral-50">
           <div className="container mx-auto px-6 py-14">
-            <h2 className="text-2xl font-bold text-neutral-900 mb-6">Todos los productos</h2>
+            <EditableText page="template-moderno" field="todos_productos_title" defaultValue={content.todos_productos_title || "Todos los productos"} isAdmin={isOwner} tag="h2" className="text-2xl font-bold text-neutral-900 mb-6" accentColor={accentColor} endpoint="/api/store-page-content" extraBody={{ subdomain }} />
             {products.length > 0 ? (
               <ProductGridModern
                 products={products}
@@ -122,6 +131,8 @@ export function StoreModernoLive({
                 exchangeRate={exchangeRate}
                 country={store.country}
                 accentColor={accentColor}
+                content={content}
+                isAdmin={isOwner}
               />
             ) : (
               <div className="text-center py-20">
@@ -134,7 +145,7 @@ export function StoreModernoLive({
           </div>
         </section>
       </main>
-      <StoreFooter store={storeConEdicion} />
+      <StoreFooter store={storeConEdicion} content={content} isAdmin={isOwner} subdomain={subdomain} page="template-moderno" />
 
       {isOwner && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">

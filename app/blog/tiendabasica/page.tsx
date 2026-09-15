@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { SeoExtraBlock } from "@/components/seo-extra-block"
 import TiendaBasicaClient from "./page-client"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Tienda Básica: llevar el sistema de tol.ar a toda Latinoamérica (2026)",
@@ -30,7 +31,8 @@ const breadcrumbJsonLd = {
   ],
 }
 
-export default function TiendaBasicaPage() {
+export default async function TiendaBasicaPage() {
+  const brand = await getBrand()
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -52,7 +54,7 @@ export default function TiendaBasicaPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
-      <TiendaBasicaClient />
+      <TiendaBasicaClient brand={brand} />
       <SeoExtraBlock page="blog-tiendabasica" />
     </>
   )

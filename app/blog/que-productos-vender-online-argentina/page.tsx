@@ -4,6 +4,7 @@ import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { ArrowRight } from "lucide-react"
 import { RelatedArticles } from "@/components/blog/related-articles"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Qué Productos Vender Online en Argentina (2026)",
@@ -135,7 +136,8 @@ const categorias = [
   },
 ]
 
-export default function ProductosVenderOnlinePage() {
+export default async function ProductosVenderOnlinePage() {
+  const brand = await getBrand()
   return (
     <>
       <script
@@ -146,7 +148,7 @@ export default function ProductosVenderOnlinePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
-      <Header />
+      <Header brand={brand} />
       <main className="min-h-screen bg-white">
         <div className="max-w-3xl mx-auto px-4 py-16">
           <div className="mb-8">
@@ -309,7 +311,7 @@ export default function ProductosVenderOnlinePage() {
         </div>
       </main>
       <RelatedArticles currentSlug="que-productos-vender-online-argentina" />
-      <Footer />
+      <Footer brand={brand} />
     </>
   )
 }

@@ -2,6 +2,7 @@ import { Metadata } from "next"
 import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import Link from "next/link"
+import { getBrand } from "@/lib/get-brand"
 
 export const metadata: Metadata = {
   title: "Dropshipping — Vendé sin tener stock propio",
@@ -14,10 +15,11 @@ export const metadata: Metadata = {
   }
 }
 
-export default function DropshippingPage() {
+export default async function DropshippingPage() {
+  const brand = await getBrand()
   return (
     <div className="min-h-screen bg-white">
-      <Header />
+      <Header brand={brand} />
 
       {/* HERO */}
       <section className="py-16 md:py-24 text-center border-b border-slate-100">
@@ -147,7 +149,7 @@ export default function DropshippingPage() {
         </div>
       </section>
 
-      <Footer />
+      <Footer brand={brand} />
     </div>
   )
 }
