@@ -197,16 +197,28 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
   const handleSave = async () => {
     setSaving(true)
     try {
-      console.log("[v0] Guardando pagos:", { storeId, ...payments })
+      // Si el comerciante cargó un Access Token o un Link de MP, activamos el
+      // cobro automáticamente. Antes había que acordarse de tocar además un
+      // botoncito aparte ("Activado/Desactivado") al final de la tarjeta, y
+      // mucha gente pegaba el token, guardaba, y Mercado Pago nunca aparecía
+      // en su checkout porque ese paso extra quedaba sin hacer.
+      const hasMercadopagoCredentials =
+        payments.mercadopago_access_token.trim().length > 0 || payments.mercadopago_link.trim().length > 0
+      const toSave = hasMercadopagoCredentials ? { ...payments, mercadopago_enabled: true } : payments
+
+      console.log("[v0] Guardando pagos:", { storeId, ...toSave })
       const res = await fetch("/api/admin/payments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ storeId, ...payments }),
+        body: JSON.stringify({ storeId, ...toSave }),
       })
       const data = await res.json()
       console.log("[v0] Respuesta guardado:", data, "Status:", res.status)
-      
+
       if (res.ok) {
+        if (hasMercadopagoCredentials && !payments.mercadopago_enabled) {
+          setPayments((prev) => ({ ...prev, mercadopago_enabled: true }))
+        }
         alert("Configuracion de pagos guardada correctamente")
       } else {
         alert("Error al guardar: " + (data.error || "Error desconocido"))
@@ -646,6 +658,15 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                   </CardContent>
                 )}
               </Card>
+
+              {mpOpen && (
+                <div className="flex justify-end -mt-2">
+                  <Button onClick={handleSave} disabled={saving}>
+                    {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                    Guardar y conectar Mercado Pago
+                  </Button>
+                </div>
+              )}
 
               {/* Mobbex - Alternativa a MercadoPago */}
               <Card className={payments.mobbex_enabled ? "border-green-200" : "border-slate-200 opacity-60"}>
