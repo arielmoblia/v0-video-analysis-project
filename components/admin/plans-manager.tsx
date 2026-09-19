@@ -1482,25 +1482,6 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                       <div className="pt-4 space-y-3">
                         <p className="text-sm font-medium text-center">Elegí como pagar:</p>
                         
-                        {/* Tarjeta (Stripe por dentro) - próximamente */}
-                        <div className="border rounded-lg p-3 bg-slate-50 opacity-60 cursor-not-allowed">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 bg-slate-400 rounded flex items-center justify-center">
-                                <CreditCard className="w-4 h-4 text-white" />
-                              </div>
-                              <div>
-                                <p className="font-medium text-sm text-slate-500">Tarjeta de crédito / débito</p>
-                              </div>
-                            </div>
-                            <Badge variant="outline" className="text-[10px] border-slate-300 text-slate-400">Próximamente</Badge>
-                          </div>
-                          <Button className="w-full" disabled variant="outline">
-                            <Lock className="w-4 h-4 mr-2" />
-                            Próximamente
-                          </Button>
-                        </div>
-
                         {/* MercadoPago */}
                         <div className="border rounded-lg p-3 hover:border-blue-400 transition-colors">
                           <div className="flex items-center justify-between mb-2">
@@ -1515,7 +1496,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                             </div>
                             <Badge variant="outline" className="text-[10px] border-green-300 text-green-600">Pesos ARS</Badge>
                           </div>
-                          <Button 
+                          <Button
                             className="w-full bg-[#00b1ea] hover:bg-[#0095c8] text-white"
                             disabled={processingPayment}
                             onClick={async () => {
@@ -1525,7 +1506,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                 const featuresToPurchase = availableFeatures
                                   .filter(f => selectedFeatures.includes(f.code))
                                   .map(f => ({ code: f.code, name: f.name, price: f.price }))
-                                
+
                                 const res = await fetch("/api/tolar/mercadopago/create-preference", {
                                   method: "POST",
                                   headers: { "Content-Type": "application/json" },
@@ -1535,14 +1516,14 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                     totalARS,
                                   }),
                                 })
-                                
+
                                 const data = await res.json()
-                                
+
                                 if (!res.ok) {
                                   alert(data.error || "Error al crear el pago")
                                   return
                                 }
-                                
+
                                 // Redirigir a MercadoPago
                                 window.location.href = data.initPoint
                               } catch (error) {
@@ -1559,9 +1540,9 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                             Pagar ${totalARS.toLocaleString("es-AR")} ARS
                           </Button>
                         </div>
-                        
-                        {/* PayPal */}
-                        <div className="border rounded-lg p-3 hover:border-yellow-400 transition-colors">
+
+                        {/* PayPal - desactivado temporalmente, próximamente */}
+                        <div className="border rounded-lg p-3">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
                               <div className="w-8 h-8 bg-[#003087] rounded flex items-center justify-center">
@@ -1574,14 +1555,32 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                             </div>
                             <Badge variant="outline" className="text-[10px] border-blue-300 text-blue-600">Dolares USD</Badge>
                           </div>
-                          <div ref={paypalButtonRef} className="min-h-[45px]" />
-                          {!paypalLoaded && (
-                            <div className="flex items-center justify-center py-2">
-                              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                            </div>
-                          )}
+                          <div className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md bg-slate-100 text-slate-400 text-sm cursor-not-allowed">
+                            <Lock className="w-4 h-4" />
+                            Próximamente · ${totalUSD.toFixed(2)} USD
+                          </div>
                         </div>
-                        
+
+                        {/* Tarjeta (Stripe por dentro) - próximamente */}
+                        <div className="border rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 bg-slate-900 rounded flex items-center justify-center">
+                                <CreditCard className="w-4 h-4 text-white" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">Tarjeta de Débito/Crédito</p>
+                                <p className="text-[10px] text-muted-foreground">0% Comisión</p>
+                              </div>
+                            </div>
+                            <Badge variant="outline" className="text-[10px] border-green-300 text-green-600">Pesos ARS</Badge>
+                          </div>
+                          <div className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md bg-slate-100 text-slate-400 text-sm cursor-not-allowed">
+                            <Lock className="w-4 h-4" />
+                            Próximamente · ${totalARS.toLocaleString("es-AR")} ARS
+                          </div>
+                        </div>
+
                         {processingPayment && (
                           <div className="flex items-center justify-center gap-2 py-4 bg-slate-50 rounded-lg">
                             <Loader2 className="w-5 h-5 animate-spin" />
