@@ -1482,16 +1482,15 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                       <div className="pt-4 space-y-3">
                         <p className="text-sm font-medium text-center">Elegí como pagar:</p>
                         
-                        {/* Stripe - próximamente */}
+                        {/* Tarjeta (Stripe por dentro) - próximamente */}
                         <div className="border rounded-lg p-3 bg-slate-50 opacity-60 cursor-not-allowed">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 bg-[#635bff] rounded flex items-center justify-center">
-                                <span className="text-white font-bold text-xs">S</span>
+                              <div className="w-8 h-8 bg-slate-400 rounded flex items-center justify-center">
+                                <CreditCard className="w-4 h-4 text-white" />
                               </div>
                               <div>
-                                <p className="font-medium text-sm text-slate-500">Stripe</p>
-                                <p className="text-[10px] text-slate-400">Tarjeta de crédito / débito</p>
+                                <p className="font-medium text-sm text-slate-500">Tarjeta de crédito / débito</p>
                               </div>
                             </div>
                             <Badge variant="outline" className="text-[10px] border-slate-300 text-slate-400">Próximamente</Badge>
