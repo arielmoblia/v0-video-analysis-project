@@ -1,5 +1,4 @@
 "use client"
-import { CositasCheckout } from "@/components/cositas-checkout"
 
 import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -1483,27 +1482,24 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                       <div className="pt-4 space-y-3">
                         <p className="text-sm font-medium text-center">Elegí como pagar:</p>
                         
-                        {/* Stripe - VISA 0% */}
-                        <div className="border-2 border-orange-400 rounded-lg p-3 bg-orange-50 relative">
-                          <div className="absolute -top-2.5 left-3 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">RECOMENDADO</div>
+                        {/* Stripe - próximamente */}
+                        <div className="border rounded-lg p-3 bg-slate-50 opacity-60 cursor-not-allowed">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 bg-slate-800 rounded flex items-center justify-center">
-                                <span className="text-white font-bold text-xs">VISA</span>
+                              <div className="w-8 h-8 bg-[#635bff] rounded flex items-center justify-center">
+                                <span className="text-white font-bold text-xs">S</span>
                               </div>
                               <div>
-                                <p className="font-medium text-sm">Tarjeta de crédito / débito</p>
-                                <p className="text-[10px] text-green-600 font-semibold">0% comisión para vos</p>
+                                <p className="font-medium text-sm text-slate-500">Stripe</p>
+                                <p className="text-[10px] text-slate-400">Tarjeta de crédito / débito</p>
                               </div>
                             </div>
-                            <Badge variant="outline" className="text-[10px] border-orange-300 text-orange-600">Dolares USD</Badge>
+                            <Badge variant="outline" className="text-[10px] border-slate-300 text-slate-400">Próximamente</Badge>
                           </div>
-                          <CositasCheckout
-                            selectedCositas={selectedFeatures}
-                            total={totalARS}
-                            hasPercentItem={false}
-                            storeId={storeId}
-                          />
+                          <Button className="w-full" disabled variant="outline">
+                            <Lock className="w-4 h-4 mr-2" />
+                            Próximamente
+                          </Button>
                         </div>
 
                         {/* MercadoPago */}
