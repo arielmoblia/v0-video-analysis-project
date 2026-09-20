@@ -1,10 +1,42 @@
 import { createClient } from "@supabase/supabase-js"
 import { type NextRequest, NextResponse } from "next/server"
+import crypto from "crypto"
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
   process.env.SUPABASE_SERVICE_ROLE_KEY as string
 )
+
+// Formato de MP: header "x-signature: ts=...,v1=..." + "x-request-id".
+// El manifest a firmar es "id:{data.id};request-id:{x-request-id};ts:{ts};"
+// (data.id en minúsculas si viene con letras). Doc: mercadopago.com.ar/developers/es/docs/checkout-pro/additional-content/notifications/webhooks
+function isValidMpSignature(request: NextRequest, dataId: string | undefined): boolean {
+  const secret = process.env.MP_WEBHOOK_SECRET
+  if (!secret) return true // sin secret configurado, no bloqueamos (compat hacia atrás)
+
+  const signatureHeader = request.headers.get("x-signature")
+  const requestId = request.headers.get("x-request-id")
+  if (!signatureHeader || !requestId || !dataId) return false
+
+  const parts = Object.fromEntries(
+    signatureHeader.split(",").map(p => {
+      const [k, v] = p.split("=")
+      return [k?.trim(), v?.trim()]
+    })
+  )
+  const ts = parts.ts
+  const v1 = parts.v1
+  if (!ts || !v1) return false
+
+  const manifest = `id:${dataId.toLowerCase()};request-id:${requestId};ts:${ts};`
+  const expected = crypto.createHmac("sha256", secret).update(manifest).digest("hex")
+
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(v1, "hex"))
+  } catch {
+    return false
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +44,11 @@ export async function POST(request: NextRequest) {
     console.log("[MP Webhook] Recibido:", JSON.stringify(body))
 
     const { type, data } = body
+
+    if (!isValidMpSignature(request, data?.id?.toString())) {
+      console.error("[MP Webhook] Firma inválida, rechazado")
+      return NextResponse.json({ error: "Firma inválida" }, { status: 401 })
+    }
 
     // Suscripciones (trial con tarjeta de las cositas). MP manda estos dos
     // topics a la misma URL de webhook que los pagos sueltos; hay que
