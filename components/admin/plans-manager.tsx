@@ -282,6 +282,13 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   // Modal de configuración
   const [configModal, setConfigModal] = useState<string | null>(null)
   const [trialModal, setTrialModal] = useState<{name: string, days: number} | null>(null)
+  const [trialCardFeature, setTrialCardFeature] = useState<DbFeature | null>(null)
+  const [trialCardLoadingBrick, setTrialCardLoadingBrick] = useState(false)
+  const [trialCardSubmitting, setTrialCardSubmitting] = useState(false)
+  const [trialCardError, setTrialCardError] = useState("")
+  const trialCardBrickRef = useRef<HTMLDivElement>(null)
+  const trialCardBrickBuilt = useRef(false)
+  const [cancellingFeature, setCancellingFeature] = useState<string | null>(null)
   const [customDomain, setCustomDomain] = useState(initialCustomDomain || "")
   const [savingDomain, setSavingDomain] = useState(false)
   const [domainSaved, setDomainSaved] = useState(false)
@@ -589,24 +596,108 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
     return () => clearTimeout(timer)
   }, [customUrlDialogOpen, hasValidCustomUrl, paypalLoaded, customThemePriceUSD, storeId, storeName, subdomain])
 
-  const startTrial = async (feature: any) => {
+  const startTrial = (feature: any) => {
     if (!feature.trial_days || feature.trial_days === 0) return
-    const trialEnd = new Date()
-    trialEnd.setDate(trialEnd.getDate() + feature.trial_days)
-    const res = await fetch("/api/admin/trial", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        storeId,
-        featureCode: feature.code,
-        trialDays: feature.trial_days,
-        trialEndsAt: trialEnd.toISOString()
-      })
+    // Antes de activar la prueba pedimos la tarjeta (Mercado Pago) para poder
+    // cobrar sola cuando termine el trial. Se abre el diálogo con el Brick.
+    setTrialCardError("")
+    trialCardBrickBuilt.current = false
+    setTrialCardFeature(feature)
+  }
+
+  const initTrialCardBrick = async (feature: DbFeature) => {
+    if (trialCardBrickBuilt.current || !trialCardBrickRef.current) return
+    setTrialCardLoadingBrick(true)
+    const pubKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY as string
+
+    const loadMP = () => new Promise<void>(resolve => {
+      if ((window as any).MercadoPago) { resolve(); return }
+      const s = document.createElement("script")
+      s.src = "https://sdk.mercadopago.com/js/v2"
+      s.onload = () => resolve()
+      document.head.appendChild(s)
     })
-    if (res.ok) {
-      setTrialModal({ name: feature.name, days: feature.trial_days })
-      window.location.reload()
+
+    await loadMP()
+    const mp = new (window as any).MercadoPago(pubKey, { locale: "es-AR" })
+    const bricks = mp.bricks()
+    trialCardBrickBuilt.current = true
+    setTrialCardLoadingBrick(false)
+
+    const priceARS = getPriceARS(feature.price)
+
+    await bricks.create("cardPayment", "mp-trial-card-brick", {
+      initialization: {
+        amount: priceARS,
+        payer: { email: "" },
+      },
+      customization: {
+        visual: { style: { theme: "default" } },
+        paymentMethods: { minInstallments: 1, maxInstallments: 1 },
+      },
+      callbacks: {
+        onReady: () => {},
+        onError: (err: any) => console.error("MP Brick error:", err),
+        onSubmit: async (cardData: any) => {
+          setTrialCardSubmitting(true)
+          setTrialCardError("")
+          try {
+            const res = await fetch("/api/tolar/mercadopago/create-subscription", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                storeId,
+                featureCode: feature.code,
+                featureName: feature.name,
+                trialDays: (feature as any).trial_days,
+                cardToken: cardData.token,
+                payerEmail: cardData.payer?.email,
+                transactionAmountARS: priceARS,
+              }),
+            })
+            const data = await res.json()
+            if (res.ok && data.ok) {
+              setTrialCardFeature(null)
+              setTrialModal({ name: feature.name, days: (feature as any).trial_days })
+              window.location.reload()
+            } else {
+              setTrialCardError(data.error || "No pudimos guardar la tarjeta. Probá con otra.")
+            }
+          } catch {
+            setTrialCardError("Error al procesar la tarjeta")
+          }
+          setTrialCardSubmitting(false)
+        },
+      },
+    })
+  }
+
+  useEffect(() => {
+    if (trialCardFeature) {
+      trialCardBrickBuilt.current = false
+      setTimeout(() => initTrialCardBrick(trialCardFeature), 100)
     }
+  }, [trialCardFeature])
+
+  const cancelSubscription = async (featureCode: string, featureName: string) => {
+    if (!window.confirm(`¿Cancelar ${featureName}? No se te va a cobrar y se desactiva ahora.`)) return
+    setCancellingFeature(featureCode)
+    try {
+      const res = await fetch("/api/tolar/mercadopago/cancel-subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId, featureCode }),
+      })
+      if (res.ok) {
+        window.location.reload()
+      } else {
+        const data = await res.json().catch(() => ({}))
+        alert(data.error || "No se pudo cancelar")
+      }
+    } catch {
+      alert("Error al cancelar")
+    }
+    setCancellingFeature(null)
   }
 
   const toggleFeature = (code: string) => {
@@ -1149,7 +1240,18 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                     )}
                                   </div>
                                   {isTrial && daysLeft > 0 ? (
-                                    <button onClick={() => toggleFeature(feature.code)} className="text-xs bg-green-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-green-700">Comprar</button>
+                                    <div className="flex items-center gap-2">
+                                      {detail?.mp_preapproval_id && (
+                                        <button
+                                          onClick={() => cancelSubscription(feature.code, feature.name)}
+                                          disabled={cancellingFeature === feature.code}
+                                          className="text-xs text-red-600 hover:text-red-700 hover:underline whitespace-nowrap"
+                                        >
+                                          {cancellingFeature === feature.code ? "Cancelando..." : "Cancelar"}
+                                        </button>
+                                      )}
+                                      <button onClick={() => toggleFeature(feature.code)} className="text-xs bg-green-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-green-700">Comprar</button>
+                                    </div>
                                   ) : (
                                     <span className="text-sm font-medium text-green-700">${priceARS.toLocaleString("es-AR")}/mes</span>
                                   )}
@@ -1830,6 +1932,46 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!trialCardFeature} onOpenChange={(open) => { if (!open) setTrialCardFeature(null) }}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-orange-500" />
+              Probar {trialCardFeature?.name} gratis
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-2 space-y-4">
+            <div className="bg-orange-50 rounded-lg p-4 text-sm text-orange-900 space-y-1">
+              <p>
+                {(trialCardFeature as any)?.trial_days} días gratis. Después se cobra{" "}
+                <strong>${trialCardFeature ? getPriceARS(trialCardFeature.price).toLocaleString("es-AR") : ""}/mes</strong>{" "}
+                con la tarjeta que cargues, salvo que canceles antes.
+              </p>
+              <p className="text-xs text-orange-700">
+                Te vamos a avisar por mail unos días antes de que se haga el primer cobro.
+              </p>
+            </div>
+            {trialCardLoadingBrick && (
+              <div className="flex items-center justify-center py-8 gap-2">
+                <Loader2 className="w-6 h-6 animate-spin text-[#00b1ea]" />
+                <span className="text-sm text-muted-foreground">Cargando formulario de pago...</span>
+              </div>
+            )}
+            <div id="mp-trial-card-brick" ref={trialCardBrickRef} />
+            {trialCardSubmitting && (
+              <p className="text-xs text-muted-foreground text-center">Guardando tarjeta...</p>
+            )}
+            {trialCardError && (
+              <p className="text-xs text-red-600 text-center">{trialCardError}</p>
+            )}
+            <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
+              <Lock className="w-3 h-3" /> Tu tarjeta la guarda Mercado Pago, no nosotros
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     {trialModal && (
       <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setTrialModal(null)}>
         <div style={{ background: "white", borderRadius: "12px", padding: "32px", textAlign: "center", maxWidth: "360px", margin: "16px" }} onClick={(e) => e.stopPropagation()}>

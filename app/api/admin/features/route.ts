@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     // Obtener features compradas por la tienda
     const { data: purchasedData, error: purchasedError } = await supabase
       .from("store_purchased_features")
-      .select("feature_code, is_trial, trial_ends_at")
+      .select("feature_code, is_trial, trial_ends_at, mp_preapproval_id, mp_subscription_status")
       .eq("store_id", storeId)
       .eq("is_active", true)
 
