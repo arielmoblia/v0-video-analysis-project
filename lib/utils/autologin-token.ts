@@ -29,8 +29,8 @@ function timingSafeEqual(a: string, b: string): boolean {
   return diff === 0
 }
 
-export async function generateAutologinToken(subdomain: string, secret: string): Promise<string> {
-  const payload = `${subdomain.toLowerCase()}.${Date.now() + TTL_MS}`
+export async function generateAutologinToken(subdomain: string, secret: string, ttlMs: number = TTL_MS): Promise<string> {
+  const payload = `${subdomain.toLowerCase()}.${Date.now() + ttlMs}`
   const key = await getKey(secret)
   const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(payload))
   return `${toBase64Url(encoder.encode(payload))}.${toBase64Url(signature)}`
