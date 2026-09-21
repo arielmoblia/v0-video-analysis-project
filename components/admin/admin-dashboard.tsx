@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { LogOut } from "lucide-react"
@@ -64,11 +64,20 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState("settings")
+  const searchParams = useSearchParams()
+  const activarFeature = searchParams.get("activar")
+  const [activeTab, setActiveTab] = useState(activarFeature ? "plans" : "settings")
   const [plansTab, setPlansTab] = useState("cositas")
   const [purchasedFeatures, setPurchasedFeatures] = useState<string[]>([])
   const [trialFeatures, setTrialFeatures] = useState<{ code: string; daysLeft: number }[]>([])
   const [customVariants, setCustomVariants] = useState<{ name: string; options: string[] }[]>([])
+
+  useEffect(() => {
+    if (activarFeature) {
+      setActiveTab("plans")
+      setPlansTab("cositas")
+    }
+  }, [activarFeature])
 
   useEffect(() => {
     const loadFeatures = async () => {
@@ -369,6 +378,7 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
                 activeTab={plansTab}
                 onActiveTabChange={setPlansTab}
                 onGoToProducts={() => setActiveTab("products")}
+                autoSelectFeature={activarFeature}
               />
               {(purchasedFeatures.includes("custom_variants") || store.template === "variants") && (
                 <div className="mt-8">

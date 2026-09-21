@@ -62,6 +62,7 @@ interface PlansManagerProps {
   activeTab?: string
   onActiveTabChange?: (tab: string) => void
   onGoToProducts?: () => void
+  autoSelectFeature?: string | null
 }
 
 const pageDesigns = [
@@ -264,7 +265,7 @@ const LEER_MAS_URLS: Record<string, string> = {
 
 const getLeerMasUrl = (code: string) => LEER_MAS_URLS[code] || `${APP_URL}/cositas#${code}`
 
-export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialCustomThemeRequest, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts }: PlansManagerProps) {
+export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialCustomThemeRequest, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts, autoSelectFeature }: PlansManagerProps) {
   const [internalActiveTab, setInternalActiveTab] = useState("cositas")
   const activeTab = controlledActiveTab ?? internalActiveTab
   const setActiveTab = onActiveTabChange ?? setInternalActiveTab
@@ -278,6 +279,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   const [paypalRendered, setPaypalRendered] = useState(false)
   const paypalButtonRef = useRef<HTMLDivElement>(null)
   const [exchangeRate, setExchangeRate] = useState(1400)
+  const autoSelectHandled = useRef(false)
 
   // Modal de configuración
   const [configModal, setConfigModal] = useState<string | null>(null)
@@ -354,8 +356,23 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
         setLoading(false)
       }
     }
+    autoSelectHandled.current = false
     fetchFeatures()
   }, [storeId])
+
+  // Link directo desde el mail de aviso (?activar=codigo): selecciona la
+  // cosita sola y lleva a la caja de pago, sin que haya que buscarla a mano.
+  useEffect(() => {
+    if (!autoSelectFeature || loading || autoSelectHandled.current) return
+    const feature = availableFeatures.find((f) => f.code === autoSelectFeature)
+    if (!feature) return
+    autoSelectHandled.current = true
+    toggleFeature(autoSelectFeature)
+    setTimeout(() => {
+      const el = document.getElementById(`feature-${autoSelectFeature}`)
+      el?.scrollIntoView({ behavior: "smooth", block: "center" })
+    }, 300)
+  }, [autoSelectFeature, loading, availableFeatures])
 
   const handleSaveDomain = async () => {
     setSavingDomain(true)
@@ -703,7 +720,9 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   const toggleFeature = (code: string) => {
     const detail = purchasedDetails.find((d: any) => d.feature_code === code)
     const isTrialOnly = detail?.is_trial && detail?.trial_ends_at && new Date(detail.trial_ends_at).getTime() > Date.now()
-    if (purchasedFeatures.includes(code) && !isTrialOnly) return
+    // Prueba vencida pero nunca cobrada (sin suscripción real en MP): se puede volver a pagar.
+    const isTrialExpiredUnpaid = detail?.is_trial && detail?.trial_ends_at && new Date(detail.trial_ends_at).getTime() <= Date.now() && !detail?.mp_preapproval_id
+    if (purchasedFeatures.includes(code) && !isTrialOnly && !isTrialExpiredUnpaid) return
     setSelectedFeatures((prev) => (prev.includes(code) ? prev.filter((f) => f !== code) : [...prev, code]))
     setPaypalRendered(false)
   }
@@ -1220,8 +1239,10 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                             const daysLeft = isTrial ? Math.ceil((new Date(detail.trial_ends_at).getTime() - Date.now()) / 86400000) : 0
                             const totalDays = feature.trial_days || 7
                             const priceARS = getPriceARS(feature.price)
+                            const isTrialExpiredUnpaid = isTrial && daysLeft <= 0 && !detail?.mp_preapproval_id
+                            const isSelected = selectedFeatures.includes(feature.code)
                             return (
-                              <div key={feature.code} className="bg-green-50 border-b border-green-100 last:border-b-0">
+                              <div key={feature.code} id={`feature-${feature.code}`} className="bg-green-50 border-b border-green-100 last:border-b-0">
                                 <div className="flex items-center gap-3 px-4 py-3">
                                   <div className="w-9 h-9 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
                                     <IconComponent className="h-4 w-4 text-green-700" />
@@ -1235,6 +1256,8 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                         </div>
                                         <span className="text-xs text-orange-600">{daysLeft} días restantes</span>
                                       </div>
+                                    ) : isTrialExpiredUnpaid ? (
+                                      <p className="text-xs text-red-600">Prueba vencida, sin cobrar</p>
                                     ) : (
                                       <p className="text-xs text-green-600">✓ Pagado</p>
                                     )}
@@ -1252,6 +1275,13 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                       )}
                                       <button onClick={() => toggleFeature(feature.code)} className="text-xs bg-green-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-green-700">Comprar</button>
                                     </div>
+                                  ) : isTrialExpiredUnpaid ? (
+                                    <button
+                                      onClick={() => toggleFeature(feature.code)}
+                                      className={`text-xs px-3 py-1.5 rounded-lg font-medium whitespace-nowrap ${isSelected ? "bg-green-700 text-white" : "bg-green-600 text-white hover:bg-green-700"}`}
+                                    >
+                                      {isSelected ? "Seleccionado" : `Pagar ahora · $${priceARS.toLocaleString("es-AR")}/mes`}
+                                    </button>
                                   ) : (
                                     <span className="text-sm font-medium text-green-700">${priceARS.toLocaleString("es-AR")}/mes</span>
                                   )}
@@ -1471,7 +1501,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                             const priceARS = getPriceARS(feature.price)
                             const isSelected = selectedFeatures.includes(feature.code)
                             return (
-                              <div key={feature.code} className="flex items-center gap-3 px-4 py-3 bg-orange-50 border-b border-orange-100 last:border-b-0">
+                              <div key={feature.code} id={`feature-${feature.code}`} className="flex items-center gap-3 px-4 py-3 bg-orange-50 border-b border-orange-100 last:border-b-0">
                                 <div className="w-9 h-9 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
                                   <IconComponent className="h-4 w-4 text-orange-700" />
                                 </div>
@@ -1540,7 +1570,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
 
             {/* Columna derecha: Resumen y pago */}
             <div className="lg:col-span-1">
-              <Card className="sticky top-4">
+              <Card id="tu-seleccion" className="sticky top-4">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <ShoppingCart className="w-5 h-5" />
