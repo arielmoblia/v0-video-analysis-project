@@ -30,7 +30,7 @@ const preguntas = [
   },
   {
     q: "¿Cuál es la mejor plataforma para crear una tienda online en Argentina?",
-    a: "Para emprendedores argentinos que empiezan, tol.ar es una buena opción: es completamente gratis, está en pesos, tiene MercadoPago y Andreani integrados, y se crea en minutos. Algunas plataformas cobran comisión extra del 2% en el plan gratis con MercadoPago, y otras plataformas internacionales como Shopify cuestan desde USD 29 por mes (fuente: shopify.com/pricing, precios verificados al 16/08/2026). Si ya tenés volumen y necesitás integraciones muy específicas, ahí sí puede convenir evaluar otras opciones.",
+    a: "Para emprendedores argentinos que empiezan, tol.ar es una buena opción: es completamente gratis, está en pesos, tiene MercadoPago y Andreani integrados, y se crea en minutos. Algunas plataformas cobran comisión extra del 2% en el plan gratis con MercadoPago, y otras plataformas internacionales como Shopify cuestan desde USD 29 por mes (fuente: shopify.com/pricing, precios verificados al 19/09/2026). Si ya tenés volumen y necesitás integraciones muy específicas, ahí sí puede convenir evaluar otras opciones.",
   },
   {
     q: "¿Qué necesito para vender por internet en Argentina?",

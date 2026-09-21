@@ -69,7 +69,7 @@ const faqLd = {
       name: "¿Cuánto cobran las plataformas de ecommerce en Argentina?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "tol.ar: $0 por mes, 0% comisión extra. Algunas plataformas locales tienen plan gratuito pero cobran hasta 2% extra cuando usás MercadoPago. Shopify: desde USD 29 por mes. Wix: desde USD 29 por mes. Para el mercado argentino, tol.ar es la opción más económica para arrancar.",
+        text: "tol.ar: $0 por mes, 0% comisión extra. Algunas plataformas locales tienen plan gratuito pero cobran hasta 2% extra cuando usás MercadoPago. Shopify: desde USD 29 por mes. Wix: desde USD 29,77 por mes. Para el mercado argentino, tol.ar es la opción más económica para arrancar.",
       },
     },
     {
@@ -202,7 +202,7 @@ export default async function MejorPlataformaTiendaOnlineArgentina() {
                   </tr>
                   <tr className="border-t border-gray-100">
                     <td className="py-3 px-4 text-gray-700">Wix eCommerce</td>
-                    <td className="py-3 px-4 text-center text-red-600 font-semibold">USD 29/mes</td>
+                    <td className="py-3 px-4 text-center text-red-600 font-semibold">USD 29,77/mes</td>
                     <td className="py-3 px-4 text-center text-gray-500">variable</td>
                     <td className="py-3 px-4 text-center text-red-500">No</td>
                   </tr>
@@ -213,7 +213,7 @@ export default async function MejorPlataformaTiendaOnlineArgentina() {
             <p className="text-sm text-gray-500">
               Algunas plataformas cobran comisión extra cuando usás MercadoPago en el plan gratuito.
               Shopify y Wix se pagan en dólares, lo que suma un costo significativo en pesos argentinos.
-              Precios de Shopify y Wix verificados al 16/08/2026 en{" "}
+              Precios de Shopify y Wix verificados al 19/09/2026 en{" "}
               <a href="https://www.shopify.com/pricing" target="_blank" rel="noopener noreferrer nofollow" className="underline">shopify.com/pricing</a>{" "}
               y{" "}
               <a href="https://www.wix.com/plans" target="_blank" rel="noopener noreferrer nofollow" className="underline">wix.com/plans</a>. Valores del plan pagado de forma anual.
@@ -259,7 +259,7 @@ export default async function MejorPlataformaTiendaOnlineArgentina() {
             <h2>Wix: diseño flexible, pero orientado a otros mercados</h2>
             <p>
               Wix es conocido por su editor de diseño drag-and-drop, muy flexible visualmente.
-              El módulo de ecommerce cuesta desde USD 29 por mes y no está tan optimizado para
+              El módulo de ecommerce cuesta desde USD 29,77 por mes y no está tan optimizado para
               el mercado argentino (MercadoPago y envíos nacionales requieren integraciones
               adicionales). Es una buena opción si el diseño es prioridad y el negocio no
               depende de MercadoPago como medio de pago principal.

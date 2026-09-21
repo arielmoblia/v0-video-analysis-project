@@ -198,7 +198,7 @@ export default async function CuantoCuestaTiendaOnlineArgentina() {
                   </tr>
                   <tr className="border-t border-gray-100">
                     <td className="py-3 px-4 text-gray-700">Wix eCommerce</td>
-                    <td className="py-3 px-4 text-center text-red-600 font-semibold">USD 29/mes</td>
+                    <td className="py-3 px-4 text-center text-red-600 font-semibold">USD 29,77/mes</td>
                     <td className="py-3 px-4 text-center text-gray-600">variable</td>
                     <td className="py-3 px-4 text-center text-red-500">USD</td>
                   </tr>
@@ -207,7 +207,7 @@ export default async function CuantoCuestaTiendaOnlineArgentina() {
             </div>
 
             <p className="text-sm text-gray-500">
-              Precios de Shopify y Wix verificados al 16/08/2026 en{" "}
+              Precios de Shopify y Wix verificados al 19/09/2026 en{" "}
               <a href="https://www.shopify.com/pricing" target="_blank" rel="noopener noreferrer nofollow" className="underline">shopify.com/pricing</a>{" "}
               y{" "}
               <a href="https://www.wix.com/plans" target="_blank" rel="noopener noreferrer nofollow" className="underline">wix.com/plans</a>. Valores del plan pagado de forma anual.

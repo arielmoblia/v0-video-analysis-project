@@ -201,7 +201,7 @@ export default async function VenderOnlineSinComisionesArgentina() {
             </div>
 
             <p className="text-sm text-gray-500">
-              Precio y comisión de Shopify verificados al 16/08/2026 en{" "}
+              Precio y comisión de Shopify verificados al 19/09/2026 en{" "}
               <a href="https://www.shopify.com/pricing" target="_blank" rel="noopener noreferrer nofollow" className="underline">shopify.com/pricing</a>{" "}
               y{" "}
               <a href="https://help.shopify.com/en/manual/your-account/manage-billing/billing-charges/types-of-charges/third-party-charges/third-party-transaction-fees" target="_blank" rel="noopener noreferrer nofollow" className="underline">help.shopify.com</a>.

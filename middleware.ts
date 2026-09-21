@@ -56,6 +56,7 @@ async function resolveCustomDomain(hostWithoutPort: string): Promise<string | nu
         Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
       },
       next: { revalidate: 0 },
+      signal: AbortSignal.timeout(2000),
     })
     if (!res.ok) return null
     const data = await res.json()
@@ -80,6 +81,7 @@ async function isNoindex(pathname: string): Promise<boolean> {
         Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
       },
       next: { revalidate: 0 },
+      signal: AbortSignal.timeout(2000),
     })
     if (!res.ok) return false
     const data = await res.json()

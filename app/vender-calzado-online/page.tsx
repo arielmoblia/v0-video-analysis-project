@@ -307,7 +307,7 @@ export default async function VenderCalzadoOnline() {
                   </tr>
                   <tr className="border-t border-gray-100">
                     <td className="py-3 px-4 text-gray-700">Wix (plan Core)</td>
-                    <td className="py-3 px-4 text-center text-red-600 font-semibold">USD 29/mes (anual)</td>
+                    <td className="py-3 px-4 text-center text-red-600 font-semibold">USD 29,77/mes (anual)</td>
                     <td className="py-3 px-4 text-center text-gray-500">variable</td>
                     <td className="py-3 px-4 text-center text-red-500">No</td>
                   </tr>
@@ -315,7 +315,7 @@ export default async function VenderCalzadoOnline() {
               </table>
             </div>
             <p className="text-sm text-gray-500">
-              Precios de Shopify y Wix verificados al 15/08/2026 en sus páginas oficiales:{" "}
+              Precios de Shopify y Wix verificados al 19/09/2026 en sus páginas oficiales:{" "}
               <a href="https://www.shopify.com/pricing" target="_blank" rel="noopener noreferrer nofollow" className="text-green-700 hover:underline">Shopify</a>{" "}
               y{" "}
               <a href="https://www.wix.com/plans" target="_blank" rel="noopener noreferrer nofollow" className="text-green-700 hover:underline">Wix</a>.

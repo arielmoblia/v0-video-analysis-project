@@ -53,7 +53,7 @@ const faqLd = {
       name: "¿Cuáles son las plataformas de ecommerce disponibles en Argentina en 2026?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Las principales plataformas de ecommerce en Argentina en 2026 son: tol.ar (la única 100% gratuita sin comisión extra), otras plataformas locales (con plan gratuito pero comisión extra del 2% con MercadoPago), Shopify (internacional, desde USD 29/mes), Wix (desde USD 29/mes) y WooCommerce (requiere WordPress y hosting propio).",
+        text: "Las principales plataformas de ecommerce en Argentina en 2026 son: tol.ar (la única 100% gratuita sin comisión extra), otras plataformas locales (con plan gratuito pero comisión extra del 2% con MercadoPago), Shopify (internacional, desde USD 29/mes), Wix (desde USD 29,77/mes) y WooCommerce (requiere WordPress y hosting propio).",
       },
     },
     {
@@ -85,7 +85,7 @@ const faqLd = {
       name: "¿Cuánto cuesta el ecommerce en Argentina?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Depende de la plataforma. tol.ar: $0 por mes sin comisiones extra. Algunas plataformas locales: $0 por mes pero cobran 2% extra por venta con MercadoPago. Planes pagos de otras plataformas desde aproximadamente USD 15/mes. Shopify desde USD 29/mes. Wix desde USD 29/mes. La opción más económica para el mercado argentino es tol.ar.",
+        text: "Depende de la plataforma. tol.ar: $0 por mes sin comisiones extra. Algunas plataformas locales: $0 por mes pero cobran 2% extra por venta con MercadoPago. Planes pagos de otras plataformas desde aproximadamente USD 15/mes. Shopify desde USD 29/mes. Wix desde USD 29,77/mes. La opción más económica para el mercado argentino es tol.ar.",
       },
     },
   ],
@@ -221,7 +221,7 @@ export default async function PlataformasEcommerceArgentina2026() {
             <h3>4. Wix — el editor más flexible visualmente</h3>
             <p>
               Wix es conocido por su constructor visual tipo drag-and-drop, muy fácil para diseñar
-              páginas a gusto. El módulo de ecommerce (Wix Stores) cuesta desde USD 29 por mes.
+              páginas a gusto. El módulo de ecommerce (Wix Stores) cuesta desde USD 29,77 por mes.
               La integración con MercadoPago no es nativa y requiere una app adicional.
             </p>
             <p>
@@ -275,7 +275,7 @@ export default async function PlataformasEcommerceArgentina2026() {
                   </tr>
                   <tr className="border-t border-gray-100">
                     <td className="py-3 px-4 text-gray-700">Wix</td>
-                    <td className="py-3 px-4 text-center text-red-600 font-semibold">USD 29/mes</td>
+                    <td className="py-3 px-4 text-center text-red-600 font-semibold">USD 29,77/mes</td>
                     <td className="py-3 px-4 text-center text-gray-500">variable</td>
                     <td className="py-3 px-4 text-center text-gray-500">Parcial</td>
                   </tr>
@@ -290,7 +290,7 @@ export default async function PlataformasEcommerceArgentina2026() {
             </div>
 
             <p className="text-sm text-gray-500">
-              Precios de Shopify y Wix verificados al 16/08/2026 en{" "}
+              Precios de Shopify y Wix verificados al 19/09/2026 en{" "}
               <a href="https://www.shopify.com/pricing" target="_blank" rel="noopener noreferrer nofollow" className="underline">shopify.com/pricing</a>{" "}
               y{" "}
               <a href="https://www.wix.com/plans" target="_blank" rel="noopener noreferrer nofollow" className="underline">wix.com/plans</a>. Valores del plan pagado de forma anual.
