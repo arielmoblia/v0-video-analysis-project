@@ -14,14 +14,25 @@ export async function GET() {
       return NextResponse.json({ error: "No autorizado" }, { status: 401, headers: { "Cache-Control": "no-store" } })
     }
 
-    const { data: stores, error } = await supabase.from("stores").select("*").order("created_at", { ascending: false })
-
-    if (error) {
-      console.error("Error fetching stores:", error)
-      return NextResponse.json({ error: "Error al obtener tiendas" }, { status: 500, headers: { "Cache-Control": "no-store" } })
+    // Supabase corta cada select en 1000 filas por default. La cantidad de tiendas ya
+    // está cerca de eso, así que se pagina con .range() para no perder tiendas de la lista
+    // cuando se cruce ese número.
+    const pageSize = 1000
+    let from = 0
+    let stores: any[] = []
+    while (true) {
+      const { data, error } = await supabase.from("stores").select("*").order("created_at", { ascending: false }).range(from, from + pageSize - 1)
+      if (error) {
+        console.error("Error fetching stores:", error)
+        return NextResponse.json({ error: "Error al obtener tiendas" }, { status: 500, headers: { "Cache-Control": "no-store" } })
+      }
+      if (!data || data.length === 0) break
+      stores = stores.concat(data)
+      if (data.length < pageSize) break
+      from += pageSize
     }
 
-    return NextResponse.json({ stores: stores || [] }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
+    return NextResponse.json({ stores }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
   } catch (error) {
     console.error("Error:", error)
     return NextResponse.json({ error: "Error del servidor" }, { status: 500, headers: { "Cache-Control": "no-store" } })

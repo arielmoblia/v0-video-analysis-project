@@ -351,39 +351,24 @@ export function SuperAdminDashboard() {
     }
   }
 
+  // Antes esto consultaba products/orders/payment_methods/shipping_methods directo desde
+  // el navegador con la clave anon. Los permisos de seguridad de esas tablas ya no dejan
+  // leer con esa clave (correcto: es una clave pública, visible por cualquiera), así que
+  // esas consultas venían devolviendo siempre 0 filas y la columna Prod mostraba "0" para
+  // tiendas con productos reales. Ahora se pide todo a una ruta del servidor que sí tiene
+  // permiso, y que además pagina para no cortarse en las 1000 filas por default de Supabase.
   const fetchCounts = async () => {
-    const { data: prods } = await supabaseAdmin.from("products").select("store_id, created_at").neq("is_template", true)
-    if (prods) {
-      const map: Record<string,number> = {}
-      const lastMap: Record<string,string> = {}
-      prods.forEach((p: any) => {
-        map[p.store_id] = (map[p.store_id] || 0) + 1
-        if (!lastMap[p.store_id] || new Date(p.created_at) > new Date(lastMap[p.store_id])) lastMap[p.store_id] = p.created_at
-      })
-      setStoreProdCounts(map)
-      setStoreLastProductAt(lastMap)
-    }
-    const { data: ords } = await supabaseAdmin.from("orders").select("store_id")
-    if (ords) {
-      const map: Record<string,number> = {}
-      ords.forEach((o: any) => { map[o.store_id] = (map[o.store_id] || 0) + 1 })
-      setStoreOrderCounts(map)
-    }
-    const { data: payments } = await supabaseAdmin.from("payment_methods").select("store_id, cash_enabled, card_enabled, transfer_enabled, mercadopago_enabled, mobbex_enabled, modo_enabled, uala_enabled, rapipago_enabled")
-    if (payments) {
-      const map: Record<string,boolean> = {}
-      payments.forEach((p: any) => {
-        map[p.store_id] = !!(p.cash_enabled || p.card_enabled || p.transfer_enabled || p.mercadopago_enabled || p.mobbex_enabled || p.modo_enabled || p.uala_enabled || p.rapipago_enabled)
-      })
-      setStoreHasPayment(map)
-    }
-    const { data: shippings } = await supabaseAdmin.from("shipping_methods").select("store_id, pickup_enabled, delivery_enabled, enviamelo_enabled, andreani_enabled, oca_enabled, correo_enabled, own_delivery_enabled")
-    if (shippings) {
-      const map: Record<string,boolean> = {}
-      shippings.forEach((s: any) => {
-        map[s.store_id] = !!(s.pickup_enabled || s.delivery_enabled || s.enviamelo_enabled || s.andreani_enabled || s.oca_enabled || s.correo_enabled || s.own_delivery_enabled)
-      })
-      setStoreHasShipping(map)
+    try {
+      const res = await fetch("/api/super-admin/counts", { cache: "no-store" })
+      if (!res.ok) return
+      const data = await res.json()
+      setStoreProdCounts(data.prodCounts || {})
+      setStoreLastProductAt(data.lastProductAt || {})
+      setStoreOrderCounts(data.orderCounts || {})
+      setStoreHasPayment(data.hasPayment || {})
+      setStoreHasShipping(data.hasShipping || {})
+    } catch (error) {
+      console.error("Error fetching counts:", error)
     }
   }
 
