@@ -281,7 +281,6 @@ const { data: templateStore } = await supabase
         await resend.emails.send({
           from: "TOL.AR <ventas@tiendaonline.com.ar>",
           to: email,
-          bcc: "soporte@tiendaonline.com.ar",
           subject: `Tu tienda ${siteTitle} esta lista en TOL.AR - Tenes 7 dias para configurarla`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
