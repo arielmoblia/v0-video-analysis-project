@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
               <h1 style="color:#96305a">Pago confirmado</h1>
               <p>Tus cositas ya estan activas en <strong>${store.subdomain}.tol.ar</strong></p>
               <p>Total pagado: $${totalARS.toLocaleString("es-AR")} ARS</p>
+              <p style="font-size:13px;color:#666">Tenés derecho a arrepentirte de esta compra dentro de los 10 días corridos desde hoy, sin necesidad de justificar el motivo (Ley 24.240). Podés cancelar cuando quieras desde tu panel.</p>
               <p><a href="https://${store.subdomain}.tol.ar/admin?tab=planes" style="color:#96305a">Ver mis cositas activas</a></p>
             </div>`,
           })

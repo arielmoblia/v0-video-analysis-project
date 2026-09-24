@@ -145,6 +145,7 @@ export async function POST(request: NextRequest) {
             <p>Activamos <strong>${featureName || featureCode}</strong> gratis por ${trialDays} días en ${store?.subdomain ? `${store.subdomain}.tol.ar` : "tu tienda"}.</p>
             <p>Guardamos tu tarjeta con Mercado Pago para que, si no cancelás antes, se cobre sola cuando termine la prueba (el ${trialEndsAt.toLocaleDateString("es-AR")}).</p>
             <p>Te vamos a avisar por mail unos días antes de que se haga el cobro, para que tengas tiempo de cancelar si no querés seguir.</p>
+            <p style="font-size:13px;color:#666">Podés cancelar cuando quieras desde tu panel. Si se hace el cobro automático al terminar la prueba, tenés derecho a arrepentirte de esa compra dentro de los 10 días corridos desde el cobro, sin necesidad de justificar el motivo (Ley 24.240).</p>
             <p><a href="https://${store?.subdomain || ""}.tol.ar/admin?tab=planes" style="color:#96305a">Ver mis cositas</a></p>
           </div>`,
         })
