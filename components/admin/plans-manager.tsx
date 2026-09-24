@@ -701,7 +701,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       trialCardBrickGen.current += 1
       trialCardBrickBuilt.current = false
       if (trialCardBrickRef.current) trialCardBrickRef.current.innerHTML = ""
-      setTrialCardError("El formulario de pago tardó demasiado en cargar. Cerrá esta ventana y probá de nuevo.")
+      setTrialCardError("El formulario de pago tardó demasiado en cargar. Si estás en una ventana de incógnito o con bloqueadores de cookies, probá en una ventana normal. Cerrá esto y probá de nuevo.")
     }, TRIAL_BRICK_TIMEOUT_MS)
 
     let controller: any = null
