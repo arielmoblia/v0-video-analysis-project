@@ -233,7 +233,32 @@ async function handleAuthorizedPayment(authorizedPaymentId?: string) {
       return
     }
     const payment = await res.json()
-    console.log("[MP Webhook] Authorized payment:", payment.id, payment.status, payment.preapproval_id)
+    console.log(
+      "[MP Webhook] Authorized payment:", payment.id,
+      "invoice_status:", payment.status,
+      "payment_status:", payment.payment?.status,
+      "retry_attempt:", payment.retry_attempt,
+      "preapproval:", payment.preapproval_id
+    )
+
+    // "recycling" = MP está reintentando el cobro solo (hasta 4 veces en 10
+    // días) antes de dar el cobro por perdido. No es un rechazo final, así
+    // que no tocamos nada todavía y esperamos el próximo webhook.
+    if (payment.status === "recycling") {
+      console.log("[MP Webhook] Reintento de cobro en curso, no se desactiva todavía:", payment.id)
+      return
+    }
+
+    // El campo "status" de arriba es del lado de la cuota/invoice (scheduled/
+    // processed/recycling/cancelled) y queda en "processed" tanto si el cobro
+    // salió bien como si se agotaron los 4 reintentos y falló. El resultado
+    // real del cobro está anidado en payment.payment.status (approved/rejected).
+    const cobroStatus = payment.payment?.status
+
+    if (!cobroStatus || cobroStatus === "pending" || cobroStatus === "in_process") {
+      console.log("[MP Webhook] Estado de cobro no concluyente todavía, no se toca nada:", payment.id, payment.status, cobroStatus)
+      return
+    }
 
     const { data: row } = await supabase
       .from("store_purchased_features")
@@ -252,7 +277,7 @@ async function handleAuthorizedPayment(authorizedPaymentId?: string) {
       .eq("id", row.store_id)
       .single()
 
-    if (payment.status === "processed") {
+    if (cobroStatus === "approved") {
       // Cobro exitoso: ya no es trial, queda pagada y activa.
       await supabase
         .from("store_purchased_features")
@@ -284,7 +309,7 @@ async function handleAuthorizedPayment(authorizedPaymentId?: string) {
           console.error("[MP Webhook] Error enviando email de cobro:", emailError)
         }
       }
-    } else if (payment.status === "rejected") {
+    } else if (cobroStatus === "rejected") {
       // La tarjeta falló: desactivamos la cosita y avisamos.
       await supabase
         .from("store_purchased_features")
