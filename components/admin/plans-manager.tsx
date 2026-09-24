@@ -1656,8 +1656,8 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                   return
                                 }
 
-                                // Redirigir a MercadoPago
-                                window.location.href = data.initPoint
+                                // Redirigir a MercadoPago (checkoutUrl ya elige sandbox o producción según la credencial)
+                                window.location.href = data.checkoutUrl || data.initPoint
                               } catch (error) {
                                 console.error("Error:", error)
                                 alert("Error al procesar el pago")

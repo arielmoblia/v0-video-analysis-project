@@ -53,13 +53,14 @@ export async function POST(request: NextRequest) {
     }
 
     const externalReference = `cosita_trial_${storeId}_${featureCode}_${Date.now()}`
+    const host = request.headers.get("host") || "tol.ar"
 
     const preapprovalBody = {
       reason: `Cosita tol.ar: ${featureName || featureCode}`,
       external_reference: externalReference,
       payer_email: payerEmail,
       card_token_id: cardToken,
-      back_url: `${process.env.NEXT_PUBLIC_APP_URL || "https://tol.ar"}/admin?tab=planes`,
+      back_url: `https://${host}/admin?tab=planes`,
       status: "authorized",
       auto_recurring: {
         frequency: 1,

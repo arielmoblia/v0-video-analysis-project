@@ -42,6 +42,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Base real de donde vino el pedido (prod, dev, o cualquier subdominio de tienda),
+    // no un valor fijo: si no coincide con el dominio real, MP redirige/notifica mal
+    // y el checkout de sandbox devuelve 403 si se usa la URL de producción.
+    const host = request.headers.get("host") || "tol.ar"
+    const baseUrl = `https://${host}`
+
     // Crear referencia unica para este pago
     const externalReference = `tolar_features_${storeId}_${Date.now()}`
 
@@ -82,13 +88,13 @@ export async function POST(request: NextRequest) {
         email: user.email,
       },
       back_urls: {
-        success: `${process.env.NEXT_PUBLIC_APP_URL || "https://tol.ar"}/admin?tab=planes&payment=success`,
-        failure: `${process.env.NEXT_PUBLIC_APP_URL || "https://tol.ar"}/admin?tab=planes&payment=failed`,
-        pending: `${process.env.NEXT_PUBLIC_APP_URL || "https://tol.ar"}/admin?tab=planes&payment=pending`,
+        success: `${baseUrl}/admin?tab=planes&payment=success`,
+        failure: `${baseUrl}/admin?tab=planes&payment=failed`,
+        pending: `${baseUrl}/admin?tab=planes&payment=pending`,
       },
       auto_return: "approved",
       external_reference: externalReference,
-      notification_url: `${process.env.NEXT_PUBLIC_APP_URL || "https://tol.ar"}/api/tolar/mercadopago/webhook`,
+      notification_url: `${baseUrl}/api/tolar/mercadopago/webhook`,
       statement_descriptor: "TOLAR",
       expires: true,
       expiration_date_from: new Date().toISOString(),
@@ -115,10 +121,16 @@ export async function POST(request: NextRequest) {
 
     const preference = await response.json()
 
+    // Con credenciales TEST- (sandbox) el link de producción (init_point) da 403 al
+    // abrirlo: MP exige el link de sandbox para preferencias creadas en modo prueba.
+    const isTestCredential = accessToken.startsWith("TEST-")
+    const checkoutUrl = isTestCredential ? preference.sandbox_init_point : preference.init_point
+
     return NextResponse.json({
       preferenceId: preference.id,
       initPoint: preference.init_point,
       sandboxInitPoint: preference.sandbox_init_point,
+      checkoutUrl,
     })
   } catch (error) {
     console.error("[v0] Error creando preferencia TOL.AR:", error)
