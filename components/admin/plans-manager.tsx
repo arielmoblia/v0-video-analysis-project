@@ -291,6 +291,13 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   const trialCardBrickRef = useRef<HTMLDivElement>(null)
   const trialCardBrickBuilt = useRef(false)
   const trialCardBrickController = useRef<any>(null)
+  // Cuenta cuántas veces arrancamos una creación de Brick. Si el usuario navega
+  // afuera (ej. al Comprar con MP) y vuelve con el botón "atrás", el navegador
+  // puede restaurar la página desde bfcache con un bricks.create() que quedó
+  // colgado a mitad de camino (la promesa nunca se cancela). Con este número
+  // cada creación sabe si sigue siendo "la vigente" cuando por fin resuelve;
+  // si no lo es, se descarta en vez de pisar el Brick nuevo que ya se mostró.
+  const trialCardBrickGen = useRef(0)
   const [cancellingFeature, setCancellingFeature] = useState<string | null>(null)
   const [customDomain, setCustomDomain] = useState(initialCustomDomain || "")
   const [savingDomain, setSavingDomain] = useState(false)
@@ -623,20 +630,49 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
     setTrialCardFeature(feature)
   }
 
-  const unmountTrialCardBrick = async () => {
+  // El SDK de Mercado Pago escribe el <form> del Brick directo en el DOM
+  // del contenedor mientras se está creando (no espera a que resuelva la
+  // promesa de bricks.create), y su unmount() no garantiza sacar ese <form>
+  // a tiempo. Si un desmontaje (cerrar el diálogo) y una creación (abrir
+  // otra cosita) corren en paralelo, quedan dos formularios pisados en el
+  // mismo contenedor, o uno colgado cargando para siempre. Por eso todo
+  // unmount/create de este Brick pasa por esta cola: nunca se ejecutan dos
+  // operaciones a la vez, siempre una espera a que la anterior termine del
+  // todo antes de tocar el contenedor.
+  const trialCardBrickOp = useRef<Promise<void>>(Promise.resolve())
+  const queueTrialCardBrickOp = (op: () => Promise<void>) => {
+    trialCardBrickOp.current = trialCardBrickOp.current.then(op, op)
+    return trialCardBrickOp.current
+  }
+
+  const clearTrialCardBrick = async () => {
+    // Cualquier creación en curso deja de ser "la vigente" apenas arranca un
+    // clear: si esa promesa vieja resuelve más tarde, se va a descartar sola.
+    trialCardBrickGen.current += 1
     if (trialCardBrickController.current) {
       try { await trialCardBrickController.current.unmount() } catch {}
       trialCardBrickController.current = null
     }
+    if (trialCardBrickRef.current) trialCardBrickRef.current.innerHTML = ""
     trialCardBrickBuilt.current = false
   }
 
-  const initTrialCardBrick = async (feature: DbFeature) => {
+  const unmountTrialCardBrick = () => queueTrialCardBrickOp(clearTrialCardBrick)
+
+  // Cuánto esperamos a que Mercado Pago termine de armar el formulario antes
+  // de darlo por colgado. Si el usuario navegó afuera (ej. al Comprar) y
+  // volvió con "atrás", el navegador puede restaurar la página desde bfcache
+  // con este create() interrumpido a mitad de camino y que nunca va a
+  // resolver solo — sin este timeout el esqueleto gris queda así para
+  // siempre.
+  const TRIAL_BRICK_TIMEOUT_MS = 15000
+
+  const initTrialCardBrick = (feature: DbFeature) => queueTrialCardBrickOp(async () => {
     if (trialCardBrickBuilt.current || !trialCardBrickRef.current) return
-    // El SDK de Mercado Pago no permite crear un Brick nuevo en el mismo
-    // contenedor sin desmontar el anterior antes: si no, la segunda vez
-    // que se abre "Probar X días" el formulario queda colgado cargando.
-    await unmountTrialCardBrick()
+    // Desmontamos cualquier Brick previo dentro del mismo turno de la cola,
+    // así nunca se solapa con la creación de este.
+    await clearTrialCardBrick()
+    const myGen = trialCardBrickGen.current
     setTrialCardLoadingBrick(true)
     const pubKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY as string
 
@@ -649,6 +685,10 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
     })
 
     await loadMP()
+    // Si mientras cargaba el SDK se cerró el diálogo o se pidió otra
+    // cosita, esta creación ya quedó vieja: no seguir.
+    if (trialCardBrickGen.current !== myGen) return
+
     const mp = new (window as any).MercadoPago(pubKey, { locale: "es-AR" })
     const bricks = mp.bricks()
     trialCardBrickBuilt.current = true
@@ -656,51 +696,73 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
 
     const priceARS = getPriceARS(feature.price)
 
-    trialCardBrickController.current = await bricks.create("cardPayment", "mp-trial-card-brick", {
-      initialization: {
-        amount: priceARS,
-        payer: { email: "" },
-      },
-      customization: {
-        visual: { style: { theme: "default" } },
-        paymentMethods: { minInstallments: 1, maxInstallments: 1 },
-      },
-      callbacks: {
-        onReady: () => {},
-        onError: (err: any) => console.error("MP Brick error:", err),
-        onSubmit: async (cardData: any) => {
-          setTrialCardSubmitting(true)
-          setTrialCardError("")
-          try {
-            const res = await fetch("/api/tolar/mercadopago/create-subscription", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                storeId,
-                featureCode: feature.code,
-                featureName: feature.name,
-                trialDays: (feature as any).trial_days,
-                cardToken: cardData.token,
-                payerEmail: cardData.payer?.email,
-                transactionAmountARS: priceARS,
-              }),
-            })
-            const data = await res.json()
-            if (res.ok && data.ok) {
-              setTrialCardFeature(null)
-              setTrialModal({ name: feature.name, days: (feature as any).trial_days })
-              window.location.reload()
-            } else {
-              setTrialCardError(data.error || "No pudimos guardar la tarjeta. Probá con otra.")
-            }
-          } catch {
-            setTrialCardError("Error al procesar la tarjeta")
-          }
-          setTrialCardSubmitting(false)
+    const timeoutId = setTimeout(() => {
+      if (trialCardBrickGen.current !== myGen) return
+      trialCardBrickGen.current += 1
+      trialCardBrickBuilt.current = false
+      if (trialCardBrickRef.current) trialCardBrickRef.current.innerHTML = ""
+      setTrialCardError("El formulario de pago tardó demasiado en cargar. Cerrá esta ventana y probá de nuevo.")
+    }, TRIAL_BRICK_TIMEOUT_MS)
+
+    let controller: any = null
+    try {
+      controller = await bricks.create("cardPayment", "mp-trial-card-brick", {
+        initialization: {
+          amount: priceARS,
+          payer: { email: "" },
         },
-      },
-    })
-  }
+        customization: {
+          visual: { style: { theme: "default" } },
+          paymentMethods: { minInstallments: 1, maxInstallments: 1 },
+        },
+        callbacks: {
+          onReady: () => {},
+          onError: (err: any) => console.error("MP Brick error:", err),
+          onSubmit: async (cardData: any) => {
+            setTrialCardSubmitting(true)
+            setTrialCardError("")
+            try {
+              const res = await fetch("/api/tolar/mercadopago/create-subscription", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  storeId,
+                  featureCode: feature.code,
+                  featureName: feature.name,
+                  trialDays: (feature as any).trial_days,
+                  cardToken: cardData.token,
+                  payerEmail: cardData.payer?.email,
+                  transactionAmountARS: priceARS,
+                }),
+              })
+              const data = await res.json()
+              if (res.ok && data.ok) {
+                setTrialCardFeature(null)
+                setTrialModal({ name: feature.name, days: (feature as any).trial_days })
+                window.location.reload()
+              } else {
+                setTrialCardError(data.error || "No pudimos guardar la tarjeta. Probá con otra.")
+              }
+            } catch {
+              setTrialCardError("Error al procesar la tarjeta")
+            }
+            setTrialCardSubmitting(false)
+          },
+        },
+      })
+    } finally {
+      clearTimeout(timeoutId)
+    }
+
+    if (trialCardBrickGen.current !== myGen) {
+      // Llegó tarde: ya se pidió otro Brick (o se invalidó por timeout)
+      // mientras este terminaba de crearse. Lo descartamos para no pisar
+      // lo que ya se está mostrando.
+      try { await controller?.unmount() } catch {}
+      return
+    }
+    trialCardBrickController.current = controller
+  })
 
   useEffect(() => {
     if (trialCardFeature) {
@@ -708,6 +770,29 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       setTimeout(() => initTrialCardBrick(trialCardFeature), 100)
     }
   }, [trialCardFeature])
+
+  // Si el usuario se va del panel (ej. al Comprar, que redirige a Mercado
+  // Pago) y vuelve con el botón "atrás" del navegador, Chrome puede restaurar
+  // esta página entera desde bfcache tal cual quedó, con el diálogo de
+  // "Probar gratis" a mitad de cargar y sin forma de terminar solo. Mejor
+  // cerrarlo de una y que lo vuelva a abrir limpio.
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (!e.persisted) return
+      trialCardBrickGen.current += 1
+      trialCardBrickBuilt.current = false
+      if (trialCardBrickController.current) {
+        try { trialCardBrickController.current.unmount() } catch {}
+        trialCardBrickController.current = null
+      }
+      if (trialCardBrickRef.current) trialCardBrickRef.current.innerHTML = ""
+      setTrialCardFeature(null)
+      setTrialCardError("")
+      setTrialCardLoadingBrick(false)
+    }
+    window.addEventListener("pageshow", onPageShow)
+    return () => window.removeEventListener("pageshow", onPageShow)
+  }, [])
 
   const cancelSubscription = async (featureCode: string, featureName: string) => {
     if (!window.confirm(`¿Cancelar ${featureName}? No se te va a cobrar y se desactiva ahora.`)) return
