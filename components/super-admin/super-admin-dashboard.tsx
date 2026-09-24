@@ -39,14 +39,7 @@ import {
   Mail, // Declared Mail variable
   Search, Wrench, Send, Edit3
 } from "lucide-react"
-import { createClient } from "@supabase/supabase-js"
 import { AnalyticsDashboard } from "./analytics-dashboard"
-
-// Cliente Supabase con service role para super-admin
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 import { FeaturesAdmin } from "./features-admin"
 import { PlansDashboard } from "./plans-dashboard"
 import { EspecialistaDashboard } from "./especialista-dashboard"
@@ -379,10 +372,10 @@ export function SuperAdminDashboard() {
     // Cargar cositas activas desde Supabase
     const loadFeatures = async () => {
       try {
-        const { createClient } = await import("@supabase/supabase-js")
-        const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL as string, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string)
-        const { data } = await sb.from("store_features").select("*").eq("is_active", true).order("created_at", { ascending: true })
-        setAvailableFeatures(data || [])
+        const res = await fetch("/api/super-admin/features", { cache: "no-store" })
+        if (!res.ok) return
+        const data = await res.json()
+        setAvailableFeatures((data.features || []).filter((f: any) => f.is_active))
       } catch(e) { console.error("Error cargando features:", e) }
     }
     loadFeatures()
@@ -441,19 +434,13 @@ export function SuperAdminDashboard() {
     setSelectedStore(store)
     setLoadingFeatures(true)
     try {
-      // Consulta directa a Supabase sin depender de cookie
-      const { data: features, error } = await supabaseAdmin
-        .from("store_purchased_features")
-        .select("feature_code")
-        .eq("store_id", store.id)
-        .eq("is_active", true)
-      
-      if (error) {
-        console.error("[v0] Error consultando features:", error)
+      const res = await fetch(`/api/super-admin/store-features?storeId=${store.id}`, { cache: "no-store" })
+      const data = await res.json()
+      if (!res.ok) {
+        console.error("[v0] Error consultando features:", data.error)
         setStoreFeatures([])
       } else {
-        const activeCodes = (features || []).map((f) => f.feature_code)
-        setStoreFeatures(activeCodes)
+        setStoreFeatures(data.purchasedCodes || [])
       }
     } catch (error) {
       console.error("[v0] Error cargando features:", error)
@@ -467,55 +454,20 @@ export function SuperAdminDashboard() {
     if (!selectedStore) return
     setSavingFeature(featureCode)
     const isActive = storeFeatures.includes(featureCode)
-    
+
     try {
-      if (isActive) {
-        // Quitar feature
-        const { error } = await supabaseAdmin
-          .from("store_purchased_features")
-          .delete()
-          .eq("store_id", selectedStore.id)
-          .eq("feature_code", featureCode)
-        
-        if (error) {
-          alert("Error al quitar feature: " + error.message)
-        } else {
-          setStoreFeatures(storeFeatures.filter(f => f !== featureCode))
-        }
+      const res = await fetch("/api/super-admin/store-features", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId: selectedStore.id, featureCode, action: isActive ? "remove" : "gift" }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        alert("Error: " + (data.error || "no se pudo guardar"))
+      } else if (isActive) {
+        setStoreFeatures(storeFeatures.filter(f => f !== featureCode))
       } else {
-        // Regalar feature - verificar si existe
-        const { data: existing } = await supabaseAdmin
-          .from("store_purchased_features")
-          .select("*")
-          .eq("store_id", selectedStore.id)
-          .eq("feature_code", featureCode)
-          .single()
-        
-        let error
-        if (existing) {
-          const result = await supabaseAdmin
-            .from("store_purchased_features")
-            .update({ is_active: true, is_gifted: true })
-            .eq("store_id", selectedStore.id)
-            .eq("feature_code", featureCode)
-          error = result.error
-        } else {
-          const result = await supabaseAdmin
-            .from("store_purchased_features")
-            .insert({
-              store_id: selectedStore.id,
-              feature_code: featureCode,
-              is_active: true,
-              is_gifted: true,
-            })
-          error = result.error
-        }
-        
-        if (error) {
-          alert("Error al regalar feature: " + error.message)
-        } else {
-          setStoreFeatures([...storeFeatures, featureCode])
-        }
+        setStoreFeatures([...storeFeatures, featureCode])
       }
     } catch (error) {
       console.error("Error toggling feature:", error)

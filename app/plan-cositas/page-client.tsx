@@ -17,7 +17,6 @@ import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog"
 import { CositasCheckout } from "@/components/cositas-checkout"
-import { createClient } from "@supabase/supabase-js"
 
 const ICON_MAP: Record<string, any> = {
   BarChart3, Video, MessageSquare, Globe, Package, Headphones,
@@ -39,11 +38,6 @@ interface StoreFeature {
   trial_days: number
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
 interface Props {
   brand?: "tol" | "tiendabasica"
 }
@@ -61,12 +55,11 @@ export default function PlanCositasPage({ brand = "tol" }: Props) {
 
   useEffect(() => {
     async function fetchData() {
-      const { data } = await supabase
-        .from("store_features")
-        .select("*")
-        .eq("is_active", true)
-        .order("created_at", { ascending: true })
-      if (data) setFeatures(data)
+      const res = await fetch("/api/super-admin/features", { cache: "no-store" })
+      if (res.ok) {
+        const { features: allFeatures } = await res.json()
+        setFeatures((allFeatures || []).filter((f: StoreFeature) => f.is_active))
+      }
       fetch("/api/super-admin/exchange-rate")
         .then(r => r.json())
         .then(d => { if (d.rate) setDolarRate(d.rate) })

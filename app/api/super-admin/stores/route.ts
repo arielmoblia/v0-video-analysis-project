@@ -39,6 +39,35 @@ export async function GET() {
   }
 }
 
+export async function PATCH(request: Request) {
+  try {
+    const cookieStore = await cookies()
+    const isAuthenticated = cookieStore.get("super_admin")?.value === "true"
+
+    if (!isAuthenticated) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401, headers: { "Cache-Control": "no-store" } })
+    }
+
+    const { id, comision_pct } = await request.json()
+
+    if (!id || typeof comision_pct !== "number") {
+      return NextResponse.json({ error: "Faltan parametros" }, { status: 400, headers: { "Cache-Control": "no-store" } })
+    }
+
+    const { error } = await supabase.from("stores").update({ comision_pct }).eq("id", id)
+
+    if (error) {
+      console.error("Error updating comision:", error)
+      return NextResponse.json({ error: "Error al actualizar comision" }, { status: 500, headers: { "Cache-Control": "no-store" } })
+    }
+
+    return NextResponse.json({ success: true }, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } })
+  } catch (error) {
+    console.error("Error:", error)
+    return NextResponse.json({ error: "Error del servidor" }, { status: 500, headers: { "Cache-Control": "no-store" } })
+  }
+}
+
 export async function DELETE(request: Request) {
   try {
     const cookieStore = await cookies()

@@ -1,13 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { createClient } from "@supabase/supabase-js"
 import { Users, ShoppingBag, CreditCard, TrendingUp, Clock, Star, Package } from "lucide-react"
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 
 interface StoreData {
   id: string
@@ -56,80 +50,27 @@ export function PlansDashboard({ stores }: PlansDashboardProps) {
   useEffect(() => {
     async function fetchExtra() {
       setLoading(true)
-      // Tiendas con productos
-      const { data: products } = await supabase
-        .from("products")
-        .select("store_id")
-        .limit(500000)
-      if (products) {
-        setStoresWithProducts(new Set(products.map((p: any) => p.store_id)))
-        const counts: Record<string, number> = {}
-        products.forEach((p: any) => { counts[p.store_id] = (counts[p.store_id] || 0) + 1 })
-        setProductCount(counts)
-      }
-
-      // Tiendas con MercadoPago
-      const { data: payments } = await supabase
-        .from("payment_methods")
-        .select("store_id, provider")
-        .eq("provider", "mercadopago")
-      if (payments) {
-        setStoresWithMP(new Set(payments.map((p: any) => p.store_id)))
-      }
-      // Cositas por tienda
-      const { data: cositas } = await supabase
-        .from('store_purchased_features')
-        .select('store_id, feature_code, is_active, is_gifted')
-      if (cositas) {
-        const grouped: Record<string, any[]> = {}
-        cositas.forEach((c: any) => {
-          if (!grouped[c.store_id]) grouped[c.store_id] = []
-          grouped[c.store_id].push(c)
-        })
-        setCositasPorTienda(grouped)
-      }
-      // Pedidos por tienda
-      const { data: orders } = await supabase
-        .from("orders")
-        .select("store_id, status")
-        .limit(500000)
-      if (orders) {
-        const oc: Record<string, number> = {}
-        const op: Record<string, number> = {}
-        orders.forEach((o: any) => {
-          oc[o.store_id] = (oc[o.store_id] || 0) + 1
-          if (o.status === "pagado") op[o.store_id] = (op[o.store_id] || 0) + 1
-        })
-        setOrderCount(oc)
-        setOrderPaid(op)
+      const res = await fetch('/api/super-admin/plans-dashboard-data', { cache: 'no-store' })
+      if (res.ok) {
+        const data = await res.json()
+        setStoresWithProducts(new Set<string>(data.storesWithProducts || []))
+        setProductCount(data.productCount || {})
+        setStoresWithMP(new Set<string>(data.storesWithMP || []))
+        setCositasPorTienda(data.cositasPorTienda || {})
+        setOrderCount(data.orderCount || {})
+        setOrderPaid(data.orderPaid || {})
+        setPageContent(data.pageContent || {})
+        const featuresData = data.featuresData || []
+        const trialMap: Record<string, number> = {}
+        featuresData.forEach((f: any) => { trialMap[f.code] = f.trial_days || 0 })
+        setFeatureTrialDays(trialMap)
+        setCatalogFeatures(featuresData)
       }
       // Visitas por tienda via API (excluye IP del dueño, últimos 7 días)
       const viewsRes = await fetch('/api/super-admin/stores-activity')
       if (viewsRes.ok) {
         const viewsData = await viewsRes.json()
         setStoreViews(viewsData)
-      }
-      // Contenido de la pagina publica
-      const { data: pageData } = await supabase
-        .from('page_content')
-        .select('key, value')
-        .eq('page', 'plan-cositas')
-      if (pageData) {
-        const map: Record<string, string> = {}
-        pageData.forEach((r: any) => { map[r.key] = r.value })
-        setPageContent(map)
-      }
-      // Features desde Supabase (fuente de verdad)
-      const { data: featuresData } = await supabase
-        .from('store_features')
-        .select('*')
-        .order('is_active', { ascending: false })
-        .order('created_at', { ascending: true })
-      if (featuresData) {
-        const trialMap: Record<string, number> = {}
-        featuresData.forEach((f: any) => { trialMap[f.code] = f.trial_days || 0 })
-        setFeatureTrialDays(trialMap)
-        setCatalogFeatures(featuresData)
       }
       setLoading(false)
     }
@@ -502,9 +443,11 @@ export function PlansDashboard({ stores }: PlansDashboardProps) {
                             <button
                               onClick={async () => {
                                 const newVal = !c.is_active
-                                const { createClient } = await import("@supabase/supabase-js")
-                                const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL as string, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string)
-                                await sb.from("store_features").update({ is_active: newVal }).eq("code", c.code)
+                                await fetch("/api/super-admin/features", {
+                                  method: "PUT",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ id: c.id, is_active: newVal }),
+                                })
                                 setCatalogFeatures(prev => prev.map(x => x.code === c.code ? {...x, is_active: newVal} : x))
                               }}
                               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${c.is_active ? "bg-orange-500" : "bg-slate-300"}`}
@@ -635,7 +578,11 @@ export function PlansDashboard({ stores }: PlansDashboardProps) {
                               onBlur={async (e) => {
                                 const val = parseFloat(e.target.value)
                                 if (!isNaN(val) && val !== pct) {
-                                  await supabase.from("stores").update({ comision_pct: val }).eq("id", s.id)
+                                  await fetch("/api/super-admin/stores", {
+                                    method: "PATCH",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ id: s.id, comision_pct: val }),
+                                  })
                                 }
                               }}
                               className="w-14 text-center border border-purple-200 rounded-lg px-1 py-1 text-xs font-bold text-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-300"
