@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,8 +11,6 @@ export async function POST(request: NextRequest) {
     if (!storeId || !product?.name || !product?.price) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 })
     }
-
-    const supabase = await createServerClient()
 
     // Verificar que la tienda tiene la feature csv_import activa
     const { data: feature } = await supabase

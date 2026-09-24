@@ -2,15 +2,16 @@
 // SERVICIO DE PEDIDOS - tol.ar
 // ===========================================
 
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
 import type { Order, OrderStatus } from "@/lib/types"
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 /**
  * Obtiene todos los pedidos de una tienda
  */
 export async function getStoreOrders(storeId: string): Promise<Order[]> {
   try {
-    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("orders")
@@ -31,7 +32,6 @@ export async function getStoreOrders(storeId: string): Promise<Order[]> {
  */
 export async function getOrderById(orderId: string): Promise<Order | null> {
   try {
-    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("orders")
@@ -52,7 +52,6 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
  */
 export async function updateOrderStatus(orderId: string, status: OrderStatus): Promise<boolean> {
   try {
-    const supabase = await createClient()
 
     const { error } = await supabase
       .from("orders")
@@ -71,7 +70,6 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus): P
  */
 export async function updateOrderPayment(orderId: string, paymentId: string, status: OrderStatus = "pagado"): Promise<boolean> {
   try {
-    const supabase = await createClient()
 
     const { error } = await supabase
       .from("orders")
@@ -93,7 +91,6 @@ export async function updateOrderPayment(orderId: string, paymentId: string, sta
  */
 export async function getOrderStats(storeId: string) {
   try {
-    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("orders")

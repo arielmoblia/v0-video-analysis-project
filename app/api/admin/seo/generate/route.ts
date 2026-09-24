@@ -1,17 +1,17 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
 import { NextRequest, NextResponse } from "next/server"
 import { generateText } from "ai"
 import { gateway } from "@ai-sdk/gateway"
 
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+
 export async function POST(request: NextRequest) {
   const { storeId, storeName, subdomain, field } = await request.json()
-  
+
   if (!storeId || !storeName) {
     return NextResponse.json({ error: "Datos requeridos" }, { status: 400 })
   }
 
-  const supabase = await createClient()
-  
   // Obtener info de la tienda y productos para contexto
   const { data: store } = await supabase
     .from("stores")

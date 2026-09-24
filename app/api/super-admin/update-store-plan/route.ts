@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,8 +16,6 @@ export async function POST(request: NextRequest) {
     if (!validPlans.includes(plan)) {
       return NextResponse.json({ error: "Plan no valido" }, { status: 400, headers: { "Cache-Control": "no-store" } })
     }
-
-    const supabase = await createClient()
 
     const { error } = await supabase
       .from("stores")

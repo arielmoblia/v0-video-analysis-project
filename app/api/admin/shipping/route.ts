@@ -1,5 +1,7 @@
-import { createServerSupabaseClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
 import { type NextRequest, NextResponse } from "next/server"
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 export async function GET(request: NextRequest) {
   const storeId = request.nextUrl.searchParams.get("storeId")
@@ -7,8 +9,6 @@ export async function GET(request: NextRequest) {
   if (!storeId) {
     return NextResponse.json({ error: "Store ID required" }, { status: 400 })
   }
-
-  const supabase = await createServerSupabaseClient()
 
   const { data, error } = await supabase.from("shipping_methods").select("*").eq("store_id", storeId).single()
 
@@ -26,8 +26,6 @@ export async function POST(request: NextRequest) {
   if (!storeId) {
     return NextResponse.json({ error: "Store ID required" }, { status: 400 })
   }
-
-  const supabase = await createServerSupabaseClient()
 
   // Check if config exists
   const { data: existing } = await supabase.from("shipping_methods").select("id").eq("store_id", storeId).single()

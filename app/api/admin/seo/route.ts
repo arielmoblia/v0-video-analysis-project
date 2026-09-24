@@ -1,15 +1,15 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
 import { NextRequest, NextResponse } from "next/server"
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 export async function GET(request: NextRequest) {
   const storeId = request.nextUrl.searchParams.get("storeId")
-  
+
   if (!storeId) {
     return NextResponse.json({ error: "storeId requerido" }, { status: 400 })
   }
 
-  const supabase = await createClient()
-  
   const { data: store } = await supabase
     .from("stores")
     .select("seo_config")
@@ -27,8 +27,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "storeId requerido" }, { status: 400 })
     }
 
-    const supabase = await createClient()
-    
     const { data, error } = await supabase
       .from("stores")
       .update({ seo_config: seo })

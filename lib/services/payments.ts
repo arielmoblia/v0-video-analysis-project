@@ -2,17 +2,18 @@
 // SERVICIO DE PAGOS - tol.ar
 // ===========================================
 
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
 import { decryptFields } from "@/lib/crypto"
 import type { PaymentMethods
  } from "@/lib/types"
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 /**
  * Obtiene los métodos de pago de una tienda
  */
 export async function getPaymentMethods(storeId: string): Promise<PaymentMethods | null> {
   try {
-    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("payment_methods")
@@ -33,7 +34,6 @@ export async function getPaymentMethods(storeId: string): Promise<PaymentMethods
  */
 export async function getMercadoPagoToken(storeId: string): Promise<{ token: string; isTestMode: boolean; checkoutType: string } | null> {
   try {
-    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("payment_methods")
@@ -53,7 +53,7 @@ export async function getMercadoPagoToken(storeId: string): Promise<{ token: str
     return {
       token,
       isTestMode,
-      checkoutType: decrypted.mercadopago_checkout_type || "redirect"
+      checkoutType: data.mercadopago_checkout_type || "redirect"
     }
   } catch (e) {
     console.error("[payments] Error in getMercadoPagoToken:", e)

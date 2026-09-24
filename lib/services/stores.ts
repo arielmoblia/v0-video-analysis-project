@@ -2,15 +2,16 @@
 // SERVICIO DE TIENDAS - tol.ar
 // ===========================================
 
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
 import type { Store } from "@/lib/types"
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 /**
  * Obtiene una tienda por su subdominio
  */
 export async function getStoreBySubdomain(subdomain: string): Promise<Store | null> {
   try {
-    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("stores")
@@ -32,7 +33,6 @@ export async function getStoreBySubdomain(subdomain: string): Promise<Store | nu
  */
 export async function getStoreById(storeId: string): Promise<Store | null> {
   try {
-    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("stores")
@@ -53,7 +53,6 @@ export async function getStoreById(storeId: string): Promise<Store | null> {
  */
 export async function getAllStores(): Promise<Store[]> {
   try {
-    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("stores")
@@ -73,7 +72,6 @@ export async function getAllStores(): Promise<Store[]> {
  */
 export async function updateLastLogin(storeId: string): Promise<void> {
   try {
-    const supabase = await createClient()
 
     await supabase
       .from("stores")
@@ -89,7 +87,6 @@ export async function updateLastLogin(storeId: string): Promise<void> {
  */
 export async function getStoreFeatures(storeId: string): Promise<string[]> {
   try {
-    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("store_purchased_features")
@@ -118,7 +115,6 @@ export async function hasStoreFeature(storeId: string, featureCode: string): Pro
  */
 export async function getStorePurchasedFeatures(storeId: string): Promise<string[]> {
   try {
-    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("store_purchased_features")

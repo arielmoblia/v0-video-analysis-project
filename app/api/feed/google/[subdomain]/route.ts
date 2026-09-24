@@ -1,5 +1,7 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 // Mapeo de categorias internas -> Taxonomia de Google
 const GOOGLE_CATEGORY_MAP: Record<string, string> = {
@@ -33,7 +35,6 @@ function getGoogleCategory(template: string, categoryName?: string): string {
 // Feed XML para Google Merchant Center
 export async function GET(request: Request, { params }: { params: Promise<{ subdomain: string }> }) {
   const { subdomain } = await params
-  const supabase = await createClient()
 
   const { data: store } = await supabase.from("stores").select("*").eq("subdomain", subdomain).single()
 

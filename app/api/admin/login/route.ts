@@ -1,7 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 import { rateLimit, resetRateLimit } from "@/lib/utils/rate-limit"
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,8 +26,6 @@ export async function POST(request: NextRequest) {
         error: `Demasiados intentos. Intentá de nuevo en ${minutesLeft} minutos.` 
       }, { status: 429 })
     }
-
-    const supabase = await createClient()
 
     const { data: store, error } = await supabase.from("stores").select("*").ilike("subdomain", subdomainLower).single()
 

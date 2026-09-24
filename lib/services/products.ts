@@ -2,15 +2,16 @@
 // SERVICIO DE PRODUCTOS - tol.ar
 // ===========================================
 
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
 import type { Product, Category } from "@/lib/types"
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 /**
  * Obtiene todos los productos activos de una tienda
  */
 export async function getStoreProducts(storeId: string): Promise<Product[]> {
   try {
-    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("products")
@@ -33,7 +34,6 @@ export async function getStoreProducts(storeId: string): Promise<Product[]> {
  */
 export async function getFeaturedProducts(storeId: string, limit = 8): Promise<Product[]> {
   try {
-    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("products")
@@ -56,7 +56,6 @@ export async function getFeaturedProducts(storeId: string, limit = 8): Promise<P
  */
 export async function getProductBySlug(storeId: string, slug: string): Promise<Product | null> {
   try {
-    const supabase = await createClient()
 
     // Primero intentar buscar por slug exacto
     const { data } = await supabase
@@ -106,7 +105,6 @@ export async function getProductBySlug(storeId: string, slug: string): Promise<P
  */
 export async function getProductsByCategory(storeId: string, categoryId: string): Promise<Product[]> {
   try {
-    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("products")
@@ -130,7 +128,6 @@ export async function getProductsByCategory(storeId: string, categoryId: string)
  */
 export async function getStoreCategories(storeId: string): Promise<Category[]> {
   try {
-    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("categories")

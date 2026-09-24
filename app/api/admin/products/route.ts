@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 
 async function pingGoogle(url: string) {
@@ -30,7 +32,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Store ID requerido" }, { status: 400 })
     }
 
-    const supabase = await createServerClient()
 
     const [productsRes, categoriesRes] = await Promise.all([
       supabase.from("products").select("*").eq("store_id", storeId).order("display_order", { ascending: true, nullsFirst: false }).order("created_at", { ascending: false }),
@@ -56,7 +57,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Store ID requerido" }, { status: 400 })
     }
 
-    const supabase = await createServerClient()
 
     // Generar slug base
     let baseSlug = productData.name
@@ -125,7 +125,6 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Product ID requerido" }, { status: 400 })
     }
 
-    const supabase = await createServerClient()
 
     // Generar slug base
     let baseSlug = productData.name
@@ -196,7 +195,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Product ID requerido" }, { status: 400 })
     }
 
-    const supabase = await createServerClient()
 
     const { error } = await supabase.from("products").delete().eq("id", id)
 

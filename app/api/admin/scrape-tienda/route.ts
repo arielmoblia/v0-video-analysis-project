@@ -1,9 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
 import { writeFile, mkdir } from "fs/promises"
 import { existsSync } from "fs"
 import path from "path"
 import crypto from "crypto"
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 // Scraper de tiendas externas - Extrae TODO del HTML que ve el cliente
 // Soporta: Empretienda, Tiendanube, MercadoShops
@@ -807,7 +809,6 @@ export async function POST(request: NextRequest) {
 
     // 5. Si no es dryRun, importar a la tienda
     if (!dryRun && storeId && result.products.length > 0) {
-      const supabase = await createServerClient()
       let imported = 0
 
       // Obtener slug de la tienda para la carpeta de imágenes

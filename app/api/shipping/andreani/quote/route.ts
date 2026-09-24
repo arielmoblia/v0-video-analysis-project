@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 // API de Andreani para cotizar envíos
 const ANDREANI_API_URL = "https://external-services.api.flexipaas.com/woo/seguridad/cotizaciones/"
@@ -19,8 +21,6 @@ export async function POST(request: NextRequest) {
     if (!storeId || !cpDestino) {
       return NextResponse.json({ error: "Faltan datos requeridos" }, { status: 400 })
     }
-
-    const supabase = await createClient()
 
     // Obtener credenciales de Andreani de la tienda
     const { data: shipping, error: shippingError } = await supabase
