@@ -290,6 +290,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   const [trialCardError, setTrialCardError] = useState("")
   const trialCardBrickRef = useRef<HTMLDivElement>(null)
   const trialCardBrickBuilt = useRef(false)
+  const trialCardBrickController = useRef<any>(null)
   const [cancellingFeature, setCancellingFeature] = useState<string | null>(null)
   const [customDomain, setCustomDomain] = useState(initialCustomDomain || "")
   const [savingDomain, setSavingDomain] = useState(false)
@@ -622,8 +623,20 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
     setTrialCardFeature(feature)
   }
 
+  const unmountTrialCardBrick = async () => {
+    if (trialCardBrickController.current) {
+      try { await trialCardBrickController.current.unmount() } catch {}
+      trialCardBrickController.current = null
+    }
+    trialCardBrickBuilt.current = false
+  }
+
   const initTrialCardBrick = async (feature: DbFeature) => {
     if (trialCardBrickBuilt.current || !trialCardBrickRef.current) return
+    // El SDK de Mercado Pago no permite crear un Brick nuevo en el mismo
+    // contenedor sin desmontar el anterior antes: si no, la segunda vez
+    // que se abre "Probar X días" el formulario queda colgado cargando.
+    await unmountTrialCardBrick()
     setTrialCardLoadingBrick(true)
     const pubKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY as string
 
@@ -643,7 +656,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
 
     const priceARS = getPriceARS(feature.price)
 
-    await bricks.create("cardPayment", "mp-trial-card-brick", {
+    trialCardBrickController.current = await bricks.create("cardPayment", "mp-trial-card-brick", {
       initialization: {
         amount: priceARS,
         payer: { email: "" },
@@ -1963,7 +1976,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!trialCardFeature} onOpenChange={(open) => { if (!open) setTrialCardFeature(null) }}>
+      <Dialog open={!!trialCardFeature} onOpenChange={(open) => { if (!open) { setTrialCardFeature(null); setTrialCardError(""); unmountTrialCardBrick() } }}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
