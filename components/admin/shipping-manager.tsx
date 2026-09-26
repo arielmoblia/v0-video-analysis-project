@@ -392,15 +392,15 @@ export function ShippingManager({ storeId }: ShippingManagerProps) {
               </div>
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Video Tutorial</Label>
-                <div className="aspect-video rounded-lg overflow-hidden border">
-                  <iframe
-                    width="100%"
-                    height="100%"
-                    src={`https://www.youtube.com/embed/${TUTORIAL_VIDEOS.own_delivery}`}
-                    title="Tutorial Envío Propio"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
+                <div className="aspect-video rounded-lg overflow-hidden border bg-black">
+                  <video
+                    controls
+                    playsInline
+                    className="w-full h-full object-contain"
+                    src="/videos/envio-propio.mp4"
+                  >
+                    Tu navegador no soporta el video.
+                  </video>
                 </div>
               </div>
             </div>
