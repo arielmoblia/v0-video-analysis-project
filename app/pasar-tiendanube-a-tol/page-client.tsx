@@ -16,6 +16,9 @@ import {
   Send,
   CheckCircle2,
   Loader2,
+  Zap,
+  FileText,
+  KeyRound,
 } from "lucide-react"
 
 interface Props {
@@ -23,36 +26,55 @@ interface Props {
 }
 
 export default function PasarTiendanubeATolPage({ brand = "tol" }: Props) {
+  const [modo, setModo] = useState<"auto" | "manual">("auto")
   const [form, setForm] = useState({ name: "", email: "", whatsapp: "", storeUrl: "" })
+  const [storeId, setStoreId] = useState("")
+  const [accessToken, setAccessToken] = useState("")
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [fotos, setFotos] = useState<File[]>([])
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
+  const [resultado, setResultado] = useState<{ productos: number; fotos: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
 
-    if (!csvFile) {
-      setError("Falta el archivo CSV que exportaste de Tiendanube (paso 1).")
+    if (modo === "manual" && !csvFile) {
+      setError("Falta el archivo CSV que exportaste de Tiendanube.")
+      return
+    }
+    if (modo === "auto" && (!storeId || !accessToken)) {
+      setError("Falta el ID de tienda o el token de acceso.")
       return
     }
 
     setSending(true)
     try {
-      const body = new FormData()
-      body.append("name", form.name)
-      body.append("email", form.email)
-      body.append("whatsapp", form.whatsapp)
-      body.append("storeUrl", form.storeUrl)
-      body.append("csv", csvFile)
-      fotos.forEach((f) => body.append("fotos", f))
-
-      const res = await fetch("/api/migracion-tiendanube", { method: "POST", body })
-      if (!res.ok) {
+      if (modo === "auto") {
+        const res = await fetch("/api/migracion-tiendanube/auto", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...form, storeId, accessToken }),
+        })
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || "No se pudo enviar")
+        if (!res.ok) throw new Error(data.error || "No se pudo importar")
+        setResultado({ productos: data.productos, fotos: data.fotos })
+      } else {
+        const body = new FormData()
+        body.append("name", form.name)
+        body.append("email", form.email)
+        body.append("whatsapp", form.whatsapp)
+        body.append("storeUrl", form.storeUrl)
+        body.append("csv", csvFile as File)
+        fotos.forEach((f) => body.append("fotos", f))
+
+        const res = await fetch("/api/migracion-tiendanube", { method: "POST", body })
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          throw new Error(data.error || "No se pudo enviar")
+        }
       }
       setSent(true)
     } catch (err: any) {
@@ -80,11 +102,85 @@ export default function PasarTiendanubeATolPage({ brand = "tol" }: Props) {
             Sin perder productos, precios ni fotos. Seguís vendiendo en Tiendanube mientras migramos.
           </p>
           <p className="text-2xl font-semibold text-orange-600">
-            3 pasos, sin costo.
+            Apretá un botón y listo. Sin costo.
           </p>
         </div>
       </section>
 
+      {/* Selector de modo */}
+      <section className="py-4">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <button
+              type="button"
+              onClick={() => setModo("auto")}
+              className={`text-left rounded-xl border-2 p-5 transition-colors ${modo === "auto" ? "border-orange-500 bg-orange-50/60" : "border-border hover:border-orange-300"}`}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Zap className="w-5 h-5 text-orange-500" />
+                <span className="font-bold">Automático</span>
+                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs">Recomendado</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Pegás un token, nosotros traemos productos, precios y fotos solos. Cero carga manual.
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setModo("manual")}
+              className={`text-left rounded-xl border-2 p-5 transition-colors ${modo === "manual" ? "border-orange-500 bg-orange-50/60" : "border-border hover:border-orange-300"}`}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <FileText className="w-5 h-5 text-orange-500" />
+                <span className="font-bold">Manual</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Exportás vos el CSV desde tu panel y subís las fotos a mano. Más pasos, mismo resultado.
+              </p>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {modo === "auto" ? (
+        <section className="py-6">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <Card className="border-orange-100">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-9 h-9 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold shrink-0">
+                    <KeyRound className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-xl font-bold mb-2">Generá tu token en tu panel de Tiendanube</h2>
+                    <p className="text-muted-foreground mb-3">
+                      Es una autorización tuya que le damos a la API oficial de Tiendanube para leer (no modificar)
+                      tus productos y fotos. No tocamos tu cuenta ni tu contraseña, y no interrumpe tu tienda actual.
+                    </p>
+                    <p className="bg-muted rounded-lg px-4 py-3 text-sm font-mono mb-3">
+                      Panel de Tiendanube → Aplicaciones a medida → Crear aplicación a medida → tildá solo lectura de
+                      Productos e Imágenes → Guardar → Revelar token
+                    </p>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Disponible en los planes Escala y Tiendanube Evolución. Copiá el token apenas lo veas: Tiendanube
+                      solo lo muestra una vez.
+                    </p>
+                    <a
+                      href="https://ayuda.tiendanube.com/es_ES/aplicaciones-a-medida/como-crear-una-aplicacion-a-medida-y-acceder-al-token-en-mi-tiendanube"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-orange-600 font-medium hover:underline"
+                    >
+                      Ver la guía oficial de Tiendanube <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      ) : (
+        <>
       {/* Paso 1 */}
       <section className="py-10">
         <div className="container mx-auto px-4 max-w-3xl">
@@ -142,6 +238,8 @@ export default function PasarTiendanubeATolPage({ brand = "tol" }: Props) {
           </Card>
         </div>
       </section>
+        </>
+      )}
 
       {/* Paso 3 — formulario */}
       <section className="py-10">
@@ -150,13 +248,17 @@ export default function PasarTiendanubeATolPage({ brand = "tol" }: Props) {
             <CardContent className="pt-6">
               <div className="flex items-start gap-4 mb-2">
                 <div className="w-9 h-9 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold shrink-0">3</div>
-                <h2 className="text-xl font-bold">Mandanos todo</h2>
+                <h2 className="text-xl font-bold">{modo === "auto" ? "Pegá el token y listo" : "Mandanos todo"}</h2>
               </div>
 
               {sent ? (
                 <div className="text-center py-8">
                   <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold mb-2">¡Listo, lo recibimos!</h3>
+                  <h3 className="text-xl font-bold mb-2">
+                    {modo === "auto" && resultado
+                      ? `¡Listo! Importamos ${resultado.productos} productos y ${resultado.fotos} fotos.`
+                      : "¡Listo, lo recibimos!"}
+                  </h3>
                   <p className="text-muted-foreground">
                     Te contactamos en menos de 24-48hs con tu tienda armada en tol.ar y los datos de acceso.
                   </p>
@@ -203,40 +305,66 @@ export default function PasarTiendanubeATolPage({ brand = "tol" }: Props) {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="text-sm font-medium mb-1 block">Archivo CSV del paso 1</label>
-                    <label
-                      className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center gap-2 bg-muted/40 cursor-pointer transition-colors ${csvFile ? "border-orange-400 bg-orange-50/40" : "border-border hover:border-orange-300"}`}
-                    >
-                      <Upload className="w-6 h-6 text-orange-500" />
-                      <p className="text-sm font-medium text-foreground">
-                        {csvFile ? csvFile.name : "Elegí el archivo .csv que descargaste"}
-                      </p>
-                      <input
-                        type="file"
-                        accept=".csv"
-                        className="hidden"
-                        onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
-                      />
-                    </label>
-                  </div>
+                  {modo === "auto" ? (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">ID de tienda (Store ID)</label>
+                        <Input
+                          required
+                          value={storeId}
+                          onChange={(e) => setStoreId(e.target.value)}
+                          placeholder="123456"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">Token de acceso</label>
+                        <Input
+                          required
+                          type="password"
+                          value={accessToken}
+                          onChange={(e) => setAccessToken(e.target.value)}
+                          placeholder="Pegá acá el token que revelaste en Tiendanube"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">Archivo CSV exportado de Tiendanube</label>
+                        <label
+                          className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center gap-2 bg-muted/40 cursor-pointer transition-colors ${csvFile ? "border-orange-400 bg-orange-50/40" : "border-border hover:border-orange-300"}`}
+                        >
+                          <Upload className="w-6 h-6 text-orange-500" />
+                          <p className="text-sm font-medium text-foreground">
+                            {csvFile ? csvFile.name : "Elegí el archivo .csv que descargaste"}
+                          </p>
+                          <input
+                            type="file"
+                            accept=".csv"
+                            className="hidden"
+                            onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+                          />
+                        </label>
+                      </div>
 
-                  <div>
-                    <label className="text-sm font-medium mb-1 block">Fotos de tus productos (opcional)</label>
-                    <label className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center gap-2 bg-muted/40 cursor-pointer transition-colors border-border hover:border-orange-300">
-                      <ImageIcon className="w-6 h-6 text-orange-500" />
-                      <p className="text-sm font-medium text-foreground">
-                        {fotos.length > 0 ? `${fotos.length} archivo(s) elegido(s)` : "Elegí las fotos o un ZIP"}
-                      </p>
-                      <input
-                        type="file"
-                        accept=".zip,image/*"
-                        multiple
-                        className="hidden"
-                        onChange={(e) => setFotos(Array.from(e.target.files || []))}
-                      />
-                    </label>
-                  </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">Fotos de tus productos (opcional)</label>
+                        <label className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center gap-2 bg-muted/40 cursor-pointer transition-colors border-border hover:border-orange-300">
+                          <ImageIcon className="w-6 h-6 text-orange-500" />
+                          <p className="text-sm font-medium text-foreground">
+                            {fotos.length > 0 ? `${fotos.length} archivo(s) elegido(s)` : "Elegí las fotos o un ZIP"}
+                          </p>
+                          <input
+                            type="file"
+                            accept=".zip,image/*"
+                            multiple
+                            className="hidden"
+                            onChange={(e) => setFotos(Array.from(e.target.files || []))}
+                          />
+                        </label>
+                      </div>
+                    </>
+                  )}
 
                   {error && (
                     <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
@@ -247,11 +375,11 @@ export default function PasarTiendanubeATolPage({ brand = "tol" }: Props) {
                   <Button type="submit" className="w-full gap-2 bg-orange-500 hover:bg-orange-600" disabled={sending}>
                     {sending ? (
                       <>
-                        Enviando… <Loader2 className="w-4 h-4 animate-spin" />
+                        {modo === "auto" ? "Importando…" : "Enviando…"} <Loader2 className="w-4 h-4 animate-spin" />
                       </>
                     ) : (
                       <>
-                        Enviar y migrar gratis <Send className="w-4 h-4" />
+                        {modo === "auto" ? "Importar todo automáticamente" : "Enviar y migrar gratis"} <Send className="w-4 h-4" />
                       </>
                     )}
                   </Button>
