@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { ImageUpload } from "./image-upload"
 import { MinorConsentStatus } from "./minor-consent-status"
-import { Instagram, Facebook, Youtube, AlertTriangle } from "lucide-react"
+import { Instagram, Facebook, Youtube, AlertTriangle, Eye, EyeOff } from "lucide-react"
 import type { Store } from "@/lib/store-context"
 
 interface StoreSettingsProps {
@@ -77,10 +77,14 @@ export function StoreSettings({ store }: StoreSettingsProps) {
   const [confirmNewPassword, setConfirmNewPassword] = useState("")
   const [changingPassword, setChangingPassword] = useState(false)
   const [passwordMessage, setPasswordMessage] = useState("")
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false)
 
   // Dar de baja la tienda
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deletePassword, setDeletePassword] = useState("")
+  const [showDeletePassword, setShowDeletePassword] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState("")
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
@@ -554,30 +558,63 @@ export function StoreSettings({ store }: StoreSettingsProps) {
         <CardContent className="space-y-4">
           <div>
             <Label>Contraseña actual</Label>
-            <Input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="Tu contraseña actual"
-            />
+            <div className="relative">
+              <Input
+                type={showCurrentPassword ? "text" : "password"}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Tu contraseña actual"
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword((v) => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                tabIndex={-1}
+              >
+                {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           <div>
             <Label>Nueva contraseña</Label>
-            <Input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Mínimo 6 caracteres"
-            />
+            <div className="relative">
+              <Input
+                type={showNewPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword((v) => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                tabIndex={-1}
+              >
+                {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           <div>
             <Label>Confirmar nueva contraseña</Label>
-            <Input
-              type="password"
-              value={confirmNewPassword}
-              onChange={(e) => setConfirmNewPassword(e.target.value)}
-              placeholder="Repetí la nueva contraseña"
-            />
+            <div className="relative">
+              <Input
+                type={showConfirmNewPassword ? "text" : "password"}
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                placeholder="Repetí la nueva contraseña"
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmNewPassword((v) => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                tabIndex={-1}
+              >
+                {showConfirmNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           {passwordMessage && (
             <p className={`text-sm ${passwordMessage.includes("Error") ? "text-red-500" : "text-green-600"}`}>
@@ -644,12 +681,23 @@ export function StoreSettings({ store }: StoreSettingsProps) {
             </div>
             <div>
               <Label>Tu contraseña de administrador</Label>
-              <Input
-                type="password"
-                value={deletePassword}
-                onChange={(e) => setDeletePassword(e.target.value)}
-                placeholder="Contraseña actual"
-              />
+              <div className="relative">
+                <Input
+                  type={showDeletePassword ? "text" : "password"}
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  placeholder="Contraseña actual"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowDeletePassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                  tabIndex={-1}
+                >
+                  {showDeletePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             {deleteError && <p className="text-sm text-red-500">{deleteError}</p>}
           </div>
