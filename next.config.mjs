@@ -146,6 +146,7 @@ const nextConfig = {
     ]
   },
   async headers() {
+    const isProd = process.env.NODE_ENV === 'production'
     return [
       {
         source: "/:path*",
@@ -199,7 +200,12 @@ const nextConfig = {
           },
         ],
       },
-      {
+      // En dev, Turbopack no siempre cambia el hash del chunk cuando cambia el
+      // contenido (ni cuando cambia una env var NEXT_PUBLIC_* inlineada), así que
+      // cachear los .js "para siempre" deja al navegador con código viejo aunque
+      // el servidor ya se haya recompilado (mismo bug ya diagnosticado y arreglado
+      // en tiendabasica-dev el 01/09/2026).
+      ...(isProd ? [{
         source: "/(.*)\\.(js|css|woff|woff2)",
         headers: [
           {
@@ -207,7 +213,7 @@ const nextConfig = {
             value: "public, max-age=31536000, immutable",
           },
         ],
-      },
+      }] : []),
     ]
   },
   poweredByHeader: false,
