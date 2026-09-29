@@ -151,17 +151,17 @@ const pageDesigns = [
     previewUrl: "/disenio-preview/vintage",
     comingSoon: false,
   },
-  {
-    id: "nuevo_propio",
-    name: "Nuevo / Propio",
-    subtitle: "Creá tu propio modelo",
-    description: "Pegá el link de una tienda que te gusta y armamos un modelo nuevo con ese estilo, usando tus productos y fotos reales.",
-    image: "",
-    previewUrl: "#",
-    comingSoon: false,
-    isCustom: true,
-  },
 ]
+
+// Separado de pageDesigns a propósito: no es un modelo prearmado ($1/mes de Modelos/Templates),
+// es el clonado real por link ($10 único, feature "theme_custom_url"). Antes vivía mezclado como
+// una tile más de la grilla y quedaba invisible; ahora es su propia sección, siempre visible.
+const customCloneDesign = {
+  id: "nuevo_propio",
+  name: "Clonar con IA",
+  subtitle: "Copiá el estilo de otra tienda",
+  description: "Pegá el link de una tienda que te gusta y armamos un modelo nuevo con ese estilo, usando tus productos y fotos reales.",
+}
 
 interface DbFeature {
   id: string
@@ -572,6 +572,42 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   const normalizedCustomUrl = getNormalizedCustomUrl(customUrl)
   const hasValidCustomUrl = !!normalizedCustomUrl
   normalizedCustomUrlRef.current = normalizedCustomUrl
+
+  const renderCloneWithAICard = () => (
+    <div className="mt-4 rounded-xl border-2 border-dashed border-violet-300 bg-violet-50 p-4 flex items-start gap-3">
+      <div className="w-11 h-11 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0 text-violet-500">
+        <Sparkles className="h-5 w-5" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-violet-900">{customCloneDesign.name}</p>
+        <p className="text-xs text-violet-700 mt-0.5">{customCloneDesign.description}</p>
+        <a
+          href={getLeerMasUrl(customCloneDesign.id)}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="inline-block text-xs text-green-700 hover:text-green-800 hover:underline mt-1"
+        >
+          Leer más →
+        </a>
+        <div className="mt-2">
+          {customThemeRequest?.status === "pendiente" ? (
+            <p className="text-xs text-violet-600 font-medium">Lo estamos armando…</p>
+          ) : customThemeRequest?.status === "listo" ? (
+            <p className="text-xs text-green-600 font-medium">¡Listo! Ya está en tu lista</p>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setCustomUrlDialogOpen(true)}
+              className="text-xs px-3 py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
+            >
+              Clonar con IA · USD {customThemePriceUSD}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 
   useEffect(() => {
     if (!customUrlDialogOpen || !hasValidCustomUrl || !paypalLoaded) {
@@ -1409,40 +1445,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                   <div className="px-4 pb-4 pt-1">
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                       {pageDesigns.map((design) =>
-                                        design.isCustom ? (
-                                          <div
-                                            key={design.id}
-                                            className="relative border-2 border-dashed rounded-xl p-2 transition-all text-left bg-white border-violet-300"
-                                          >
-                                            <div className="h-20 rounded-lg mb-2 bg-violet-50 flex items-center justify-center text-violet-400 text-2xl font-bold">
-                                              +
-                                            </div>
-                                            <p className="text-xs font-medium mb-0.5">{design.name}</p>
-                                            <p className="text-[9px] text-muted-foreground leading-tight mb-1">{design.subtitle}</p>
-                                            <a
-                                              href={getLeerMasUrl(design.id)}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              onClick={(e) => e.stopPropagation()}
-                                              className="block text-[9px] text-green-600 hover:text-green-700 hover:underline mb-2"
-                                            >
-                                              Leer más →
-                                            </a>
-                                            {customThemeRequest?.status === "pendiente" ? (
-                                              <p className="text-[9px] text-violet-600 font-medium text-center py-1.5">Lo estamos armando…</p>
-                                            ) : customThemeRequest?.status === "listo" ? (
-                                              <p className="text-[9px] text-green-600 font-medium text-center py-1.5">¡Listo! Ya está en tu lista</p>
-                                            ) : (
-                                              <button
-                                                type="button"
-                                                onClick={() => setCustomUrlDialogOpen(true)}
-                                                className="w-full text-xs py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
-                                              >
-                                                Crear desde un link
-                                              </button>
-                                            )}
-                                          </div>
-                                        ) : design.comingSoon ? (
+                                        design.comingSoon ? (
                                           <div
                                             key={design.id}
                                             className="relative border-2 rounded-xl p-2 transition-all text-left border-border opacity-60 cursor-not-allowed bg-white"
@@ -1519,6 +1522,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                         ),
                                       )}
                                     </div>
+                                    {renderCloneWithAICard()}
                                   </div>
                                 )}
                                 {expandedFeatures.has(feature.code) && feature.code === "dolar_peso" && (
@@ -1845,40 +1849,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {pageDesigns.map((design) =>
-                  design.isCustom ? (
-                    <div
-                      key={design.id}
-                      className="relative border-2 border-dashed rounded-xl p-2 transition-all text-left border-violet-300"
-                    >
-                      <div className="h-20 rounded-lg mb-2 bg-violet-50 flex items-center justify-center text-violet-400 text-2xl font-bold">
-                        +
-                      </div>
-                      <p className="text-xs font-medium mb-0.5">{design.name}</p>
-                      <p className="text-[9px] text-muted-foreground leading-tight mb-1">{design.subtitle}</p>
-                      <a
-                        href={getLeerMasUrl(design.id)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="block text-[9px] text-green-600 hover:text-green-700 hover:underline mb-2"
-                      >
-                        Leer más →
-                      </a>
-                      {customThemeRequest?.status === "pendiente" ? (
-                        <p className="text-[9px] text-violet-600 font-medium text-center py-1.5">Lo estamos armando…</p>
-                      ) : customThemeRequest?.status === "listo" ? (
-                        <p className="text-[9px] text-green-600 font-medium text-center py-1.5">¡Listo! Ya está en tu lista</p>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setCustomUrlDialogOpen(true)}
-                          className="w-full text-xs py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
-                        >
-                          Crear desde un link
-                        </button>
-                      )}
-                    </div>
-                  ) : design.comingSoon ? (
+                  design.comingSoon ? (
                     <div
                       key={design.id}
                       className="relative border-2 rounded-xl p-2 transition-all text-left border-border opacity-60 cursor-not-allowed"
@@ -1958,7 +1929,24 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
               <p className="text-xs text-muted-foreground mt-4">
                 Por ahora esto guarda tu preferencia de diseño. Todavía estamos conectando cada modelo a los productos y el carrito reales de tu tienda — te avisamos apenas "Moderno" quede funcionando 100% con tus datos.
               </p>
+              {renderCloneWithAICard()}
             </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="clonar" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-violet-500" />
+                Clonar con IA
+              </CardTitle>
+              <CardDescription>
+                Pago único aparte de Modelos/Templates. Pegá el link de una tienda que te gusta y armamos un modelo
+                nuevo con ese estilo, usando tus productos y fotos reales.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>{renderCloneWithAICard()}</CardContent>
           </Card>
         </TabsContent>
 
