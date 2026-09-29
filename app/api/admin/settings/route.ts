@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { cookies } from "next/headers"
 
 export async function PUT(request: NextRequest) {
   try {
@@ -38,6 +39,18 @@ export async function PUT(request: NextRequest) {
 
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
+    // Solo el dueño de ESTA tienda (con su cookie de sesión) puede editar sus ajustes.
+    // Antes esto confiaba en el storeId que mandaba el navegador sin más chequeo.
+    const { data: current } = await supabase.from("stores").select("subdomain").eq("id", storeId).single()
+    if (!current) {
+      return NextResponse.json({ error: "No se encontró la tienda" }, { status: 404 })
+    }
+    const cookieStore = await cookies()
+    const isAuthenticated = cookieStore.get(`admin_${current.subdomain.toLowerCase()}`)?.value === "true"
+    if (!isAuthenticated) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+    }
+
     // plan_features es un jsonb que ya usan otras cositas (ej. dropshipping);
     // hay que leerlo y mergear para no pisar lo que ya tenga guardado.
     let mergedPlanFeatures: Record<string, any> | undefined
@@ -57,13 +70,8 @@ export async function PUT(request: NextRequest) {
     // Validar unicidad de subdominio si cambió
     if (subdomain) {
       const normalized = subdomain.toLowerCase()
-      const { data: current } = await supabase
-        .from("stores")
-        .select("subdomain")
-        .eq("id", storeId)
-        .single()
 
-      if (current && current.subdomain !== normalized) {
+      if (current.subdomain !== normalized) {
         const { data: existing } = await supabase
           .from("stores")
           .select("id")

@@ -7,9 +7,17 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { ImageUpload } from "./image-upload"
 import { MinorConsentStatus } from "./minor-consent-status"
-import { Instagram, Facebook, Youtube } from "lucide-react"
+import { Instagram, Facebook, Youtube, AlertTriangle } from "lucide-react"
 import type { Store } from "@/lib/store-context"
 
 interface StoreSettingsProps {
@@ -62,6 +70,20 @@ export function StoreSettings({ store }: StoreSettingsProps) {
 
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
+
+  // Cambio de contraseña
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmNewPassword, setConfirmNewPassword] = useState("")
+  const [changingPassword, setChangingPassword] = useState(false)
+  const [passwordMessage, setPasswordMessage] = useState("")
+
+  // Dar de baja la tienda
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deletePassword, setDeletePassword] = useState("")
+  const [deleteConfirmText, setDeleteConfirmText] = useState("")
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState("")
 
   // Verificar disponibilidad del subdominio en vivo, con debounce
   useEffect(() => {
@@ -165,6 +187,81 @@ export function StoreSettings({ store }: StoreSettingsProps) {
       setMessage("Error de conexión")
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleChangePassword = async () => {
+    setPasswordMessage("")
+
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+      setPasswordMessage("Error: completá los tres campos")
+      return
+    }
+    if (newPassword !== confirmNewPassword) {
+      setPasswordMessage("Error: la nueva contraseña no coincide en los dos campos")
+      return
+    }
+
+    setChangingPassword(true)
+    try {
+      const response = await fetch("/api/admin/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subdomain: store.subdomain,
+          currentPassword,
+          newPassword,
+        }),
+      })
+      const data = await response.json()
+      if (response.ok) {
+        setPasswordMessage("Contraseña actualizada correctamente")
+        setCurrentPassword("")
+        setNewPassword("")
+        setConfirmNewPassword("")
+      } else {
+        setPasswordMessage(`Error: ${data.error || "no se pudo cambiar la contraseña"}`)
+      }
+    } catch {
+      setPasswordMessage("Error de conexión")
+    } finally {
+      setChangingPassword(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    setDeleteError("")
+
+    if (deleteConfirmText.toLowerCase().trim() !== (store.subdomain || "").toLowerCase()) {
+      setDeleteError("Escribí el nombre de tu tienda exactamente como aparece arriba")
+      return
+    }
+    if (!deletePassword) {
+      setDeleteError("Ingresá tu contraseña de administrador")
+      return
+    }
+
+    setDeleting(true)
+    try {
+      const response = await fetch("/api/admin/delete-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subdomain: store.subdomain,
+          password: deletePassword,
+          confirmSubdomain: deleteConfirmText,
+        }),
+      })
+      const data = await response.json()
+      if (response.ok) {
+        window.location.href = "https://tol.ar/"
+      } else {
+        setDeleteError(data.error || "No se pudo dar de baja la tienda")
+      }
+    } catch {
+      setDeleteError("Error de conexión")
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -447,6 +544,125 @@ export function StoreSettings({ store }: StoreSettingsProps) {
       </Card>
 
       <MinorConsentStatus subdomain={store.subdomain || ""} />
+
+      {/* Seguridad: cambiar contraseña */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Seguridad</CardTitle>
+          <CardDescription>Cambiá la contraseña con la que entrás a este panel de administración</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>Contraseña actual</Label>
+            <Input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Tu contraseña actual"
+            />
+          </div>
+          <div>
+            <Label>Nueva contraseña</Label>
+            <Input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Mínimo 6 caracteres"
+            />
+          </div>
+          <div>
+            <Label>Confirmar nueva contraseña</Label>
+            <Input
+              type="password"
+              value={confirmNewPassword}
+              onChange={(e) => setConfirmNewPassword(e.target.value)}
+              placeholder="Repetí la nueva contraseña"
+            />
+          </div>
+          {passwordMessage && (
+            <p className={`text-sm ${passwordMessage.includes("Error") ? "text-red-500" : "text-green-600"}`}>
+              {passwordMessage}
+            </p>
+          )}
+          <Button onClick={handleChangePassword} disabled={changingPassword} variant="outline">
+            {changingPassword ? "Cambiando..." : "Cambiar contraseña"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Zona de peligro: dar de baja la tienda */}
+      <Card className="border-red-200">
+        <CardHeader>
+          <CardTitle className="text-red-600 flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5" />
+            Zona de peligro
+          </CardTitle>
+          <CardDescription>Dar de baja tu tienda de forma definitiva</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-neutral-600 mb-4">
+            Esto borra tu tienda ({store.subdomain}.tol.ar) para siempre: productos, pedidos, categorías, imágenes y
+            toda la configuración. No hay forma de recuperarla después.
+          </p>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              setDeleteError("")
+              setDeletePassword("")
+              setDeleteConfirmText("")
+              setDeleteDialogOpen(true)
+            }}
+          >
+            Dar de baja mi tienda
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-red-600 flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              ¿Dar de baja {store.subdomain}.tol.ar?
+            </DialogTitle>
+            <DialogDescription>
+              Esta acción no se puede deshacer. Se van a borrar para siempre todos los productos, pedidos,
+              categorías, imágenes y toda la información de tu tienda. No vas a poder recuperar nada después de
+              confirmar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>
+                Escribí <span className="font-mono font-semibold">{store.subdomain}</span> para confirmar
+              </Label>
+              <Input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={store.subdomain}
+              />
+            </div>
+            <div>
+              <Label>Tu contraseña de administrador</Label>
+              <Input
+                type="password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder="Contraseña actual"
+              />
+            </div>
+            {deleteError && <p className="text-sm text-red-500">{deleteError}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteAccount} disabled={deleting}>
+              {deleting ? "Borrando..." : "Sí, borrar todo"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
