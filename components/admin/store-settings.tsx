@@ -656,9 +656,9 @@ export function StoreSettings({ store }: StoreSettingsProps) {
               ¿Dar de baja {store.subdomain}.tol.ar?
             </DialogTitle>
             <DialogDescription>
-              Esta acción no se puede deshacer. Se van a borrar para siempre todos los productos, pedidos,
-              categorías, imágenes y toda la información de tu tienda. No vas a poder recuperar nada después de
-              confirmar.
+              Vas a borrar {store.subdomain}.tol.ar. Esta acción no se puede deshacer: se van a borrar para siempre
+              todos los productos, pedidos, categorías, imágenes y toda la información de tu tienda. No vas a poder
+              recuperar nada después de confirmar.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
