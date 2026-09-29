@@ -85,7 +85,6 @@ export function StoreSettings({ store }: StoreSettingsProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deletePassword, setDeletePassword] = useState("")
   const [showDeletePassword, setShowDeletePassword] = useState(false)
-  const [deleteConfirmText, setDeleteConfirmText] = useState("")
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
 
@@ -236,10 +235,6 @@ export function StoreSettings({ store }: StoreSettingsProps) {
   const handleDeleteAccount = async () => {
     setDeleteError("")
 
-    if (deleteConfirmText.toLowerCase().trim() !== (store.subdomain || "").toLowerCase()) {
-      setDeleteError("Escribí el nombre de tu tienda exactamente como aparece arriba")
-      return
-    }
     if (!deletePassword) {
       setDeleteError("Ingresá tu contraseña de administrador")
       return
@@ -253,7 +248,6 @@ export function StoreSettings({ store }: StoreSettingsProps) {
         body: JSON.stringify({
           subdomain: store.subdomain,
           password: deletePassword,
-          confirmSubdomain: deleteConfirmText,
         }),
       })
       const data = await response.json()
@@ -646,7 +640,6 @@ export function StoreSettings({ store }: StoreSettingsProps) {
             onClick={() => {
               setDeleteError("")
               setDeletePassword("")
-              setDeleteConfirmText("")
               setDeleteDialogOpen(true)
             }}
           >
@@ -669,16 +662,6 @@ export function StoreSettings({ store }: StoreSettingsProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label>
-                Escribí <span className="font-mono font-semibold">{store.subdomain}</span> para confirmar
-              </Label>
-              <Input
-                value={deleteConfirmText}
-                onChange={(e) => setDeleteConfirmText(e.target.value)}
-                placeholder={store.subdomain}
-              />
-            </div>
             <div>
               <Label>Tu contraseña de administrador</Label>
               <div className="relative">

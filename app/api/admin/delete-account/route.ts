@@ -10,9 +10,9 @@ const PROTECTED_SUBDOMAINS = ["perfumes", "ropa", "zapatos", "electronicos", "ba
 
 export async function POST(request: NextRequest) {
   try {
-    const { subdomain, password, confirmSubdomain } = await request.json()
+    const { subdomain, password } = await request.json()
 
-    if (!subdomain || !password || !confirmSubdomain) {
+    if (!subdomain || !password) {
       return NextResponse.json({ error: "Faltan datos" }, { status: 400 })
     }
 
@@ -23,10 +23,6 @@ export async function POST(request: NextRequest) {
     const isAuthenticated = cookieStore.get(`admin_${subdomainLower}`)?.value === "true"
     if (!isAuthenticated) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-    }
-
-    if (confirmSubdomain.toLowerCase().trim() !== subdomainLower) {
-      return NextResponse.json({ error: "El nombre de la tienda escrito no coincide" }, { status: 400 })
     }
 
     if (PROTECTED_SUBDOMAINS.includes(subdomainLower)) {
