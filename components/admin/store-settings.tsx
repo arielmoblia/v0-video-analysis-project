@@ -569,7 +569,7 @@ export function StoreSettings({ store }: StoreSettingsProps) {
               <button
                 type="button"
                 onClick={() => setShowCurrentPassword((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-neutral-900"
                 tabIndex={-1}
               >
                 {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -589,7 +589,7 @@ export function StoreSettings({ store }: StoreSettingsProps) {
               <button
                 type="button"
                 onClick={() => setShowNewPassword((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-neutral-900"
                 tabIndex={-1}
               >
                 {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -609,7 +609,7 @@ export function StoreSettings({ store }: StoreSettingsProps) {
               <button
                 type="button"
                 onClick={() => setShowConfirmNewPassword((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-neutral-900"
                 tabIndex={-1}
               >
                 {showConfirmNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -692,7 +692,7 @@ export function StoreSettings({ store }: StoreSettingsProps) {
                 <button
                   type="button"
                   onClick={() => setShowDeletePassword((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-neutral-900"
                   tabIndex={-1}
                 >
                   {showDeletePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
