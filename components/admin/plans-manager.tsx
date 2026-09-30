@@ -161,7 +161,7 @@ const customCloneDesign = {
   id: "nuevo_propio",
   name: "Diseño Customizado de Portada",
   subtitle: "Copiá el estilo de otra tienda",
-  description: "Pegá el link de una tienda que te gusta y armamos la portada de tu tienda con ese estilo, usando tus productos y fotos reales.",
+  description: "Pegá el link de una tienda que te gusta y una IA arma una portada igual para vos, usando tus productos y fotos reales.",
 }
 
 interface DbFeature {
@@ -2113,8 +2113,8 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                 Diseño Customizado de Portada
               </CardTitle>
               <CardDescription>
-                Pago único aparte de Modelos/Templates. Pegá el link de una tienda que te gusta y armamos la
-                portada de tu tienda con ese estilo, usando tus productos y fotos reales.
+                Pago único aparte de Modelos/Templates. Vos pegás el link de una tienda que te gusta y una IA
+                arma una portada igual para vos, usando tus productos y fotos reales.
               </CardDescription>
             </CardHeader>
             <CardContent>{renderCloneWithAICard()}</CardContent>

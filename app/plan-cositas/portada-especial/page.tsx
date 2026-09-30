@@ -7,11 +7,11 @@ import { getActivarHref } from "@/lib/get-activar-href"
 
 export const metadata: Metadata = {
   title: "Diseño Customizado de Portada — Copiá el estilo de otra tienda que te guste",
-  description: "Pegá el link de una tienda que te guste y armamos la portada de tu tienda con ese estilo, usando tus productos y fotos reales.",
+  description: "Vos pegás el link de una tienda que te guste y una IA arma una portada igual para vos, usando tus productos y fotos reales.",
   keywords: ["clonar diseño tienda", "portada personalizada tienda online", "copiar estilo tienda argentina", "diseño customizado de portada tol.ar"],
   openGraph: {
     title: "Diseño Customizado de Portada — Copiá el estilo de otra tienda que te guste",
-    description: "Pegá el link de una tienda que te guste y armamos la portada de tu tienda con ese estilo, usando tus productos y fotos reales.",
+    description: "Vos pegás el link de una tienda que te guste y una IA arma una portada igual para vos, usando tus productos y fotos reales.",
     url: "https://tol.ar/plan-cositas/portada-especial",
   }
 }
@@ -33,7 +33,7 @@ export default async function PortadaEspecialPage({ searchParams }: { searchPara
           <h1 className="text-5xl md:text-6xl font-bold mb-6 text-slate-900">Diseño Customizado de Portada</h1>
           <p className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-2">Resumen</p>
           <p className="text-xl text-orange-500 mb-8 leading-relaxed">
-            Pegá el link de una tienda que te guste y armamos la portada de tu tienda con ese estilo, usando tus productos y fotos reales.
+            Vos pegás el link de una tienda que te guste y una IA arma una portada igual para vos, usando tus productos y fotos reales.
           </p>
           <div className="grid sm:grid-cols-5 gap-4 items-center max-w-3xl mx-auto">
             <div className="sm:col-span-3 aspect-video bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 gap-2">
