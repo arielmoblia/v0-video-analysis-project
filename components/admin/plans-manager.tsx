@@ -323,6 +323,9 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   const [customUrlCardLoadingBrick, setCustomUrlCardLoadingBrick] = useState(false)
   const customUrlCardBrickRef = useRef<HTMLDivElement>(null)
   const customUrlCardBrickBuilt = useRef(false)
+  const customUrlCardBrickGen = useRef(0)
+  const customUrlCardBrickController = useRef<any>(null)
+  const customUrlCardBrickOp = useRef<Promise<void>>(Promise.resolve())
   const normalizedCustomUrlRef = useRef<string | null>(null)
 
   const toggleExpanded = (code: string) => {
@@ -626,75 +629,120 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
     </div>
   )
 
-  useEffect(() => {
-    if (!customUrlDialogOpen || !hasValidCustomUrl) {
+  const queueCustomUrlCardBrickOp = (op: () => Promise<void>) => {
+    customUrlCardBrickOp.current = customUrlCardBrickOp.current.then(op, op)
+    return customUrlCardBrickOp.current
+  }
+
+  const clearCustomUrlCardBrick = async () => {
+    // Igual que con el Brick de "Probar gratis": invalidamos la creación en
+    // curso apenas arranca un clear, así si esa promesa vieja resuelve tarde
+    // se descarta sola en vez de pisar el contenedor.
+    customUrlCardBrickGen.current += 1
+    if (customUrlCardBrickController.current) {
+      try { await customUrlCardBrickController.current.unmount() } catch {}
+      customUrlCardBrickController.current = null
+    }
+    if (customUrlCardBrickRef.current) customUrlCardBrickRef.current.innerHTML = ""
+    customUrlCardBrickBuilt.current = false
+  }
+
+  // Igual que el Brick de "Probar gratis": si el SDK de Mercado Pago se cuelga
+  // a mitad de camino (conexión lenta, bfcache al volver con "atrás"), sin este
+  // timeout el esqueleto gris de la imagen que mandó Ariel queda así para
+  // siempre, sin ningún mensaje de error.
+  const CUSTOM_URL_BRICK_TIMEOUT_MS = 15000
+
+  const initCustomUrlCardBrick = () => queueCustomUrlCardBrickOp(async () => {
+    if (customUrlCardBrickBuilt.current || !customUrlCardBrickRef.current) return
+    await clearCustomUrlCardBrick()
+    const myGen = customUrlCardBrickGen.current
+    setCustomUrlCardLoadingBrick(true)
+
+    const loadMP = () => new Promise<void>((resolve, reject) => {
+      if ((window as any).MercadoPago) { resolve(); return }
+      const s = document.createElement("script")
+      s.src = "https://sdk.mercadopago.com/js/v2"
+      s.onload = () => resolve()
+      s.onerror = () => reject(new Error("No se pudo cargar Mercado Pago"))
+      document.head.appendChild(s)
+    })
+
+    try {
+      await loadMP()
+    } catch (err) {
+      if (customUrlCardBrickGen.current !== myGen) return
+      console.error(err)
+      setCustomUrlCardLoadingBrick(false)
+      setCustomUrlError("No pudimos cargar el formulario de pago, cerrá y volvé a intentar")
+      return
+    }
+    if (customUrlCardBrickGen.current !== myGen || !customUrlCardBrickRef.current) return
+
+    const pubKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY as string
+    const mp = new (window as any).MercadoPago(pubKey, { locale: "es-AR" })
+    const bricks = mp.bricks()
+    customUrlCardBrickBuilt.current = true
+    setCustomUrlCardLoadingBrick(false)
+
+    const timeoutId = setTimeout(() => {
+      if (customUrlCardBrickGen.current !== myGen) return
+      customUrlCardBrickGen.current += 1
       customUrlCardBrickBuilt.current = false
       if (customUrlCardBrickRef.current) customUrlCardBrickRef.current.innerHTML = ""
+      setCustomUrlError("El formulario de pago tardó demasiado en cargar. Si estás en una ventana de incógnito o con bloqueadores de cookies, probá en una ventana normal. Cerrá esto y probá de nuevo.")
+    }, CUSTOM_URL_BRICK_TIMEOUT_MS)
+
+    let controller: any = null
+    try {
+      controller = await bricks.create("cardPayment", "mp-custom-url-card-brick", {
+        initialization: {
+          amount: getPriceARS(customThemePriceUSD),
+          payer: { email: "" },
+        },
+        customization: {
+          visual: { style: { theme: "default" } },
+          paymentMethods: { minInstallments: 1, maxInstallments: 1 },
+        },
+        callbacks: {
+          onReady: () => {},
+          onError: (err: any) => console.error("MP Brick error:", err),
+          onSubmit: (cardData: any) => handleCustomUrlCardSubmit(cardData),
+        },
+      })
+    } catch (err) {
+      clearTimeout(timeoutId)
+      if (customUrlCardBrickGen.current !== myGen) return
+      console.error("MP Brick create error:", err)
+      customUrlCardBrickBuilt.current = false
+      setCustomUrlCardLoadingBrick(false)
+      setCustomUrlError("No pudimos cargar el formulario de pago, cerrá y volvé a intentar")
+      return
+    }
+    clearTimeout(timeoutId)
+
+    if (customUrlCardBrickGen.current !== myGen) {
+      try { await controller?.unmount() } catch {}
+      return
+    }
+    customUrlCardBrickController.current = controller
+  })
+
+  useEffect(() => {
+    if (!customUrlDialogOpen || !hasValidCustomUrl) {
+      queueCustomUrlCardBrickOp(clearCustomUrlCardBrick)
       return
     }
     if (customUrlCardBrickBuilt.current) return
-
-    // Si el popup se cierra y reabre mientras el script de MP todavía está cargando
-    // (conexión lenta, o el cliente cierra sin querer), el loadMP().then() viejo se
-    // resuelve tarde y pisa el contenedor que ya usó el segundo intento: el Brick queda
-    // trabado para siempre en su esqueleto de carga. "cancelled" corta esa cadena vieja.
-    let cancelled = false
 
     // Espera a que la URL deje de cambiar antes de montar el Brick. Si se monta en cada
     // tecla (o en el "parpadeo" de limpiar+pegar), el SDK de Mercado Pago se queda a
     // mitad de un create() async justo cuando el contenedor se vuelve a limpiar.
     const timer = setTimeout(() => {
-      if (cancelled || customUrlCardBrickBuilt.current || !customUrlCardBrickRef.current) return
-      customUrlCardBrickBuilt.current = true
-      setCustomUrlCardLoadingBrick(true)
-
-      const loadMP = () => new Promise<void>((resolve, reject) => {
-        if ((window as any).MercadoPago) { resolve(); return }
-        const s = document.createElement("script")
-        s.src = "https://sdk.mercadopago.com/js/v2"
-        s.onload = () => resolve()
-        s.onerror = () => reject(new Error("No se pudo cargar Mercado Pago"))
-        document.head.appendChild(s)
-      })
-
-      loadMP().then(() => {
-        if (cancelled || !customUrlCardBrickRef.current) return
-        const pubKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY as string
-        const mp = new (window as any).MercadoPago(pubKey, { locale: "es-AR" })
-        const bricks = mp.bricks()
-        setCustomUrlCardLoadingBrick(false)
-        bricks.create("cardPayment", "mp-custom-url-card-brick", {
-          initialization: {
-            amount: getPriceARS(customThemePriceUSD),
-            payer: { email: "" },
-          },
-          customization: {
-            visual: { style: { theme: "default" } },
-            paymentMethods: { minInstallments: 1, maxInstallments: 1 },
-          },
-          callbacks: {
-            onReady: () => {},
-            onError: (err: any) => console.error("MP Brick error:", err),
-            onSubmit: (cardData: any) => handleCustomUrlCardSubmit(cardData),
-          },
-        }).catch((err: any) => {
-          if (cancelled) return
-          console.error("MP Brick create error:", err)
-          setCustomUrlCardLoadingBrick(false)
-          setCustomUrlError("No pudimos cargar el formulario de pago, cerrá y volvé a intentar")
-        })
-      }).catch((err) => {
-        if (cancelled) return
-        console.error(err)
-        setCustomUrlCardLoadingBrick(false)
-        setCustomUrlError("No pudimos cargar el formulario de pago, cerrá y volvé a intentar")
-      })
+      initCustomUrlCardBrick()
     }, 400)
 
-    return () => {
-      cancelled = true
-      clearTimeout(timer)
-    }
+    return () => clearTimeout(timer)
   }, [customUrlDialogOpen, hasValidCustomUrl, customThemePriceUSD, storeId, storeName, subdomain])
 
   const startTrial = (feature: any) => {
@@ -2088,11 +2136,11 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
           if (!open) {
             setCustomUrlError("")
             setCustomUrl("")
-            customUrlCardBrickBuilt.current = false
+            queueCustomUrlCardBrickOp(clearCustomUrlCardBrick)
           }
         }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Portada especial: pedila a partir de un link</DialogTitle>
           </DialogHeader>
