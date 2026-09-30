@@ -45,8 +45,10 @@ export function StoreHeroBasicoEditable({
     store.banner_image && store.banner_image !== "/images/placeholders/placeholder.svg"
       ? store.banner_image
       : fallbackBanner
-  const bannerTitle = store.banner_title || "Bienvenido a"
-  const bannerSubtitle = store.banner_subtitle || "Descubrí nuestra colección exclusiva"
+  // null/undefined = nunca se configuró (tienda nueva, mostramos placeholder editable).
+  // "" explícito = vino de un clon real sin ese texto en el sitio de origen — no inventamos nada.
+  const bannerTitle = store.banner_title == null ? "Bienvenido a" : store.banner_title
+  const bannerSubtitle = store.banner_subtitle == null ? "Descubrí nuestra colección exclusiva" : store.banner_subtitle
 
   const subirImagen = async (file: File) => {
     setUploading(true)

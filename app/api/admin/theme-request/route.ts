@@ -106,8 +106,11 @@ export async function POST(request: NextRequest) {
         // con el banner de siempre, solo con el título pisado).
         if (scraped.success && scraped.bannerImageUrl) {
           bannerUpdate.banner_image = scraped.bannerImageUrl
-          if (scraped.bannerTitle) bannerUpdate.banner_title = scraped.bannerTitle
-          if (scraped.bannerSubtitle) bannerUpdate.banner_subtitle = scraped.bannerSubtitle
+          // Guardamos "" explícito (no dejamos el campo sin tocar) cuando el sitio de
+          // origen no tenía texto propio — así el hero sabe que es un clon real sin
+          // texto y no cae en el placeholder genérico (el cliente pidió "igualita").
+          bannerUpdate.banner_title = scraped.bannerTitle || ""
+          bannerUpdate.banner_subtitle = scraped.bannerSubtitle || ""
           custom_theme_request.status = "listo"
           custom_theme_request.applied_at = new Date().toISOString()
           clonedTemplate = true
