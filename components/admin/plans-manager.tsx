@@ -284,6 +284,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   // Modal de configuración
   const [configModal, setConfigModal] = useState<string | null>(null)
   const [trialModal, setTrialModal] = useState<{name: string, days: number} | null>(null)
+  const [trialIntroFeature, setTrialIntroFeature] = useState<DbFeature | null>(null)
   const [trialCardFeature, setTrialCardFeature] = useState<DbFeature | null>(null)
   const [trialCardLoadingBrick, setTrialCardLoadingBrick] = useState(false)
   const [trialCardSubmitting, setTrialCardSubmitting] = useState(false)
@@ -623,8 +624,17 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
 
   const startTrial = (feature: any) => {
     if (!feature.trial_days || feature.trial_days === 0) return
-    // Antes de activar la prueba pedimos la tarjeta (Mercado Pago) para poder
-    // cobrar sola cuando termine el trial. Se abre el diálogo con el Brick.
+    // Primero mostramos qué es (o, en Modelos/Templates, los diseños para elegir)
+    // y recién después de esa elección se pide la tarjeta.
+    setTrialIntroFeature(feature)
+  }
+
+  const confirmTrialIntro = () => {
+    const feature = trialIntroFeature
+    setTrialIntroFeature(null)
+    if (!feature) return
+    // Ahora sí pedimos la tarjeta (Mercado Pago) para poder cobrar sola
+    // cuando termine el trial. Se abre el diálogo con el Brick.
     setTrialCardError("")
     trialCardBrickBuilt.current = false
     setTrialCardFeature(feature)
@@ -2057,6 +2067,53 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                 </span>
               </li>
             </ol>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Popup intermedio: explica qué es (o, en Modelos/Templates, deja ver los diseños) antes de pedir la tarjeta */}
+      <Dialog open={!!trialIntroFeature} onOpenChange={(open) => { if (!open) setTrialIntroFeature(null) }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{trialIntroFeature?.name}</DialogTitle>
+            <DialogDescription>
+              {(trialIntroFeature && (FEATURE_CONFIG[trialIntroFeature.code]?.configDescription || (trialIntroFeature as any).full_description)) || trialIntroFeature?.description}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {trialIntroFeature?.code === "modelos_templates" && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {pageDesigns.filter(d => !d.isCustom && !d.comingSoon).map((design) => (
+                  <button
+                    key={design.id}
+                    type="button"
+                    onClick={() => setPreviewDesign(design)}
+                    className="relative h-20 w-full rounded-lg overflow-hidden bg-muted group block border"
+                  >
+                    <Image
+                      src={design.image || "/images/placeholders/placeholder.svg"}
+                      alt={design.name}
+                      fill
+                      className={`object-cover ${design.imagePosition || "object-top"}`}
+                      sizes="150px"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-end p-1">
+                      <span className="text-white text-[10px] font-medium drop-shadow">{design.name}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            {trialIntroFeature?.code === "modelos_templates" && (
+              <p className="text-xs text-muted-foreground">
+                Tocá un diseño para verlo en grande. Vas a poder elegir cuál usar una vez activada la prueba.
+              </p>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setTrialIntroFeature(null)}>Cancelar</Button>
+              <Button onClick={confirmTrialIntro}>Continuar</Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
