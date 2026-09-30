@@ -8,6 +8,7 @@ import { StoreHeaderBlingg } from "@/components/store/store-header-blingg"
 import { StoreHeroBlinggEditable } from "@/components/store/store-hero-blingg-editable"
 import { CategoryShowcaseBlinggEditable } from "@/components/store/category-showcase-blingg-editable"
 import { ProductGridBlingg } from "@/components/store/product-grid-blingg"
+import { StoreCarousels } from "@/components/store/store-carousels"
 import { StoreFooter } from "@/components/store/store-footer"
 import { EditableInline } from "@/components/store/editable-inline"
 import { blinggBody, blinggHeading } from "@/lib/fonts/blingg"
@@ -141,6 +142,15 @@ export function StoreBlinggLive({
           onChangeImage={(slug, url) => setCategoryImages((c) => ({ ...c, [slug]: url }))}
           texts={templateTexts}
           onChangeText={handleChangeText}
+        />
+
+        <StoreCarousels
+          carousels={store.plan_features?.carousels}
+          products={products}
+          featuredProducts={featuredProducts}
+          subdomain={subdomain}
+          exchangeRate={exchangeRate}
+          country={store.country}
         />
 
         {featuredProducts.length > 0 && (

@@ -7,6 +7,7 @@ import { StoreHeaderElegante } from "@/components/store/store-header-elegante"
 import { StoreHeroEleganteEditable } from "@/components/store/store-hero-elegante-editable"
 import { CategoryShowcaseEleganteEditable } from "@/components/store/category-showcase-elegante-editable"
 import { ProductGridElegante } from "@/components/store/product-grid-elegante"
+import { StoreCarousels } from "@/components/store/store-carousels"
 import { StoreFooter } from "@/components/store/store-footer"
 
 interface StoreEleganteLiveProps {
@@ -106,6 +107,15 @@ export function StoreEleganteLive({
           onChangeImage={(slug, url) => setCategoryImages((c) => ({ ...c, [slug]: url }))}
           texts={templateTexts}
           onChangeText={handleChangeText}
+        />
+
+        <StoreCarousels
+          carousels={store.plan_features?.carousels}
+          products={products}
+          featuredProducts={featuredProducts}
+          subdomain={subdomain}
+          exchangeRate={exchangeRate}
+          country={store.country}
         />
 
         {featuredProducts.length > 0 && (

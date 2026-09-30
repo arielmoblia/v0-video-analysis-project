@@ -7,6 +7,7 @@ import { StoreHeaderModern } from "@/components/store/store-header-modern"
 import { StoreHeroModernEditable } from "@/components/store/store-hero-modern-editable"
 import { CategoryShowcaseModernEditable } from "@/components/store/category-showcase-modern-editable"
 import { ProductGridModern } from "@/components/store/product-grid-modern"
+import { StoreCarousels } from "@/components/store/store-carousels"
 import { StoreFooter } from "@/components/store/store-footer"
 import { EditableText, useStorePageContent } from "@/components/editable-text"
 
@@ -104,6 +105,15 @@ export function StoreModernoLive({
           content={content}
           isAdmin={isOwner}
           onChangeImage={(slug, url) => setCategoryImages((c) => ({ ...c, [slug]: url }))}
+        />
+
+        <StoreCarousels
+          carousels={store.plan_features?.carousels}
+          products={products}
+          featuredProducts={featuredProducts}
+          subdomain={subdomain}
+          exchangeRate={exchangeRate}
+          country={store.country}
         />
 
         {featuredProducts.length > 0 && (

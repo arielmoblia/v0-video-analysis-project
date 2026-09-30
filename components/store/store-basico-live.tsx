@@ -8,6 +8,7 @@ import { StoreHeroBasicoEditable } from "@/components/store/store-hero-basico-ed
 import { ProductGrid } from "@/components/store/product-grid"
 import { StoreFooter } from "@/components/store/store-footer"
 import { EditableInline } from "@/components/store/editable-inline"
+import { StoreCarousels } from "@/components/store/store-carousels"
 
 interface StoreBasicoLiveProps {
   store: Store
@@ -88,6 +89,15 @@ export function StoreBasicoLive({
           onChangeImage={(url) => setBanner((b) => ({ ...b, banner_image: url }))}
           onChangeTitle={(value) => setBanner((b) => ({ ...b, banner_title: value }))}
           onChangeSubtitle={(value) => setBanner((b) => ({ ...b, banner_subtitle: value }))}
+        />
+
+        <StoreCarousels
+          carousels={store.plan_features?.carousels}
+          products={products}
+          featuredProducts={featuredProducts}
+          subdomain={subdomain}
+          exchangeRate={exchangeRate}
+          country={store.country}
         />
 
         {featuredProducts.length > 0 && (

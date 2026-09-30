@@ -9,6 +9,7 @@ import { StoreHeroLuxuryEditable } from "@/components/store/store-hero-luxury-ed
 import { PromoBarLuxury } from "@/components/store/promo-bar-luxury"
 import { CategoryShowcaseLuxuryEditable } from "@/components/store/category-showcase-luxury-editable"
 import { ProductGridLuxury } from "@/components/store/product-grid-luxury"
+import { StoreCarousels } from "@/components/store/store-carousels"
 import { BenefitsBannerLuxury } from "@/components/store/benefits-banner-luxury"
 import { TestimonialsLuxury } from "@/components/store/testimonials-luxury"
 import { StoreFooterLuxury } from "@/components/store/store-footer-luxury"
@@ -109,6 +110,15 @@ export function StoreLuxuryLive({
           text={templateTexts["promo_bar.text"] ?? undefined}
           editMode={editMode}
           onChangeText={(v) => handleChangeText("promo_bar.text", v)}
+        />
+
+        <StoreCarousels
+          carousels={store.plan_features?.carousels}
+          products={products}
+          featuredProducts={featuredProducts}
+          subdomain={subdomain}
+          exchangeRate={exchangeRate}
+          country={store.country}
         />
 
         {featuredProducts.length > 0 && (

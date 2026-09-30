@@ -393,6 +393,7 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
                 initialLinkedStoreLabel={store.linked_store_label}
                 initialActiveTheme={store.plan_features?.active_theme || null}
                 initialCustomThemeRequest={store.plan_features?.custom_theme_request || null}
+                initialCarousels={store.plan_features?.carousels || null}
                 purchasedFeatures={purchasedFeatures}
                 onFeaturePurchased={(code) => setPurchasedFeatures([...purchasedFeatures, code])}
                 activeTab={plansTab}

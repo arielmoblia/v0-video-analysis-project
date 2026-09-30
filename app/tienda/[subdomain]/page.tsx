@@ -17,6 +17,7 @@ import { StoreLuxuryLive } from "@/components/store/store-luxury-live"
 import { StoreMinimalLive } from "@/components/store/store-minimal-live"
 import { StoreVintageLive } from "@/components/store/store-vintage-live"
 import { StoreBasicoLive } from "@/components/store/store-basico-live"
+import { StoreCarousels } from "@/components/store/store-carousels"
 
 const MODERNO_ACCENT = "#e8590c"
 const ELEGANTE_ACCENT = "#f7791e"
@@ -301,6 +302,15 @@ export default async function StorePage({ params }: StorePageProps) {
       <StoreHeader store={store} categories={categories} hasMayoristaMinorista={hasMayoristaMinorista} />
       <main className="flex-1">
         <StoreHero store={store} />
+
+        <StoreCarousels
+          carousels={store.plan_features?.carousels}
+          products={products}
+          featuredProducts={featuredProducts}
+          subdomain={subdomain}
+          exchangeRate={exchangeRate}
+          country={store.country}
+        />
 
         {featuredProducts.length > 0 && (
           <section className="py-20 px-6">

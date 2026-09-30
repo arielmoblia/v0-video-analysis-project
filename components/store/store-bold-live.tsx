@@ -7,6 +7,7 @@ import { StoreHeaderBold } from "@/components/store/store-header-bold"
 import { StoreHeroBoldEditable } from "@/components/store/store-hero-bold-editable"
 import { CategoryShowcaseBoldEditable } from "@/components/store/category-showcase-bold-editable"
 import { ProductGridBold } from "@/components/store/product-grid-bold"
+import { StoreCarousels } from "@/components/store/store-carousels"
 import { StoreFooter } from "@/components/store/store-footer"
 
 interface StoreBoldLiveProps {
@@ -110,6 +111,15 @@ export function StoreBoldLive({
           onChangeImage={(slug, url) => setCategoryImages((c) => ({ ...c, [slug]: url }))}
           texts={templateTexts}
           onChangeText={handleChangeText}
+        />
+
+        <StoreCarousels
+          carousels={store.plan_features?.carousels}
+          products={products}
+          featuredProducts={featuredProducts}
+          subdomain={subdomain}
+          exchangeRate={exchangeRate}
+          country={store.country}
         />
 
         {featuredProducts.length > 0 && (

@@ -8,6 +8,7 @@ import { StoreHeroArtesanoEditable } from "@/components/store/store-hero-artesan
 import { BrandStripArtesano } from "@/components/store/brand-strip-artesano"
 import { CategoryShowcaseArtesanoEditable } from "@/components/store/category-showcase-artesano-editable"
 import { ProductGridArtesano } from "@/components/store/product-grid-artesano"
+import { StoreCarousels } from "@/components/store/store-carousels"
 import { BenefitsBannerArtesano } from "@/components/store/benefits-banner-artesano"
 import { StoreFooterArtesano } from "@/components/store/store-footer-artesano"
 import { artesanoBody, artesanoHeading } from "@/lib/fonts/artesano"
@@ -120,6 +121,15 @@ export function StoreArtesanoLive({
           onChangeImage={(slug, url) => setCategoryImages((c) => ({ ...c, [slug]: url }))}
           texts={templateTexts}
           onChangeText={handleChangeText}
+        />
+
+        <StoreCarousels
+          carousels={store.plan_features?.carousels}
+          products={products}
+          featuredProducts={featuredProducts}
+          subdomain={subdomain}
+          exchangeRate={exchangeRate}
+          country={store.country}
         />
 
         {featuredProducts.length > 0 && (

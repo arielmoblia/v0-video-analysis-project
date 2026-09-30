@@ -7,6 +7,7 @@ import { StoreHeaderMinimal } from "@/components/store/store-header-minimal"
 import { StoreHeroMinimalEditable } from "@/components/store/store-hero-minimal-editable"
 import { CategoryShowcaseMinimalEditable } from "@/components/store/category-showcase-minimal-editable"
 import { ProductGridMinimal } from "@/components/store/product-grid-minimal"
+import { StoreCarousels } from "@/components/store/store-carousels"
 import { StoreFooterMinimal } from "@/components/store/store-footer-minimal"
 import { minimalBody } from "@/lib/fonts/minimal"
 
@@ -92,6 +93,15 @@ export function StoreMinimalLive({
           onChangeImage={(url) => setBanner((b) => ({ ...b, banner_image: url }))}
           onChangeTitle={(value) => setBanner((b) => ({ ...b, banner_title: value }))}
           onChangeSubtitle={(value) => setBanner((b) => ({ ...b, banner_subtitle: value }))}
+        />
+
+        <StoreCarousels
+          carousels={store.plan_features?.carousels}
+          products={products}
+          featuredProducts={featuredProducts}
+          subdomain={subdomain}
+          exchangeRate={exchangeRate}
+          country={store.country}
         />
 
         {featuredProducts.length > 0 && (

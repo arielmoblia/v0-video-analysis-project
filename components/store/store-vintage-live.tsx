@@ -8,6 +8,7 @@ import { StoreHeroVintageEditable } from "@/components/store/store-hero-vintage-
 import { FeaturesVintage } from "@/components/store/features-vintage"
 import { CategoryShowcaseVintageEditable } from "@/components/store/category-showcase-vintage-editable"
 import { ProductGridVintage } from "@/components/store/product-grid-vintage"
+import { StoreCarousels } from "@/components/store/store-carousels"
 import { TestimonialsVintage } from "@/components/store/testimonials-vintage"
 import { StoreFooterVintage } from "@/components/store/store-footer-vintage"
 import { vintageBody, vintageHeading } from "@/lib/fonts/vintage"
@@ -103,6 +104,15 @@ export function StoreVintageLive({
         />
 
         <FeaturesVintage editMode={editMode} texts={templateTexts} onChangeText={handleChangeText} />
+
+        <StoreCarousels
+          carousels={store.plan_features?.carousels}
+          products={products}
+          featuredProducts={featuredProducts}
+          subdomain={subdomain}
+          exchangeRate={exchangeRate}
+          country={store.country}
+        />
 
         {featuredProducts.length > 0 && (
           <section id="productos" className="container mx-auto px-6 py-16">
