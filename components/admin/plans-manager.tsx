@@ -226,7 +226,7 @@ const FEATURE_CONFIG: { [key: string]: { configTitle: string; configDescription:
   dolar_peso: {
     configTitle: "Dólar/Peso Automático",
     configDescription:
-      "Con esta función, podés cargar tus precios en dólares y tus clientes los verán automáticamente convertidos a pesos argentinos usando la cotización del dólar blue actualizada. Nunca más tenés que actualizar precios por inflación.",
+      "Con esta función, podés cargar tus precios en dólares y tus clientes los verán automáticamente convertidos a pesos argentinos usando la cotización del dólar actualizada. Nunca más tenés que actualizar precios por inflación.",
   },
   google_merchant: {
     configTitle: "Google Shopping",
