@@ -151,17 +151,18 @@ const pageDesigns = [
     previewUrl: "/disenio-preview/vintage",
     comingSoon: false,
   },
-  {
-    id: "nuevo_propio",
-    name: "Nuevo / Propio",
-    subtitle: "Creá tu propio modelo",
-    description: "Pegá el link de una tienda que te gusta y armamos un modelo nuevo con ese estilo, usando tus productos y fotos reales.",
-    image: "",
-    previewUrl: "#",
-    comingSoon: false,
-    isCustom: true,
-  },
 ]
+
+// Separado de pageDesigns a propósito: no es un modelo prearmado ($1/mes de Modelos/Templates),
+// es el clonado real de la portada por link ($10 único, feature "theme_custom_url"). Antes vivía
+// mezclado como una tile más de la grilla y quedaba invisible; ahora es su propia sección "Portada
+// especial", siempre visible en el menú.
+const customCloneDesign = {
+  id: "nuevo_propio",
+  name: "Portada especial",
+  subtitle: "Copiá el estilo de otra tienda",
+  description: "Pegá el link de una tienda que te gusta y armamos la portada de tu tienda con ese estilo, usando tus productos y fotos reales.",
+}
 
 interface DbFeature {
   id: string
@@ -352,7 +353,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
           const customThemeFeature = allFeatures.find((f) => f.code === "theme_custom_url")
           setPurchasedFeatures(data.features || [])
           setPurchasedDetails(data.purchasedDetails || [])
-          // "theme_custom_url" no se muestra como cosita genérica: se cobra desde el popup de "Nuevo/Propio"
+          // "theme_custom_url" no se muestra como cosita genérica: se cobra desde la sección "Portada especial"
           setAvailableFeatures(allFeatures.filter((f) => f.code !== "theme_custom_url"))
           if (customThemeFeature) setCustomThemePriceUSD(customThemeFeature.price)
           if (data.exchangeRate) {
@@ -573,6 +574,42 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   const normalizedCustomUrl = getNormalizedCustomUrl(customUrl)
   const hasValidCustomUrl = !!normalizedCustomUrl
   normalizedCustomUrlRef.current = normalizedCustomUrl
+
+  const renderCloneWithAICard = () => (
+    <div className="rounded-xl border-2 border-dashed border-violet-300 bg-violet-50 p-4 flex items-start gap-3">
+      <div className="w-11 h-11 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0 text-violet-500">
+        <Sparkles className="h-5 w-5" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-violet-900">{customCloneDesign.name}</p>
+        <p className="text-xs text-violet-700 mt-0.5">{customCloneDesign.description}</p>
+        <a
+          href={getLeerMasUrl(customCloneDesign.id)}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="inline-block text-xs text-green-700 hover:text-green-800 hover:underline mt-1"
+        >
+          Leer más →
+        </a>
+        <div className="mt-2">
+          {customThemeRequest?.status === "pendiente" ? (
+            <p className="text-xs text-violet-600 font-medium">Lo estamos armando…</p>
+          ) : customThemeRequest?.status === "listo" ? (
+            <p className="text-xs text-green-600 font-medium">¡Listo! Ya está en tu lista</p>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setCustomUrlDialogOpen(true)}
+              className="text-xs px-3 py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
+            >
+              Pedir portada especial · USD {customThemePriceUSD}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 
   useEffect(() => {
     if (!customUrlDialogOpen || !hasValidCustomUrl || !paypalLoaded) {
@@ -1419,40 +1456,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                   <div className="px-4 pb-4 pt-1">
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                       {pageDesigns.map((design) =>
-                                        design.isCustom ? (
-                                          <div
-                                            key={design.id}
-                                            className="relative border-2 border-dashed rounded-xl p-2 transition-all text-left bg-white border-violet-300"
-                                          >
-                                            <div className="h-20 rounded-lg mb-2 bg-violet-50 flex items-center justify-center text-violet-400 text-2xl font-bold">
-                                              +
-                                            </div>
-                                            <p className="text-xs font-medium mb-0.5">{design.name}</p>
-                                            <p className="text-[9px] text-muted-foreground leading-tight mb-1">{design.subtitle}</p>
-                                            <a
-                                              href={getLeerMasUrl(design.id)}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              onClick={(e) => e.stopPropagation()}
-                                              className="block text-[9px] text-green-600 hover:text-green-700 hover:underline mb-2"
-                                            >
-                                              Leer más →
-                                            </a>
-                                            {customThemeRequest?.status === "pendiente" ? (
-                                              <p className="text-[9px] text-violet-600 font-medium text-center py-1.5">Lo estamos armando…</p>
-                                            ) : customThemeRequest?.status === "listo" ? (
-                                              <p className="text-[9px] text-green-600 font-medium text-center py-1.5">¡Listo! Ya está en tu lista</p>
-                                            ) : (
-                                              <button
-                                                type="button"
-                                                onClick={() => setCustomUrlDialogOpen(true)}
-                                                className="w-full text-xs py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
-                                              >
-                                                Crear desde un link
-                                              </button>
-                                            )}
-                                          </div>
-                                        ) : design.comingSoon ? (
+                                        design.comingSoon ? (
                                           <div
                                             key={design.id}
                                             className="relative border-2 rounded-xl p-2 transition-all text-left border-border opacity-60 cursor-not-allowed bg-white"
@@ -1855,40 +1859,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {pageDesigns.map((design) =>
-                  design.isCustom ? (
-                    <div
-                      key={design.id}
-                      className="relative border-2 border-dashed rounded-xl p-2 transition-all text-left border-violet-300"
-                    >
-                      <div className="h-20 rounded-lg mb-2 bg-violet-50 flex items-center justify-center text-violet-400 text-2xl font-bold">
-                        +
-                      </div>
-                      <p className="text-xs font-medium mb-0.5">{design.name}</p>
-                      <p className="text-[9px] text-muted-foreground leading-tight mb-1">{design.subtitle}</p>
-                      <a
-                        href={getLeerMasUrl(design.id)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="block text-[9px] text-green-600 hover:text-green-700 hover:underline mb-2"
-                      >
-                        Leer más →
-                      </a>
-                      {customThemeRequest?.status === "pendiente" ? (
-                        <p className="text-[9px] text-violet-600 font-medium text-center py-1.5">Lo estamos armando…</p>
-                      ) : customThemeRequest?.status === "listo" ? (
-                        <p className="text-[9px] text-green-600 font-medium text-center py-1.5">¡Listo! Ya está en tu lista</p>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setCustomUrlDialogOpen(true)}
-                          className="w-full text-xs py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
-                        >
-                          Crear desde un link
-                        </button>
-                      )}
-                    </div>
-                  ) : design.comingSoon ? (
+                  design.comingSoon ? (
                     <div
                       key={design.id}
                       className="relative border-2 rounded-xl p-2 transition-all text-left border-border opacity-60 cursor-not-allowed"
@@ -1972,6 +1943,22 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
           </Card>
         </TabsContent>
 
+        <TabsContent value="portada" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-violet-500" />
+                Portada especial
+              </CardTitle>
+              <CardDescription>
+                Pago único aparte de Modelos/Templates. Pegá el link de una tienda que te gusta y armamos la
+                portada de tu tienda con ese estilo, usando tus productos y fotos reales.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>{renderCloneWithAICard()}</CardContent>
+          </Card>
+        </TabsContent>
+
       </Tabs>
 
       {/* Modal de configuración */}
@@ -2016,7 +2003,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Creá tu modelo a partir de un link</DialogTitle>
+            <DialogTitle>Portada especial: pedila a partir de un link</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <Input
@@ -2083,7 +2070,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
           <div className="space-y-4">
             {trialIntroFeature?.code === "modelos_templates" && (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {pageDesigns.filter(d => !d.isCustom && !d.comingSoon).map((design) => (
+                {pageDesigns.filter(d => !d.comingSoon).map((design) => (
                   <button
                     key={design.id}
                     type="button"
