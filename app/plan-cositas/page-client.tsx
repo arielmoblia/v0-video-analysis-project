@@ -260,6 +260,36 @@ export default function PlanCositasPage({ brand = "tol" }: Props) {
                                   Leer más →
                                 </a>
                               )}
+                              {cosita.code === "multi_images" && (
+                                <a
+                                  href="/plan-cositas/galeria-imagenes"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-block mt-2 mb-2 text-sm text-blue-600 hover:underline"
+                                >
+                                  Leer más →
+                                </a>
+                              )}
+                              {cosita.code === "lupa" && (
+                                <a
+                                  href="/plan-cositas/lupa"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-block mt-2 mb-2 text-sm text-blue-600 hover:underline"
+                                >
+                                  Leer más →
+                                </a>
+                              )}
+                              {cosita.code === "nuevo_propio" && (
+                                <a
+                                  href="/plan-cositas/portada-especial"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-block mt-2 mb-2 text-sm text-blue-600 hover:underline"
+                                >
+                                  Leer más →
+                                </a>
+                              )}
                               <div className="mt-4 p-4 bg-muted rounded-lg">
                                 <p className="text-2xl font-bold text-[#62162f]">
                                   {priceDisplay(cosita)}
