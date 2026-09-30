@@ -2254,6 +2254,16 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                 Tocá un diseño para verlo en grande. Vas a poder elegir cuál usar una vez activada la prueba.
               </p>
             )}
+            {trialIntroFeature && (
+              <a
+                href={getLeerMasUrl(trialIntroFeature.code, subdomain)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-xs text-orange-700 hover:text-orange-800 hover:underline"
+              >
+                Leer más →
+              </a>
+            )}
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setTrialIntroFeature(null)}>Cancelar</Button>
               <Button onClick={confirmTrialIntro}>Continuar</Button>
