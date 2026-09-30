@@ -290,6 +290,16 @@ export default function PlanCositasPage({ brand = "tol" }: Props) {
                                   Leer más →
                                 </a>
                               )}
+                              {cosita.code === "carousels" && (
+                                <a
+                                  href="/plan-cositas/carruseles"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-block mt-2 mb-2 text-sm text-blue-600 hover:underline"
+                                >
+                                  Leer más →
+                                </a>
+                              )}
                               <div className="mt-4 p-4 bg-muted rounded-lg">
                                 <p className="text-2xl font-bold text-[#62162f]">
                                   {priceDisplay(cosita)}
