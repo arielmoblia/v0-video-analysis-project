@@ -99,8 +99,12 @@ export async function POST(request: NextRequest) {
       clearTimeout(timeout)
       if (scrapeRes.ok) {
         const scraped = await scrapeRes.json()
-        if (scraped.success && (scraped.bannerImageUrl || scraped.bannerTitle)) {
-          if (scraped.bannerImageUrl) bannerUpdate.banner_image = scraped.bannerImageUrl
+        // Solo marcamos "listo" si de verdad rescatamos una FOTO de portada — casi
+        // cualquier sitio tiene <title>, así que exigir solo bannerTitle marcaba pedidos
+        // como terminados sin haber clonado ninguna imagen (el cliente veía "¡Listo!"
+        // con el banner de siempre, solo con el título pisado).
+        if (scraped.success && scraped.bannerImageUrl) {
+          bannerUpdate.banner_image = scraped.bannerImageUrl
           if (scraped.bannerTitle) bannerUpdate.banner_title = scraped.bannerTitle
           if (scraped.bannerSubtitle) bannerUpdate.banner_subtitle = scraped.bannerSubtitle
           custom_theme_request.status = "listo"
