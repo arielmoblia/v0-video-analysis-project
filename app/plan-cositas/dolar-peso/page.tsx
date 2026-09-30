@@ -66,7 +66,7 @@ export default async function DolarPesoPage({ searchParams }: { searchParams: Pr
           </div>
           <h1 className="text-5xl md:text-6xl font-bold mb-6 text-slate-900">Dólar / Peso</h1>
           <p className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-2">Resumen</p>
-          <p className="text-xl text-slate-500 mb-8 leading-relaxed">
+          <p className="text-xl text-orange-500 mb-8 leading-relaxed">
             Cargá tus precios en dólares y tus clientes los ven en pesos argentinos automáticamente. Nunca más actualizás por inflación.
           </p>
           <div className="grid sm:grid-cols-2 gap-4 items-stretch max-w-xl mx-auto">
