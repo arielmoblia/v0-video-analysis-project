@@ -247,17 +247,6 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
             >
               Leer más →
             </a>
-            {/* Independiente de "Modelos/Templates": es un pago único aparte ($10, clonado real
-                por link), no una tile de la grilla de modelos. Antes solo se podía llegar acá
-                si además tenías comprado Modelos/Templates ($1/mes) — ya no depende de eso. */}
-            <div
-              onClick={() => { setActiveTab("plans"); setPlansTab("clonar") }}
-              className={`flex items-center px-3 py-2 rounded-lg text-sm cursor-pointer mb-0.5 mt-1 transition-colors font-medium ${
-                activeTab === "plans" && plansTab === "clonar" ? "bg-violet-500 text-white" : "bg-violet-100 text-violet-700 hover:bg-violet-200"
-              }`}
-            >
-              ✨ Clonar con IA
-            </div>
           </div>
 
           {activeCositas.length > 0 && (
