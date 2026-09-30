@@ -320,8 +320,9 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   const [customUrlError, setCustomUrlError] = useState("")
   const [submittingCustomUrl, setSubmittingCustomUrl] = useState(false)
   const [customThemePriceUSD, setCustomThemePriceUSD] = useState(10)
-  const customUrlPaypalMountedRef = useRef(false)
-  const customUrlPaypalButtonRef = useRef<HTMLDivElement>(null)
+  const [customUrlCardLoadingBrick, setCustomUrlCardLoadingBrick] = useState(false)
+  const customUrlCardBrickRef = useRef<HTMLDivElement>(null)
+  const customUrlCardBrickBuilt = useRef(false)
   const normalizedCustomUrlRef = useRef<string | null>(null)
 
   const toggleExpanded = (code: string) => {
@@ -446,39 +447,46 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
     }
   }
 
-  const handleCustomUrlPaymentApprove = async (normalized: string, paypalOrderId: string) => {
+  const handleCustomUrlCardSubmit = async (cardData: any) => {
+    const normalized = normalizedCustomUrlRef.current
+    if (!normalized) return
     setSubmittingCustomUrl(true)
     setCustomUrlError("")
     try {
+      const res = await fetch("/api/admin/theme-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          storeId,
+          url: normalized,
+          cardData,
+          amountARS: getPriceARS(customThemePriceUSD),
+          storeName,
+          subdomain,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setCustomUrlError(data.error || "No pudimos procesar el pago, probá con otra tarjeta")
+        return
+      }
       await fetch("/api/admin/features/purchase", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           storeId,
           features: ["theme_custom_url"],
-          paymentMethod: "paypal",
-          paypalOrderId,
+          paymentMethod: "mercadopago_card",
+          paymentId: data.custom_theme_request?.mp_payment_id,
         }),
       })
-
-      const res = await fetch("/api/admin/theme-request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ storeId, url: normalized, paypalOrderId, amountUsd: customThemePriceUSD }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setCustomUrlError(data.error || "El pago se acreditó pero no pudimos guardar el pedido, escribinos por soporte")
-        return
-      }
       setCustomThemeRequest(data.custom_theme_request)
       setCustomUrlDialogOpen(false)
       setCustomUrl("")
     } catch {
-      setCustomUrlError("El pago se acreditó pero hubo un error al guardar el pedido, escribinos por soporte")
+      setCustomUrlError("Error al procesar el pago, probá de nuevo")
     } finally {
       setSubmittingCustomUrl(false)
-      customUrlPaypalMountedRef.current = false
     }
   }
 
@@ -592,6 +600,11 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
         >
           Leer más →
         </a>
+        {customThemeRequest?.url && (
+          <p className="text-xs text-violet-800 mt-1 break-all">
+            Página que clonaste: <span className="font-medium">{customThemeRequest.url}</span>
+          </p>
+        )}
         <div className="mt-2">
           {customThemeRequest?.status === "pendiente" ? (
             <p className="text-xs text-violet-600 font-medium">Lo estamos armando…</p>
@@ -612,52 +625,55 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   )
 
   useEffect(() => {
-    if (!customUrlDialogOpen || !hasValidCustomUrl || !paypalLoaded) {
-      customUrlPaypalMountedRef.current = false
+    if (!customUrlDialogOpen || !hasValidCustomUrl) {
+      customUrlCardBrickBuilt.current = false
+      if (customUrlCardBrickRef.current) customUrlCardBrickRef.current.innerHTML = ""
       return
     }
-    if (customUrlPaypalMountedRef.current) return
+    if (customUrlCardBrickBuilt.current) return
 
-    // Espera a que la URL deje de cambiar antes de montar el botón. Si se monta en cada
-    // tecla (o en el "parpadeo" de limpiar+pegar), el SDK de PayPal se queda a mitad de
-    // un render() async justo cuando el contenedor se vuelve a limpiar, y tira
-    // "container removed from DOM". Con el debounce solo se monta una vez, ya estable.
+    // Espera a que la URL deje de cambiar antes de montar el Brick. Si se monta en cada
+    // tecla (o en el "parpadeo" de limpiar+pegar), el SDK de Mercado Pago se queda a
+    // mitad de un create() async justo cuando el contenedor se vuelve a limpiar.
     const timer = setTimeout(() => {
-      if (customUrlPaypalMountedRef.current || !customUrlPaypalButtonRef.current || !(window as any).paypal) return
-      customUrlPaypalMountedRef.current = true
-      customUrlPaypalButtonRef.current.innerHTML = ""
-      ;(window as any).paypal
-        .Buttons({
-          style: { layout: "vertical", color: "gold", shape: "rect", label: "paypal", height: 40 },
-          createOrder: (data: any, actions: any) => {
-            return actions.order.create({
-              purchase_units: [
-                {
-                  amount: {
-                    value: customThemePriceUSD.toFixed(2),
-                    currency_code: "USD",
-                  },
-                  description: `Modelo a medida tol.ar (por link) - Tienda: ${storeName || subdomain}`,
-                },
-              ],
-            })
+      if (customUrlCardBrickBuilt.current || !customUrlCardBrickRef.current) return
+      customUrlCardBrickBuilt.current = true
+      setCustomUrlCardLoadingBrick(true)
+
+      const loadMP = () => new Promise<void>((resolve) => {
+        if ((window as any).MercadoPago) { resolve(); return }
+        const s = document.createElement("script")
+        s.src = "https://sdk.mercadopago.com/js/v2"
+        s.onload = () => resolve()
+        document.head.appendChild(s)
+      })
+
+      loadMP().then(() => {
+        if (!customUrlCardBrickRef.current) return
+        const pubKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY as string
+        const mp = new (window as any).MercadoPago(pubKey, { locale: "es-AR" })
+        const bricks = mp.bricks()
+        setCustomUrlCardLoadingBrick(false)
+        bricks.create("cardPayment", "mp-custom-url-card-brick", {
+          initialization: {
+            amount: getPriceARS(customThemePriceUSD),
+            payer: { email: "" },
           },
-          onApprove: async (data: any, actions: any) => {
-            const order = await actions.order.capture()
-            const urlToSubmit = normalizedCustomUrlRef.current
-            if (!urlToSubmit) return
-            await handleCustomUrlPaymentApprove(urlToSubmit, order.id)
+          customization: {
+            visual: { style: { theme: "default" } },
+            paymentMethods: { minInstallments: 1, maxInstallments: 1 },
           },
-          onError: (err: any) => {
-            console.error("PayPal Error:", err)
-            setCustomUrlError("Error al procesar el pago, probá de nuevo")
+          callbacks: {
+            onReady: () => {},
+            onError: (err: any) => console.error("MP Brick error:", err),
+            onSubmit: (cardData: any) => handleCustomUrlCardSubmit(cardData),
           },
         })
-        .render(customUrlPaypalButtonRef.current)
+      })
     }, 400)
 
     return () => clearTimeout(timer)
-  }, [customUrlDialogOpen, hasValidCustomUrl, paypalLoaded, customThemePriceUSD, storeId, storeName, subdomain])
+  }, [customUrlDialogOpen, hasValidCustomUrl, customThemePriceUSD, storeId, storeName, subdomain])
 
   const startTrial = (feature: any) => {
     if (!feature.trial_days || feature.trial_days === 0) return
@@ -1656,7 +1672,9 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-orange-900 text-sm">{customCloneDesign.name}</p>
-                              <p className="text-xs text-orange-600 truncate">{customCloneDesign.description}</p>
+                              <p className="text-xs text-orange-600 truncate" title={customThemeRequest?.url}>
+                                {customThemeRequest?.url ? `Clonaste: ${customThemeRequest.url}` : customCloneDesign.description}
+                              </p>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
                               {customThemeRequest?.status === "pendiente" ? (
@@ -2048,7 +2066,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
           if (!open) {
             setCustomUrlError("")
             setCustomUrl("")
-            customUrlPaypalMountedRef.current = false
+            customUrlCardBrickBuilt.current = false
           }
         }}
       >
@@ -2091,9 +2109,9 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                   )}
                   <div className={submittingCustomUrl ? "hidden" : ""}>
                     {/* Este div nunca se desmonta mientras el popup está abierto: si se saca del DOM
-                        a mitad de un toggle de estado, el SDK de PayPal tira "container removed from DOM". */}
-                    <div ref={customUrlPaypalButtonRef} className="min-h-[40px]" />
-                    {!paypalLoaded && <p className="text-[11px] text-muted-foreground">Cargando botón de pago…</p>}
+                        a mitad de un toggle de estado, el SDK de Mercado Pago se queda a mitad de un create(). */}
+                    <div id="mp-custom-url-card-brick" ref={customUrlCardBrickRef} className="min-h-[40px]" />
+                    {customUrlCardLoadingBrick && <p className="text-[11px] text-muted-foreground">Cargando formulario de pago…</p>}
                   </div>
                 </div>
               </li>
