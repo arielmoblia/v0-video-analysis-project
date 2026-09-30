@@ -262,9 +262,14 @@ const LEER_MAS_URLS: Record<string, string> = {
   lupa: `${APP_URL}/plan-cositas/lupa`,
   dropshipping: `${APP_URL}/plan-cositas/dropshipping`,
   mayorista_minorista: `${APP_URL}/plan-cositas/mayorista-minorista`,
+  modelos_templates: `${APP_URL}/plan-cositas/modelos-templates`,
 }
 
-const getLeerMasUrl = (code: string) => LEER_MAS_URLS[code] || `${APP_URL}/cositas#${code}`
+const getLeerMasUrl = (code: string, subdomain?: string) => {
+  const base = LEER_MAS_URLS[code] || `${APP_URL}/cositas#${code}`
+  if (!LEER_MAS_URLS[code] || !subdomain) return base
+  return `${base}?tienda=${encodeURIComponent(subdomain)}`
+}
 
 export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialCustomThemeRequest, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts, autoSelectFeature }: PlansManagerProps) {
   const [internalActiveTab, setInternalActiveTab] = useState("cositas")
@@ -597,7 +602,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
         <p className="text-sm font-semibold text-violet-900">{customCloneDesign.name}</p>
         <p className="text-xs text-violet-700 mt-0.5">{customCloneDesign.description}</p>
         <a
-          href={getLeerMasUrl(customCloneDesign.id)}
+          href={getLeerMasUrl(customCloneDesign.id, subdomain)}
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
@@ -1082,7 +1087,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                   : "Activá esta función para empezar a usarla"}
               </p>
               <a
-                href={`${APP_URL}/plan-cositas/dolar-peso`}
+                href={getLeerMasUrl("dolar_peso", subdomain)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block mt-3 text-sm text-blue-600 hover:underline"
@@ -1517,7 +1522,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                     <span className="text-sm font-medium text-green-700">${priceARS.toLocaleString("es-AR")}/mes</span>
                                   )}
                                   <a
-                                    href={getLeerMasUrl(feature.code)}
+                                    href={getLeerMasUrl(feature.code, subdomain)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={(e) => e.stopPropagation()}
@@ -1721,7 +1726,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                   </button>
                                 </div>
                                 <a
-                                  href={getLeerMasUrl(feature.code)}
+                                  href={getLeerMasUrl(feature.code, subdomain)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
@@ -1761,7 +1766,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                               )}
                             </div>
                             <a
-                              href={getLeerMasUrl(customCloneDesign.id)}
+                              href={getLeerMasUrl(customCloneDesign.id, subdomain)}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}

@@ -3,6 +3,7 @@ import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import Link from "next/link"
 import { getBrand } from "@/lib/get-brand"
+import { getActivarHref } from "@/lib/get-activar-href"
 
 export const metadata: Metadata = {
   title: "Dólar / Peso — Precios en dólares, tus clientes ven pesos",
@@ -45,7 +46,9 @@ async function getDolarCotizaciones(): Promise<DolarCotizacion[]> {
   }
 }
 
-export default async function DolarPesoPage() {
+export default async function DolarPesoPage({ searchParams }: { searchParams: Promise<{ tienda?: string }> }) {
+  const { tienda } = await searchParams
+  const activarHref = getActivarHref(tienda, "dolar_peso")
   const brand = await getBrand()
   const cotizaciones = await getDolarCotizaciones()
   const dolarVenta = cotizaciones.find((c) => c.key === "Blue")?.precio ?? 1405
@@ -65,7 +68,7 @@ export default async function DolarPesoPage() {
             Cargá tus precios en dólares y tus clientes los ven en pesos argentinos automáticamente. Nunca más actualizás por inflación.
           </p>
           <div className="flex gap-3 justify-center flex-wrap">
-            <Link href="/plan-cositas" className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors">
+            <Link href={activarHref} className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors">
               Activar por $1 USD/mes
             </Link>
             <Link href="/plan-cositas" className="border border-slate-300 text-slate-700 px-8 py-3 rounded-lg font-medium hover:bg-slate-50 transition-colors">
@@ -189,7 +192,7 @@ export default async function DolarPesoPage() {
           <h2 className="text-3xl font-bold text-white mb-3">Olvidate de actualizar precios</h2>
           <p className="text-slate-400 mb-8">$1 USD por mes. Cancelás cuando querés.</p>
           <div className="flex gap-3 justify-center flex-wrap">
-            <Link href="/plan-cositas" className="bg-orange-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors">
+            <Link href={activarHref} className="bg-orange-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors">
               Activar ahora
             </Link>
             <Link href="/plan-cositas" className="bg-white text-black px-8 py-3 rounded-lg font-medium hover:bg-slate-100 transition-colors">

@@ -3,6 +3,7 @@ import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import Link from "next/link"
 import { getBrand } from "@/lib/get-brand"
+import { getActivarHref } from "@/lib/get-activar-href"
 
 export const metadata: Metadata = {
   title: "Modelos/Templates — Editá tu tienda en vivo, tocando lo que ves",
@@ -15,7 +16,9 @@ export const metadata: Metadata = {
   }
 }
 
-export default async function ModelosTemplatesPage() {
+export default async function ModelosTemplatesPage({ searchParams }: { searchParams: Promise<{ tienda?: string }> }) {
+  const { tienda } = await searchParams
+  const activarHref = getActivarHref(tienda, "modelos_templates")
   const brand = await getBrand()
   return (
     <div className="min-h-screen bg-white">
@@ -32,7 +35,7 @@ export default async function ModelosTemplatesPage() {
             Elegí el diseño de tu tienda y editalo en vivo, tocando directo sobre lo que ves. Sin editores aparte, sin paneles complicados.
           </p>
           <div className="flex gap-3 justify-center flex-wrap">
-            <Link href="/plan-cositas" className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors">
+            <Link href={activarHref} className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors">
               Activar por $1 USD/mes
             </Link>
             <Link href="/plan-cositas" className="border border-slate-300 text-slate-700 px-8 py-3 rounded-lg font-medium hover:bg-slate-50 transition-colors">
@@ -156,7 +159,7 @@ export default async function ModelosTemplatesPage() {
           <h2 className="text-3xl font-bold text-white mb-3">Hacé que tu tienda se vea distinta</h2>
           <p className="text-slate-400 mb-8">$1 USD por mes. Cancelás cuando querés.</p>
           <div className="flex gap-3 justify-center flex-wrap">
-            <Link href="/plan-cositas" className="bg-orange-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors">
+            <Link href={activarHref} className="bg-orange-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors">
               Activar ahora
             </Link>
             <Link href="/plan-cositas" className="bg-white text-black px-8 py-3 rounded-lg font-medium hover:bg-slate-100 transition-colors">
