@@ -280,7 +280,7 @@ export default function PlanCositasPage({ brand = "tol" }: Props) {
                                   Leer más →
                                 </a>
                               )}
-                              {cosita.code === "nuevo_propio" && (
+                              {cosita.code === "theme_custom_url" && (
                                 <a
                                   href="/plan-cositas/portada-especial"
                                   target="_blank"
