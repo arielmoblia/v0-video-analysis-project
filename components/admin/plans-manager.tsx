@@ -2091,7 +2091,9 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
               <p className="text-xs text-muted-foreground text-center">Guardando tarjeta...</p>
             )}
             {trialCardError && (
-              <p className="text-xs text-red-600 text-center">{trialCardError}</p>
+              <div className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 text-center">
+                {trialCardError}
+              </div>
             )}
             <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
               <Lock className="w-3 h-3" /> Tu tarjeta la guarda Mercado Pago, no nosotros

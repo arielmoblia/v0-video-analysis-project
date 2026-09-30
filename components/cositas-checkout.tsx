@@ -54,7 +54,7 @@ export function CositasCheckout({ selectedCositas, total, hasPercentItem, storeI
   const initBrick = async (sid: string) => {
     if (brickBuilt.current || !brickRef.current) return
     setLoadingBrick(true)
-    const pubKey = "APP_USR-aa9e2733-fd0b-49d8-b0b9-7abf369a9aa7"
+    const pubKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY as string
 
     const loadMP = () => new Promise<void>(resolve => {
       if ((window as any).MercadoPago) { resolve(); return }

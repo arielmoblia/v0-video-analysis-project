@@ -88,10 +88,11 @@ export async function POST(request: NextRequest) {
 
     if (!mpRes.ok || !mpData.id) {
       console.error("[MP create-subscription] Error creando preapproval:", mpData)
-      return NextResponse.json(
-        { error: mpData.message || mpData.error || "Mercado Pago rechazó la tarjeta" },
-        { status: 400 }
-      )
+      const rawMessage = mpData.message || mpData.error || ""
+      const friendlyMessage = rawMessage.toLowerCase().includes("resource not found")
+        ? "Mercado Pago no pudo procesar esta tarjeta para la suscripción. Probá con otra tarjeta o contactanos si el problema sigue."
+        : rawMessage || "Mercado Pago rechazó la tarjeta"
+      return NextResponse.json({ error: friendlyMessage }, { status: 400 })
     }
 
     const trialEndsAt = new Date()
