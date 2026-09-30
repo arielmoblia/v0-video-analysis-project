@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
     // más, o no tiene nada rescatable, el pedido queda "pendiente" igual que antes
     // (fallback manual) — nunca rompe el pago ya aprobado.
     const bannerUpdate: Record<string, string> = {}
+    let clonedTemplate = false
     try {
       const controller = new AbortController()
       const timeout = setTimeout(() => controller.abort(), 15000)
@@ -109,13 +110,25 @@ export async function POST(request: NextRequest) {
           if (scraped.bannerSubtitle) bannerUpdate.banner_subtitle = scraped.bannerSubtitle
           custom_theme_request.status = "listo"
           custom_theme_request.applied_at = new Date().toISOString()
+          clonedTemplate = true
         }
       }
     } catch (e) {
       console.error("[theme-request] Error clonando portada automáticamente:", e)
     }
 
-    const nextPlanFeatures = { ...(currentStore?.plan_features || {}), custom_theme_request }
+    // El "modelo" (active_theme) que la tienda tenía antes de comprar esto no tiene nada
+    // que ver con la página que el cliente quiere clonar — puede ser "artesano" o "bold",
+    // temples con título gigante en bloque que pisan cualquier foto/texto que le pongamos.
+    // Al clonar de verdad, pasamos al temple "basico" (overlay clásico, título/subtítulo
+    // de tamaño normal) para que el resultado se parezca al sitio de origen en vez de
+    // quedar con el estilo tipográfico de lo que hubiera antes.
+    const planFeaturesUpdate: Record<string, any> = { ...(currentStore?.plan_features || {}), custom_theme_request }
+    if (clonedTemplate) {
+      planFeaturesUpdate.active_theme = "basico"
+    }
+
+    const nextPlanFeatures = planFeaturesUpdate
 
     const { error } = await supabase
       .from("stores")
