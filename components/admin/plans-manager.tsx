@@ -1600,8 +1600,8 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                         </div>
                       )}
 
-                      {/* BLOQUE NARANJA: disponibles no compradas */}
-                      {availableFeatures.filter(f => f.is_active && !purchasedFeatures.includes(f.code)).length > 0 && (
+                      {/* BLOQUE NARANJA: disponibles no compradas (siempre tiene al menos "Portada especial", fila manual) */}
+                      {(
                         <div className="rounded-xl overflow-hidden border-2 border-orange-300">
                           <div className="bg-orange-100 px-4 py-2.5 flex items-center gap-2 border-b border-orange-200">
                             <div className="w-2 h-2 rounded-full bg-orange-500"></div>
@@ -1646,16 +1646,67 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                               </div>
                             )
                           })}
+
+                          {/* Fila manual: "Portada especial" no es una cosita de la tabla store_features
+                              (es un pago único aparte, feature "theme_custom_url"), pero el cliente la
+                              espera acá mezclada con el resto de las cositas, no escondida en el menú. */}
+                          <div className="flex items-center gap-3 px-4 py-3 bg-orange-50">
+                            <div className="w-9 h-9 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0">
+                              <Sparkles className="h-4 w-4 text-violet-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-orange-900 text-sm">{customCloneDesign.name}</p>
+                              <p className="text-xs text-orange-600 truncate">{customCloneDesign.description}</p>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {customThemeRequest?.status === "pendiente" ? (
+                                <span className="text-xs text-violet-600 font-medium whitespace-nowrap">Lo estamos armando…</span>
+                              ) : customThemeRequest?.status === "listo" ? (
+                                <span className="text-xs text-green-600 font-medium whitespace-nowrap">¡Listo!</span>
+                              ) : (
+                                <button
+                                  onClick={() => setCustomUrlDialogOpen(true)}
+                                  className="text-xs bg-violet-500 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-violet-600 whitespace-nowrap"
+                                >
+                                  Pedir · USD {customThemePriceUSD}
+                                </button>
+                              )}
+                            </div>
+                            <a
+                              href={getLeerMasUrl(customCloneDesign.id)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-xs text-orange-600 hover:text-orange-700 hover:underline whitespace-nowrap flex-shrink-0"
+                            >
+                              Leer más →
+                            </a>
+                          </div>
                         </div>
                       )}
 
-                      {/* BLOQUE GRIS: proximamente */}
-                      {availableFeatures.filter(f => !f.is_active).length > 0 && (
+                      {/* BLOQUE GRIS: proximamente (siempre tiene al menos "Clonar con IA", fila manual) */}
+                      {(
                         <div className="rounded-xl overflow-hidden border border-slate-200 opacity-60">
                           <div className="bg-slate-100 px-4 py-2.5 flex items-center gap-2 border-b border-slate-200">
                             <div className="w-2 h-2 rounded-full bg-slate-400"></div>
                             <span className="text-sm font-medium text-slate-500">Próximamente</span>
                           </div>
+
+                          {/* Fila manual: "Clonar con IA" (tienda completa, catálogo incluido) todavía no
+                              tiene precio ni mecánica definida — distinto de "Portada especial" (arriba),
+                              que solo clona el diseño de la portada. Va acá hasta que se termine de armar. */}
+                          <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 cursor-not-allowed">
+                            <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                              <Copy className="h-4 w-4 text-slate-400" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-slate-400 text-sm">Clonar con IA</p>
+                              <p className="text-xs text-slate-400 truncate">Clonamos tu tienda web completa (catálogo y productos incluidos), no solo la portada.</p>
+                            </div>
+                            <span className="text-xs text-slate-400 border border-slate-200 px-3 py-1 rounded-full flex-shrink-0">Pronto</span>
+                          </div>
+
                           {availableFeatures.filter(f => !f.is_active).map(feature => {
                             const IconComponent = ICON_MAP[feature.icon] || Package
                             return (
