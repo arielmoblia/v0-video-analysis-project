@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         transaction_amount: amount,
         token: cardData.token,
-        description: `Portada especial tol.ar - Tienda: ${storeName || subdomain}`,
+        description: `Diseño Customizado de Portada tol.ar - Tienda: ${storeName || subdomain}`,
         installments: cardData.installments || 1,
         payment_method_id: cardData.payment_method_id,
         issuer_id: cardData.issuer_id,
@@ -98,9 +98,9 @@ export async function POST(request: NextRequest) {
       await resend.emails.send({
         from: "TOL.AR <ventas@tiendaonline.com.ar>",
         to: "soporte@tiendaonline.com.ar",
-        subject: `[Portada especial] ${storeName || subdomain} pidió clonar una página`,
+        subject: `[Diseño Customizado de Portada] ${storeName || subdomain} pidió clonar una página`,
         html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-          <h2 style="color:#96305a">Nuevo pedido de Portada especial</h2>
+          <h2 style="color:#96305a">Nuevo pedido de Diseño Customizado de Portada</h2>
           <p><strong>Tienda:</strong> ${storeName || subdomain} (${subdomain}.tol.ar)</p>
           <p><strong>Página que quiere clonar:</strong> <a href="${parsed.toString()}">${parsed.toString()}</a></p>
           <p><strong>Pagó:</strong> $${amount.toLocaleString("es-AR")} ARS</p>

@@ -257,7 +257,7 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              Portada especial
+              Diseño Customizado de Portada
             </div>
           </div>
 

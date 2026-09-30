@@ -145,7 +145,7 @@ export default async function GaleriaImagenesPage({ searchParams }: { searchPara
           <p className="text-slate-400 text-sm mb-4">Otras cositas que te pueden interesar</p>
           <div className="flex gap-3 flex-wrap">
             <Link href="/plan-cositas/modelos-templates" className="text-sm text-slate-600 hover:text-black border border-slate-200 px-4 py-2 rounded-lg hover:border-slate-400 transition-colors">Modelos/Templates →</Link>
-            <Link href="/plan-cositas/portada-especial" className="text-sm text-slate-600 hover:text-black border border-slate-200 px-4 py-2 rounded-lg hover:border-slate-400 transition-colors">Portada especial →</Link>
+            <Link href="/plan-cositas/portada-especial" className="text-sm text-slate-600 hover:text-black border border-slate-200 px-4 py-2 rounded-lg hover:border-slate-400 transition-colors">Diseño Customizado de Portada →</Link>
             <Link href="/plan-cositas" className="text-sm text-slate-600 hover:text-black border border-slate-200 px-4 py-2 rounded-lg hover:border-slate-400 transition-colors">Ver todas las cositas →</Link>
           </div>
         </div>

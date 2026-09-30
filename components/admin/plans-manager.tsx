@@ -159,7 +159,7 @@ const pageDesigns = [
 // especial", siempre visible en el menú.
 const customCloneDesign = {
   id: "nuevo_propio",
-  name: "Portada especial",
+  name: "Diseño Customizado de Portada",
   subtitle: "Copiá el estilo de otra tienda",
   description: "Pegá el link de una tienda que te gusta y armamos la portada de tu tienda con ese estilo, usando tus productos y fotos reales.",
 }
@@ -2110,7 +2110,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-violet-500" />
-                Portada especial
+                Diseño Customizado de Portada
               </CardTitle>
               <CardDescription>
                 Pago único aparte de Modelos/Templates. Pegá el link de una tienda que te gusta y armamos la
@@ -2165,7 +2165,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       >
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Portada especial: pedila a partir de un link</DialogTitle>
+            <DialogTitle>Diseño Customizado de Portada: pedila a partir de un link</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <ol className="space-y-3 text-sm">

@@ -6,11 +6,11 @@ import { getBrand } from "@/lib/get-brand"
 import { getActivarHref } from "@/lib/get-activar-href"
 
 export const metadata: Metadata = {
-  title: "Portada especial — Copiá el estilo de otra tienda que te guste",
+  title: "Diseño Customizado de Portada — Copiá el estilo de otra tienda que te guste",
   description: "Pegá el link de una tienda que te guste y armamos la portada de tu tienda con ese estilo, usando tus productos y fotos reales.",
-  keywords: ["clonar diseño tienda", "portada personalizada tienda online", "copiar estilo tienda argentina", "portada especial tol.ar"],
+  keywords: ["clonar diseño tienda", "portada personalizada tienda online", "copiar estilo tienda argentina", "diseño customizado de portada tol.ar"],
   openGraph: {
-    title: "Portada especial — Copiá el estilo de otra tienda que te guste",
+    title: "Diseño Customizado de Portada — Copiá el estilo de otra tienda que te guste",
     description: "Pegá el link de una tienda que te guste y armamos la portada de tu tienda con ese estilo, usando tus productos y fotos reales.",
     url: "https://tol.ar/plan-cositas/portada-especial",
   }
@@ -30,7 +30,7 @@ export default async function PortadaEspecialPage({ searchParams }: { searchPara
           <div className="inline-flex items-center gap-2 bg-slate-100 text-slate-500 px-4 py-1.5 rounded-full text-sm mb-6">
             Cositas tol.ar
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 text-slate-900">Portada especial</h1>
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 text-slate-900">Diseño Customizado de Portada</h1>
           <p className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-2">Resumen</p>
           <p className="text-xl text-orange-500 mb-8 leading-relaxed">
             Pegá el link de una tienda que te guste y armamos la portada de tu tienda con ese estilo, usando tus productos y fotos reales.
@@ -62,7 +62,7 @@ export default async function PortadaEspecialPage({ searchParams }: { searchPara
             A veces no hace falta elegir entre nuestros modelos: ya viste una tienda (tuya de antes, o de otro lado) con la que querés que la tuya se parezca. Ese trabajo de diseño desde cero lleva tiempo y no siempre sale igual.
           </p>
           <p className="text-lg text-slate-600 leading-relaxed">
-            Con Portada especial, armamos nosotros esa portada a mano, con el estilo de la página que nos mandes, pero con tus productos y fotos reales.
+            Con Diseño Customizado de Portada, armamos nosotros esa portada a mano, con el estilo de la página que nos mandes, pero con tus productos y fotos reales.
           </p>
         </div>
       </section>
@@ -76,7 +76,7 @@ export default async function PortadaEspecialPage({ searchParams }: { searchPara
               { n: "1", title: "Pegás el link de la página que te gusta", desc: "Puede ser tu tienda vieja en otra plataforma, o cualquier página que te guste como referencia de diseño." },
               { n: "2", title: "Pagás una sola vez ($10 USD)", desc: "Sin mensualidad. Es un trabajo de diseño puntual, no una suscripción." },
               { n: "3", title: "La armamos a mano", desc: "Tomamos el estilo (colores, banner, orden de secciones) de esa referencia y armamos tu portada con tus productos y fotos reales." },
-              { n: "4", title: "Te avisamos cuando está lista", desc: "Vas a verla directo en el panel de tu tienda, en la sección \"Portada especial\"." },
+              { n: "4", title: "Te avisamos cuando está lista", desc: "Vas a verla directo en el panel de tu tienda, en la sección \"Diseño Customizado de Portada\"." },
             ].map(step => (
               <div key={step.n} className="flex gap-5 items-start">
                 <div className="w-10 h-10 min-w-10 rounded-full bg-black text-white flex items-center justify-center font-semibold text-sm">
