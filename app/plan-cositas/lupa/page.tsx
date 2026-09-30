@@ -29,32 +29,29 @@ export default async function LupaPage() {
             Cositas tol.ar
           </div>
           <h1 className="text-5xl md:text-6xl font-bold mb-6 text-slate-900">Lupa</h1>
-          <p className="text-xl text-slate-500 mb-8 leading-relaxed">
+          <p className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-2">Resumen</p>
+          <p className="text-xl text-orange-500 mb-8 leading-relaxed">
             Grabá y reproducí exactamente cómo navegan tus clientes. Descubrí por qué entran y no compran.
           </p>
-          <div className="flex gap-3 justify-center flex-wrap">
-            <Link href="/plan-cositas" className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors">
-              Probar 7 días gratis
-            </Link>
-            <Link href="/plan-cositas" className="border border-slate-300 text-slate-700 px-8 py-3 rounded-lg font-medium hover:bg-slate-50 transition-colors">
-              Ver todos los planes
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* VIDEO */}
-      <section className="py-16">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
-            <video
-              src="/videos/lupa-demo.webm"
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="w-full"
-            />
+          <div className="grid sm:grid-cols-5 gap-4 items-center max-w-3xl mx-auto">
+            <div className="sm:col-span-3 aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+              <video
+                src="/videos/lupa-demo.webm"
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="sm:col-span-2 flex flex-col gap-3 justify-center">
+              <Link href="/plan-cositas" className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors text-center">
+                Probar 7 días gratis
+              </Link>
+              <Link href="/plan-cositas" className="border border-slate-300 text-slate-700 px-8 py-3 rounded-lg font-medium hover:bg-slate-50 transition-colors text-center">
+                Ver todos los planes
+              </Link>
+            </div>
           </div>
         </div>
       </section>

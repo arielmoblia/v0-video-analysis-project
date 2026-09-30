@@ -253,6 +253,11 @@ const FEATURE_CONFIG: { [key: string]: { configTitle: string; configDescription:
     configDescription:
       "Poné la dirección de tu otra tienda (la mayorista o la minorista) y va a aparecer un botón en el encabezado de tu tienda que lleva directo a ella.",
   },
+  multi_images: {
+    configTitle: "Configurar Galería de Imágenes",
+    configDescription:
+      "Subí hasta 5 fotos por producto. Tus clientes las ven en una galería deslizable, con el producto desde todos los ángulos.",
+  },
 }
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://tol.ar"
@@ -264,6 +269,7 @@ const LEER_MAS_URLS: Record<string, string> = {
   mayorista_minorista: `${APP_URL}/plan-cositas/mayorista-minorista`,
   modelos_templates: `${APP_URL}/plan-cositas/modelos-templates`,
   nuevo_propio: `${APP_URL}/plan-cositas/portada-especial`,
+  multi_images: `${APP_URL}/plan-cositas/galeria-imagenes`,
 }
 
 const getLeerMasUrl = (code: string, subdomain?: string) => {
