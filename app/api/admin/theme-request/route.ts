@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: payment.status_detail || "Pago rechazado. Probá con otra tarjeta." }, { status: 400 })
     }
 
-    const custom_theme_request = {
+    const custom_theme_request: Record<string, any> = {
       url: parsed.toString(),
       status: "pendiente",
       requested_at: new Date().toISOString(),
@@ -81,16 +81,48 @@ export async function POST(request: NextRequest) {
       amount_ars: amount,
     }
 
+    // Clonado automático: le pedimos a scraping.tol.ar la foto de portada + título +
+    // subtítulo de la página de origen y los aplicamos directo a la tienda del cliente,
+    // sin que nadie del equipo la arme a mano. Si el sitio de origen bloquea, tarda de
+    // más, o no tiene nada rescatable, el pedido queda "pendiente" igual que antes
+    // (fallback manual) — nunca rompe el pago ya aprobado.
+    const bannerUpdate: Record<string, string> = {}
+    try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 15000)
+      const scrapeRes = await fetch("https://scraping.tol.ar/api/scrape-homepage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: parsed.toString() }),
+        signal: controller.signal,
+      })
+      clearTimeout(timeout)
+      if (scrapeRes.ok) {
+        const scraped = await scrapeRes.json()
+        if (scraped.success && (scraped.bannerImageUrl || scraped.bannerTitle)) {
+          if (scraped.bannerImageUrl) bannerUpdate.banner_image = scraped.bannerImageUrl
+          if (scraped.bannerTitle) bannerUpdate.banner_title = scraped.bannerTitle
+          if (scraped.bannerSubtitle) bannerUpdate.banner_subtitle = scraped.bannerSubtitle
+          custom_theme_request.status = "listo"
+          custom_theme_request.applied_at = new Date().toISOString()
+        }
+      }
+    } catch (e) {
+      console.error("[theme-request] Error clonando portada automáticamente:", e)
+    }
+
     const nextPlanFeatures = { ...(currentStore?.plan_features || {}), custom_theme_request }
 
     const { error } = await supabase
       .from("stores")
-      .update({ plan_features: nextPlanFeatures })
+      .update({ plan_features: nextPlanFeatures, ...bannerUpdate })
       .eq("id", storeId)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    const autoApplied = custom_theme_request.status === "listo"
 
     try {
       const { Resend } = await import("resend")
@@ -104,6 +136,7 @@ export async function POST(request: NextRequest) {
           <p><strong>Tienda:</strong> ${storeName || subdomain} (${subdomain}.tol.ar)</p>
           <p><strong>Página que quiere clonar:</strong> <a href="${parsed.toString()}">${parsed.toString()}</a></p>
           <p><strong>Pagó:</strong> $${amount.toLocaleString("es-AR")} ARS</p>
+          <p><strong>Estado:</strong> ${autoApplied ? "Clonada y aplicada automático ✅ (no hace falta armarla a mano)" : "No se pudo clonar sola, hay que armarla a mano"}</p>
           <p><a href="https://${subdomain}.tol.ar/admin?tab=planes">Ver en el admin de la tienda</a></p>
         </div>`,
       })

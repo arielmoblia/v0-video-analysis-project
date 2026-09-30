@@ -2190,8 +2190,9 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                   <span className="font-semibold text-violet-700">2)</span>
                   <span>
                     Aboná los <span className="font-semibold">USD {customThemePriceUSD}</span> (~$
-                    {Math.round(customThemePriceUSD * exchangeRate).toLocaleString("es-AR")} ARS), pago único. Se
-                    cobra ahora y lo armamos en los próximos días.
+                    {Math.round(customThemePriceUSD * exchangeRate).toLocaleString("es-AR")} ARS), pago único. Al
+                    aprobarse el pago, una IA clona la portada sola y la deja lista al toque (si no puede, la
+                    armamos nosotros en los próximos días).
                   </span>
                 </div>
                 <div className={`rounded-lg border border-violet-200 bg-violet-50 p-3 space-y-2 ${normalizedCustomUrl ? "" : "hidden"}`}>
