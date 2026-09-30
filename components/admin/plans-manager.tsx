@@ -603,7 +603,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
               onClick={() => setCustomUrlDialogOpen(true)}
               className="text-xs px-3 py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
             >
-              Pedir portada especial · USD {customThemePriceUSD}
+              Comprar
             </button>
           )}
         </div>
@@ -1668,7 +1668,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                   onClick={() => setCustomUrlDialogOpen(true)}
                                   className="text-xs bg-violet-500 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-violet-600 whitespace-nowrap"
                                 >
-                                  Pedir · USD {customThemePriceUSD}
+                                  Comprar
                                 </button>
                               )}
                             </div>
@@ -2057,21 +2057,22 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
             <DialogTitle>Portada especial: pedila a partir de un link</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Input
-              placeholder="xxxxxx.com"
-              value={customUrl}
-              onChange={(e) => {
-                setCustomUrl(e.target.value)
-                setCustomUrlError("")
-              }}
-              disabled={submittingCustomUrl}
-            />
-            {customUrlError && <p className="text-xs text-red-600">{customUrlError}</p>}
-
             <ol className="space-y-3 text-sm">
-              <li className="flex gap-2">
-                <span className="font-semibold text-violet-700">1)</span>
-                <span>Pegá el link de la página que te guste</span>
+              <li className="space-y-2">
+                <div className="flex gap-2">
+                  <span className="font-semibold text-violet-700">1)</span>
+                  <span>Pegá el link de la página que te guste</span>
+                </div>
+                <Input
+                  placeholder="xxxxxx.com"
+                  value={customUrl}
+                  onChange={(e) => {
+                    setCustomUrl(e.target.value)
+                    setCustomUrlError("")
+                  }}
+                  disabled={submittingCustomUrl}
+                />
+                {customUrlError && <p className="text-xs text-red-600">{customUrlError}</p>}
               </li>
               <li className="space-y-2">
                 <div className="flex gap-2">
