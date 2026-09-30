@@ -61,11 +61,12 @@ export function AdminLogin({ store, subdomain }: AdminLoginProps) {
           <CardDescription>Panel de Administración</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} action="#" className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Usuario</Label>
               <Input
                 id="username"
+                name="username"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -77,6 +78,7 @@ export function AdminLogin({ store, subdomain }: AdminLoginProps) {
               <Label htmlFor="password">Contraseña</Label>
               <Input
                 id="password"
+                name="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
