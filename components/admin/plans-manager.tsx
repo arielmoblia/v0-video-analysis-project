@@ -263,6 +263,7 @@ const LEER_MAS_URLS: Record<string, string> = {
   dropshipping: `${APP_URL}/plan-cositas/dropshipping`,
   mayorista_minorista: `${APP_URL}/plan-cositas/mayorista-minorista`,
   modelos_templates: `${APP_URL}/plan-cositas/modelos-templates`,
+  nuevo_propio: `${APP_URL}/plan-cositas/portada-especial`,
 }
 
 const getLeerMasUrl = (code: string, subdomain?: string) => {
@@ -383,6 +384,17 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   // cosita sola y lleva a la caja de pago, sin que haya que buscarla a mano.
   useEffect(() => {
     if (!autoSelectFeature || loading || autoSelectHandled.current) return
+    // "Portada especial" no es una cosita de la tabla (ver comentario en fetchFeatures),
+    // así que no está en availableFeatures: abre directo el diálogo de la URL a clonar.
+    if (autoSelectFeature === "nuevo_propio") {
+      autoSelectHandled.current = true
+      setCustomUrlDialogOpen(true)
+      setTimeout(() => {
+        const el = document.getElementById("feature-nuevo_propio")
+        el?.scrollIntoView({ behavior: "smooth", block: "center" })
+      }, 300)
+      return
+    }
     const feature = availableFeatures.find((f) => f.code === autoSelectFeature)
     if (!feature) return
     autoSelectHandled.current = true
@@ -1741,7 +1753,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                           {/* Fila manual: "Portada especial" no es una cosita de la tabla store_features
                               (es un pago único aparte, feature "theme_custom_url"), pero el cliente la
                               espera acá mezclada con el resto de las cositas, no escondida en el menú. */}
-                          <div className="flex items-center gap-3 px-4 py-3 bg-orange-50">
+                          <div id="feature-nuevo_propio" className="flex items-center gap-3 px-4 py-3 bg-orange-50">
                             <div className="w-9 h-9 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0">
                               <Sparkles className="h-4 w-4 text-violet-600" />
                             </div>
