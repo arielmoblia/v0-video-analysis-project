@@ -53,6 +53,7 @@ export default async function DolarPesoPage({ searchParams }: { searchParams: Pr
   const cotizaciones = await getDolarCotizaciones()
   const dolarVenta = cotizaciones.find((c) => c.key === "Blue")?.precio ?? 1405
   const pesosDemo = (dolarVenta * 10).toLocaleString("es-AR")
+  const precioMensualArs = dolarVenta.toLocaleString("es-AR")
   return (
     <div className="min-h-screen bg-white">
       <Header brand={brand} />
@@ -64,7 +65,7 @@ export default async function DolarPesoPage({ searchParams }: { searchParams: Pr
             Cositas tol.ar
           </div>
           <h1 className="text-5xl md:text-6xl font-bold mb-6 text-slate-900">Dólar / Peso</h1>
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">Resumen</p>
+          <p className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-2">Resumen</p>
           <p className="text-xl text-slate-500 mb-8 leading-relaxed">
             Cargá tus precios en dólares y tus clientes los ven en pesos argentinos automáticamente. Nunca más actualizás por inflación.
           </p>
@@ -77,7 +78,7 @@ export default async function DolarPesoPage({ searchParams }: { searchParams: Pr
             </div>
             <div className="flex flex-col gap-3 justify-center">
               <Link href={activarHref} className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors text-center">
-                Activar por $1 USD/mes
+                Activar por ${precioMensualArs}/mes
               </Link>
               <Link href="/plan-cositas" className="border border-slate-300 text-slate-700 px-8 py-3 rounded-lg font-medium hover:bg-slate-50 transition-colors text-center">
                 Ver todas las cositas
