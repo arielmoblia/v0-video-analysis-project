@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     // (fallback manual) — nunca rompe el pago ya aprobado.
     const bannerUpdate: Record<string, string> = {}
     let clonedTemplate = false
-    let clonedCarousels: Array<{ id: string; type: string; title?: string; phrases?: string[] }> | null = null
+    let clonedCarousels: Array<{ id: string; type: string; title?: string; phrases?: string[]; ctaText?: string; ctaKind?: string }> | null = null
     try {
       const controller = new AbortController()
       const timeout = setTimeout(() => controller.abort(), 15000)
@@ -117,18 +117,23 @@ export async function POST(request: NextRequest) {
           clonedTemplate = true
         } else if (scraped.success && Array.isArray(scraped.carousels) && scraped.carousels.length > 0) {
           // El sitio de referencia no tiene banner clásico, arranca directo con
-          // carruseles (caso real: pinkonlineoficial, con 2 de productos + 1 franja
-          // de texto). En vez de dejar el pedido pendiente sin nada, armamos esos
-          // mismos carruseles acá: con LOS PRODUCTOS REALES de esta tienda (nunca
-          // los del sitio ajeno) y el texto real de la franja (nunca inventado).
+          // carruseles (caso real: pinkonlineoficial, con 3 de productos, 1 franja
+          // de texto y bloques CTA tipo "seguinos en WhatsApp/Instagram"). En vez de
+          // dejar el pedido pendiente sin nada, armamos esos mismos bloques acá: con
+          // LOS PRODUCTOS REALES de esta tienda (nunca los del sitio ajeno), el texto
+          // real de la franja (nunca inventado), y en los CTA el link de contacto
+          // real DE ESTA TIENDA (no el del sitio clonado — eso lo resuelve el
+          // render con store.social_whatsapp/social_instagram).
           custom_theme_request.status = "listo"
           custom_theme_request.applied_at = new Date().toISOString()
           custom_theme_request.carousels_only = true
           clonedCarousels = scraped.carousels.map((c: any, i: number) => ({
             id: `cloned_${Date.now()}_${i}`,
-            type: c.type === "text" ? "text" : "products",
+            type: c.type === "cta" ? "cta" : c.type === "text" ? "text" : "products",
             ...(c.title ? { title: String(c.title).slice(0, 60) } : {}),
             ...(Array.isArray(c.phrases) ? { phrases: c.phrases.slice(0, 6) } : {}),
+            ...(c.type === "cta" && c.ctaText ? { ctaText: String(c.ctaText).slice(0, 250) } : {}),
+            ...(c.type === "cta" && (c.ctaKind === "whatsapp" || c.ctaKind === "instagram") ? { ctaKind: c.ctaKind } : {}),
           }))
         }
       }

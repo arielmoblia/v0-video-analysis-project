@@ -9,9 +9,11 @@ import type { Product } from "@/lib/store-context"
 
 export interface CarouselBlock {
   id: string
-  type: "products" | "text"
+  type: "products" | "text" | "cta"
   title?: string
   phrases?: string[]
+  ctaText?: string
+  ctaKind?: "whatsapp" | "instagram"
 }
 
 interface StoreCarouselsProps {
@@ -21,14 +23,19 @@ interface StoreCarouselsProps {
   subdomain: string
   exchangeRate: number
   country?: string | null
+  whatsapp?: string | null
+  instagram?: string | null
 }
 
 // Bloque de carruseles (feature vendible "carousels" + fallback del clonado de
 // portada cuando el sitio de referencia no tiene banner clásico sino carruseles
 // en su home, ej. pinkonlineoficial). El carrusel de productos siempre muestra
 // LOS PRODUCTOS REALES de esta tienda (nunca los del sitio ajeno); el de texto
-// muestra las frases reales que se encontraron al clonar, nunca inventadas.
-export function StoreCarousels({ carousels, products, featuredProducts, subdomain, exchangeRate, country }: StoreCarouselsProps) {
+// muestra las frases reales que se encontraron al clonar, nunca inventadas; el
+// bloque "cta" muestra el texto real encontrado pero SIEMPRE con el whatsapp/
+// instagram de ESTA tienda (nunca el del sitio clonado) — si esta tienda no
+// cargó ninguno, se muestra el texto sin link en vez de inventar un contacto.
+export function StoreCarousels({ carousels, products, featuredProducts, subdomain, exchangeRate, country, whatsapp, instagram }: StoreCarouselsProps) {
   if (!carousels || carousels.length === 0) return null
 
   return (
@@ -38,6 +45,16 @@ export function StoreCarousels({ carousels, products, featuredProducts, subdomai
           const phrases = block.phrases?.filter(Boolean)
           if (!phrases || phrases.length === 0) return null
           return <TextCarousel key={block.id} phrases={phrases} />
+        }
+        if (block.type === "cta") {
+          if (!block.ctaText) return null
+          const linkUrl =
+            block.ctaKind === "whatsapp" && whatsapp
+              ? `https://wa.me/${whatsapp.replace(/\D/g, "")}`
+              : block.ctaKind === "instagram" && instagram
+                ? instagram
+                : null
+          return <CtaBanner key={block.id} text={block.ctaText} linkUrl={linkUrl} />
         }
         const items = featuredProducts.length > 0 ? featuredProducts : products
         if (items.length === 0) return null
@@ -53,6 +70,23 @@ export function StoreCarousels({ carousels, products, featuredProducts, subdomai
         )
       })}
     </>
+  )
+}
+
+function CtaBanner({ text, linkUrl }: { text: string; linkUrl: string | null }) {
+  const content = <p className="text-sm md:text-base text-center text-neutral-700 px-6">{text}</p>
+  return (
+    <section className="py-8 bg-neutral-50">
+      <div className="container mx-auto flex justify-center">
+        {linkUrl ? (
+          <a href={linkUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
+            {content}
+          </a>
+        ) : (
+          content
+        )}
+      </div>
+    </section>
   )
 }
 

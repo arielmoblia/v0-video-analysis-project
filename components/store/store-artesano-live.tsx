@@ -130,6 +130,8 @@ export function StoreArtesanoLive({
           subdomain={subdomain}
           exchangeRate={exchangeRate}
           country={store.country}
+          whatsapp={store.social_whatsapp}
+          instagram={store.social_instagram}
         />
 
         {featuredProducts.length > 0 && (
