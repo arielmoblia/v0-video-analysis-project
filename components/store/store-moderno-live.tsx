@@ -10,6 +10,7 @@ import { ProductGridModern } from "@/components/store/product-grid-modern"
 import { StoreCarousels } from "@/components/store/store-carousels"
 import { StoreFooter } from "@/components/store/store-footer"
 import { EditableText, useStorePageContent } from "@/components/editable-text"
+import type { StorePage } from "@/lib/services/store-pages"
 
 interface StoreModernoLiveProps {
   store: Store
@@ -21,6 +22,7 @@ interface StoreModernoLiveProps {
   exchangeRate: number
   isOwner: boolean
   initialCategoryImages: Record<string, string>
+  storePages?: StorePage[]
 }
 
 // Temple "Moderno" para tiendas reales: mismo diseño del preview, pero los
@@ -37,6 +39,7 @@ export function StoreModernoLive({
   exchangeRate,
   isOwner,
   initialCategoryImages,
+  storePages = [],
 }: StoreModernoLiveProps) {
   const { content } = useStorePageContent(subdomain, "template-moderno")
   const [banner, setBanner] = useState({
@@ -83,7 +86,7 @@ export function StoreModernoLive({
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <StoreHeaderModern store={storeConEdicion} categories={categories} accentColor={accentColor} />
+      <StoreHeaderModern store={storeConEdicion} categories={categories} accentColor={accentColor} storePages={storePages} />
       <main className="flex-1">
         <StoreHeroModernEditable
           store={storeConEdicion}

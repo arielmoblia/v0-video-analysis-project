@@ -3,6 +3,7 @@ import { cookies } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import { getStoreBySubdomain, getStoreProducts, getStoreCategories, getFeaturedProducts } from "@/lib/store-context"
 import { hasStoreFeature } from "@/lib/services/stores"
+import { getStorePages } from "@/lib/services/store-pages"
 import { seoClean } from "@/lib/utils"
 import { StoreHeader } from "@/components/store/store-header"
 import { StoreHero } from "@/components/store/store-hero"
@@ -105,11 +106,12 @@ export default async function StorePage({ params }: StorePageProps) {
   // cargado tal cual (en CLP), sin conversión.
   const exchangeRate = hasDolarPeso && store.country !== "CL" ? (store.dolar_valor || 0) : 0
 
-  const [products, categories, featuredProducts, hasMayoristaMinorista] = await Promise.all([
+  const [products, categories, featuredProducts, hasMayoristaMinorista, storePages] = await Promise.all([
     getStoreProducts(store.id),
     getStoreCategories(store.id),
     getFeaturedProducts(store.id),
     hasStoreFeature(store.id, 'mayorista_minorista'),
+    getStorePages(store.id),
   ])
 
   // Los temples "Moderno" y "Elegante" solo reemplazan el index (header/hero/
@@ -134,6 +136,7 @@ export default async function StorePage({ params }: StorePageProps) {
         exchangeRate={exchangeRate}
         isOwner={isOwner}
         initialCategoryImages={initialCategoryImages}
+        storePages={storePages}
       />
     )
   }

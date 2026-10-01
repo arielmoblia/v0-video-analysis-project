@@ -6,15 +6,17 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { useCart } from "@/components/store/cart-provider"
 import type { Store, Category } from "@/lib/store-context"
+import type { StorePage } from "@/lib/services/store-pages"
 
 interface StoreHeaderModernProps {
   store: Store
   categories: Category[]
   accentColor?: string
   disableNav?: boolean
+  storePages?: StorePage[]
 }
 
-export function StoreHeaderModern({ store, categories, accentColor = "#111827", disableNav = false }: StoreHeaderModernProps) {
+export function StoreHeaderModern({ store, categories, accentColor = "#111827", disableNav = false, storePages = [] }: StoreHeaderModernProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [basePath, setBasePath] = useState(`/tienda/${store.subdomain}`)
   const { items, setCartOpen } = useCart()
@@ -77,6 +79,16 @@ export function StoreHeaderModern({ store, categories, accentColor = "#111827", 
                 </Link>
               ),
             )}
+            {!disableNav &&
+              storePages.map((page) => (
+                <Link
+                  key={page.id}
+                  href={`${basePath}/pagina/${page.slug}`}
+                  className="px-4 py-2 rounded-full text-sm font-medium text-neutral-600 hover:bg-neutral-100 transition-colors"
+                >
+                  {page.title}
+                </Link>
+              ))}
           </nav>
 
           <div className="flex items-center gap-2">
@@ -132,6 +144,16 @@ export function StoreHeaderModern({ store, categories, accentColor = "#111827", 
                   </Link>
                 ),
               )}
+              {!disableNav &&
+                storePages.map((page) => (
+                  <Link
+                    key={page.id}
+                    href={`${basePath}/pagina/${page.slug}`}
+                    className="px-3 py-2 rounded-lg text-sm font-medium hover:bg-neutral-100"
+                  >
+                    {page.title}
+                  </Link>
+                ))}
             </nav>
           </div>
         )}

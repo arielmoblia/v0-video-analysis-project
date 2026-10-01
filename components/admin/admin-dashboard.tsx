@@ -23,6 +23,7 @@ import { DropshipManager } from "./dropship-manager"
 import { LinkedStoreManager } from "./linked-store-manager"
 import { AdminChat } from "./admin-chat"
 import { InvoicingManager } from "./invoicing-manager"
+import { StorePagesManager } from "./store-pages-manager"
 
 // Prueba aislada: solo esta tienda tiene el asistente de chat en el admin
 const ADMIN_CHAT_SUBDOMAINS = ["prueba3"]
@@ -224,6 +225,7 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
             {navGratis("shipping", "Envíos")}
             {navGratis("orders", "Pedidos")}
             {navGratis("contacto", "Contacto")}
+            {navGratis("paginas", "Páginas propias")}
             {navGratis("marketing", "Marketing")}
             {navGratis("facturacion", "Facturación electrónica")}
           </div>
@@ -356,6 +358,10 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
 
             <TabsContent value="contacto">
               <ContactManager storeId={store.id} subdomain={subdomain} storeName={store.site_title} />
+            </TabsContent>
+
+            <TabsContent value="paginas">
+              <StorePagesManager storeId={store.id} subdomain={subdomain} />
             </TabsContent>
 
             {purchasedFeatures.includes("whatsapp_chat") && (
