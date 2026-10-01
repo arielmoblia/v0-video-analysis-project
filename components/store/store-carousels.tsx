@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useEffect, useState } from "react"
-import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel"
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext, type CarouselApi } from "@/components/ui/carousel"
 import { formatPrice } from "@/lib/currency"
 import type { Product } from "@/lib/store-context"
 
@@ -126,6 +126,9 @@ function ProductsCarousel({
   country?: string | null
 }) {
   const [basePath, setBasePath] = useState(`/tienda/${subdomain}`)
+  const [api, setApi] = useState<CarouselApi>()
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [snapCount, setSnapCount] = useState(0)
 
   useEffect(() => {
     const hostname = window.location.hostname
@@ -134,11 +137,23 @@ function ProductsCarousel({
     }
   }, [])
 
+  useEffect(() => {
+    if (!api) return
+    setSnapCount(api.scrollSnapList().length)
+    setSelectedIndex(api.selectedScrollSnap())
+    const onSelect = () => setSelectedIndex(api.selectedScrollSnap())
+    api.on("select", onSelect)
+    api.on("reInit", onSelect)
+    return () => {
+      api.off("select", onSelect)
+    }
+  }, [api])
+
   return (
     <section className="py-14 px-6">
       <div className="container mx-auto">
         {title && <h2 className="text-2xl md:text-3xl font-semibold tracking-wide text-left mb-8">{title}</h2>}
-        <Carousel opts={{ align: "start", loop: products.length > 3 }} className="w-full">
+        <Carousel opts={{ align: "start", loop: products.length > 3, slidesToScroll: "auto" }} setApi={setApi} className="w-full">
           <CarouselContent>
             {products.map((product) => {
               const hasDiscount = !!product.compare_price && product.compare_price > product.price && exchangeRate === 0
@@ -179,9 +194,24 @@ function ProductsCarousel({
               )
             })}
           </CarouselContent>
-          <CarouselPrevious className="hidden md:flex md:-left-10 border-none shadow-none bg-transparent hover:bg-transparent text-neutral-900 [&_svg]:size-6" />
-          <CarouselNext className="hidden md:flex md:-right-10 border-none shadow-none bg-transparent hover:bg-transparent text-neutral-900 [&_svg]:size-6" />
+          <CarouselPrevious className="hidden md:flex md:-left-[14px] border-none shadow-none bg-transparent hover:bg-transparent text-neutral-900 [&_svg]:size-6" />
+          <CarouselNext className="hidden md:flex md:-right-[14px] border-none shadow-none bg-transparent hover:bg-transparent text-neutral-900 [&_svg]:size-6" />
         </Carousel>
+        {snapCount > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-6">
+            {Array.from({ length: snapCount }).map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`Ir a la página ${i + 1}`}
+                onClick={() => api?.scrollTo(i)}
+                className={`rounded-full transition-all ${
+                  i === selectedIndex ? "w-2 h-2 bg-neutral-900" : "w-2 h-2 bg-neutral-300"
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )
