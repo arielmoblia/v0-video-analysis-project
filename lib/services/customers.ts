@@ -137,6 +137,8 @@ export async function getCustomerOrders(storeId: string, email: string): Promise
 export interface CustomerWithSpend extends Customer {
   orderCount: number
   totalSpent: number
+  lastOrderAt: string | null
+  lastAddress: string | null
 }
 
 /**
@@ -150,21 +152,38 @@ export async function getStoreCustomersWithSpend(storeId: string): Promise<Custo
       .select("id, store_id, name, email, phone, created_at")
       .eq("store_id", storeId)
       .order("created_at", { ascending: false }),
-    supabase.from("orders").select("customer_email, total").eq("store_id", storeId),
+    supabase
+      .from("orders")
+      .select("customer_email, total, created_at, shipping_address, shipping_city")
+      .eq("store_id", storeId)
+      .order("created_at", { ascending: false }),
   ])
 
-  const spendByEmail = new Map<string, { orderCount: number; totalSpent: number }>()
+  const spendByEmail = new Map<
+    string,
+    { orderCount: number; totalSpent: number; lastOrderAt: string | null; lastAddress: string | null }
+  >()
   for (const order of orders || []) {
     const email = normalizeEmail(order.customer_email || "")
     if (!email) continue
-    const current = spendByEmail.get(email) || { orderCount: 0, totalSpent: 0 }
+    const current = spendByEmail.get(email) || { orderCount: 0, totalSpent: 0, lastOrderAt: null, lastAddress: null }
     current.orderCount += 1
     current.totalSpent += Number(order.total) || 0
+    // Los pedidos vienen ordenados del más nuevo al más viejo, el primero que aparece por email es el último.
+    if (!current.lastOrderAt) {
+      current.lastOrderAt = order.created_at
+      current.lastAddress = [order.shipping_address, order.shipping_city].filter(Boolean).join(", ") || null
+    }
     spendByEmail.set(email, current)
   }
 
   return (customers || []).map((c) => {
-    const spend = spendByEmail.get(normalizeEmail(c.email)) || { orderCount: 0, totalSpent: 0 }
+    const spend = spendByEmail.get(normalizeEmail(c.email)) || {
+      orderCount: 0,
+      totalSpent: 0,
+      lastOrderAt: null,
+      lastAddress: null,
+    }
     return { ...c, ...spend } as CustomerWithSpend
   })
 }

@@ -16,6 +16,8 @@ interface CustomerRow {
   created_at: string
   orderCount: number
   totalSpent: number
+  lastOrderAt: string | null
+  lastAddress: string | null
 }
 
 export function CustomersManager({ storeId, country }: CustomersManagerProps) {
@@ -50,21 +52,27 @@ export function CustomersManager({ storeId, country }: CustomersManagerProps) {
         </p>
       </div>
 
-      {sorted.length === 0 ? (
-        <p className="text-sm text-slate-400">Todavía no hay clientes registrados.</p>
-      ) : (
-        <div className="rounded-lg border border-slate-200 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50">
-              <tr className="text-left text-slate-500">
-                <th className="px-4 py-3 font-medium">Nombre</th>
-                <th className="px-4 py-3 font-medium">Contacto</th>
-                <th className="px-4 py-3 font-medium text-right">Pedidos</th>
-                <th className="px-4 py-3 font-medium text-right">Gastado</th>
+      <div className="rounded-lg border border-slate-200 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50">
+            <tr className="text-left text-slate-500">
+              <th className="px-4 py-3 font-medium">Nombre</th>
+              <th className="px-4 py-3 font-medium">Contacto</th>
+              <th className="px-4 py-3 font-medium">Dirección de entrega</th>
+              <th className="px-4 py-3 font-medium">Última compra</th>
+              <th className="px-4 py-3 font-medium text-right">Pedidos</th>
+              <th className="px-4 py-3 font-medium text-right">Gastado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-6 text-center text-slate-400">
+                  Todavía no hay clientes registrados.
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {sorted.map((c) => (
+            ) : (
+              sorted.map((c) => (
                 <tr key={c.id} className="border-t border-slate-100">
                   <td className="px-4 py-3 font-medium text-slate-800">{c.name}</td>
                   <td className="px-4 py-3 text-slate-500">
@@ -76,14 +84,18 @@ export function CustomersManager({ storeId, country }: CustomersManagerProps) {
                     </div>
                     {c.phone && <p className="text-xs text-slate-400 mt-0.5">{c.phone}</p>}
                   </td>
+                  <td className="px-4 py-3 text-slate-500">{c.lastAddress || "—"}</td>
+                  <td className="px-4 py-3 text-slate-500">
+                    {c.lastOrderAt ? new Date(c.lastOrderAt).toLocaleDateString("es-AR") : "Sin compras"}
+                  </td>
                   <td className="px-4 py-3 text-right text-slate-600">{c.orderCount}</td>
                   <td className="px-4 py-3 text-right font-semibold text-slate-800">{formatPrice(c.totalSpent, country)}</td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
