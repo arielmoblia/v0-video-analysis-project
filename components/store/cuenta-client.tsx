@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Loader2 } from "lucide-react"
+import { Loader2, Eye, EyeOff } from "lucide-react"
 import { formatPrice } from "@/lib/currency"
 import type { Order, OrderStatus } from "@/lib/types"
 
@@ -114,13 +114,22 @@ function AuthForms({ subdomain, storeName, onSuccess }: { subdomain: string; sto
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
     setError("")
+
+    if (mode === "register" && password !== confirmPassword) {
+      setError("Las contraseñas no coinciden")
+      return
+    }
+
+    setLoading(true)
 
     const url = mode === "login" ? "/api/customer/login" : "/api/customer/register"
     const body = mode === "login" ? { subdomain, email, password } : { subdomain, name, email, phone, password }
@@ -140,46 +149,97 @@ function AuthForms({ subdomain, storeName, onSuccess }: { subdomain: string; sto
     onSuccess()
   }
 
+  const inputClass = "w-full rounded-lg border border-neutral-200 px-4 py-3 text-sm outline-none focus:border-neutral-400"
+  const labelClass = "block text-sm text-neutral-700 mb-1.5"
+
   return (
     <div>
-      <h1 className="text-2xl font-bold text-neutral-900 mb-1">{mode === "login" ? "Entrá a tu cuenta" : "Creá tu cuenta"}</h1>
-      <p className="text-sm text-neutral-500 mb-6">en {storeName}</p>
+      <h1 className="text-2xl font-bold text-neutral-900 mb-1">{mode === "login" ? "Iniciá sesión" : "Crear cuenta"}</h1>
+      <p className="text-sm text-neutral-500 mb-6">
+        {mode === "login" ? `Entrá a tu cuenta de ${storeName}` : `Comprá más rápido en ${storeName} y llevá el control de tus pedidos, ¡en un solo lugar!`}
+      </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {mode === "register" && (
+          <div>
+            <label className={labelClass}>Nombre y apellido</label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="ej.: María Perez"
+              required
+              className={inputClass}
+            />
+          </div>
+        )}
+        <div>
+          <label className={labelClass}>Email</label>
           <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Nombre y apellido"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="ej.: tuemail@email.com"
             required
-            className="w-full rounded-lg border border-neutral-200 px-4 py-3 text-sm outline-none focus:border-neutral-400"
+            className={inputClass}
           />
-        )}
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          required
-          className="w-full rounded-lg border border-neutral-200 px-4 py-3 text-sm outline-none focus:border-neutral-400"
-        />
+        </div>
         {mode === "register" && (
-          <input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Teléfono (opcional)"
-            className="w-full rounded-lg border border-neutral-200 px-4 py-3 text-sm outline-none focus:border-neutral-400"
-          />
+          <div>
+            <label className={labelClass}>Teléfono (opcional)</label>
+            <input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="ej.: 1123445567"
+              className={inputClass}
+            />
+          </div>
         )}
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Contraseña"
-          required
-          minLength={6}
-          className="w-full rounded-lg border border-neutral-200 px-4 py-3 text-sm outline-none focus:border-neutral-400"
-        />
+        <div>
+          <label className={labelClass}>Contraseña</label>
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="ej.: tucontraseña"
+              required
+              minLength={6}
+              className={`${inputClass} pr-11`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+        {mode === "register" && (
+          <div>
+            <label className={labelClass}>Confirmar contraseña</label>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="ej.: tucontraseña"
+                required
+                minLength={6}
+                className={`${inputClass} pr-11`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                tabIndex={-1}
+              >
+                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+        )}
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
@@ -193,12 +253,15 @@ function AuthForms({ subdomain, storeName, onSuccess }: { subdomain: string; sto
         </button>
       </form>
 
-      <button
-        onClick={() => { setMode(mode === "login" ? "register" : "login"); setError("") }}
-        className="mt-4 text-sm text-neutral-500 hover:text-neutral-900 underline"
-      >
-        {mode === "login" ? "¿No tenés cuenta? Registrate" : "¿Ya tenés cuenta? Entrá"}
-      </button>
+      <p className="mt-4 text-sm text-neutral-500">
+        {mode === "login" ? "¿No tenés cuenta? " : "¿Ya tenés una cuenta? "}
+        <button
+          onClick={() => { setMode(mode === "login" ? "register" : "login"); setError("") }}
+          className="text-neutral-900 underline hover:text-neutral-700"
+        >
+          {mode === "login" ? "Registrate" : "Iniciá sesión"}
+        </button>
+      </p>
     </div>
   )
 }
