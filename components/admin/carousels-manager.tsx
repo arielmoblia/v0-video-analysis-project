@@ -328,7 +328,7 @@ function TextBlockEditor({
   onChange: (patch: Partial<CarouselBlock>) => void
 }) {
   const [dragIndex, setDragIndex] = useState<number | null>(null)
-  const [editing, setEditing] = useState<{ cardId: string; field: "title" | "description" | "link" } | null>(null)
+  const [editing, setEditing] = useState<{ cardId: string; field: "title" | "description" | "link" | "linkLabel" } | null>(null)
   const cards = block.cards || []
   const legacyPhrases = cards.length === 0 ? block.phrases?.filter(Boolean) || [] : []
 
@@ -475,6 +475,38 @@ function TextBlockEditor({
                   <Pencil className="w-3 h-3" />
                 </button>
               </div>
+
+              {card.link && (
+                <div className="flex items-center gap-1.5 mt-1">
+                  {editing?.cardId === card.id && editing.field === "linkLabel" ? (
+                    <input
+                      autoFocus
+                      value={card.linkLabel || ""}
+                      onChange={(e) => updateCard(card.id, { linkLabel: e.target.value })}
+                      onBlur={() => setEditing(null)}
+                      onKeyDown={(e) => e.key === "Enter" && setEditing(null)}
+                      placeholder="Texto del link (Ej: SEGUÍ NUESTRO CANAL)"
+                      className="flex-1 text-xs outline-none border-b border-amber-400 py-0.5"
+                    />
+                  ) : (
+                    <p
+                      onClick={() => setEditing({ cardId: card.id, field: "linkLabel" })}
+                      className={`text-xs underline cursor-text hover:bg-amber-50 rounded px-0.5 -mx-0.5 ${
+                        card.linkLabel ? "text-slate-700" : "text-slate-300 italic"
+                      }`}
+                    >
+                      {card.linkLabel || "Ver más (tocá para cambiar el texto)"}
+                    </p>
+                  )}
+                  <button
+                    onClick={() => setEditing({ cardId: card.id, field: "linkLabel" })}
+                    className="text-slate-400 hover:text-amber-600 shrink-0"
+                    title="Editar texto del link"
+                  >
+                    <Pencil className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
             </div>
             <button onClick={() => removeCard(card.id)} className="text-slate-400 hover:text-red-600 mt-1">
               <Trash2 className="w-4 h-4" />

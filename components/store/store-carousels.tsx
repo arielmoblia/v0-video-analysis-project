@@ -12,6 +12,7 @@ export interface CarouselTextCard {
   title: string
   description?: string
   link?: string
+  linkLabel?: string
 }
 
 export interface CarouselBlock {
@@ -157,18 +158,24 @@ function CardsCarousel({ title, cards }: { title?: string; cards: CarouselTextCa
     <section className="py-14 px-6 bg-neutral-50">
       <div className="container mx-auto">
         {title && <h2 className="text-2xl md:text-3xl font-normal tracking-wide text-left mb-8">{title}</h2>}
-        <Carousel opts={{ align: "start", loop: cards.length > 3 }} setApi={setApi} className="w-full px-8 md:px-10">
+        <Carousel opts={{ align: "start", loop: cards.length > 1 }} setApi={setApi} className="w-full px-4 md:px-10">
           <CarouselContent>
             {cards.map((card) => {
               const inner = (
-                <div className="bg-white border border-neutral-200 rounded-lg p-6 h-full flex flex-col items-center text-center gap-2">
-                  <h3 className="text-base font-medium tracking-wide">{card.title}</h3>
-                  {card.description && <p className="text-sm text-neutral-500">{card.description}</p>}
-                  {card.link && <span className="text-sm font-medium underline underline-offset-4 mt-1">Ver más</span>}
+                <div className="flex flex-col items-center text-center gap-3 px-4 py-2">
+                  <h3 className="text-3xl md:text-4xl font-normal text-neutral-900">{card.title}</h3>
+                  {card.description && (
+                    <p className="text-base leading-snug text-neutral-900">{card.description}</p>
+                  )}
+                  {card.link && (
+                    <span className="text-sm underline underline-offset-4 text-neutral-900 mt-1">
+                      {card.linkLabel || "Ver más"}
+                    </span>
+                  )}
                 </div>
               )
               return (
-                <CarouselItem key={card.id} className="basis-full md:basis-1/2 lg:basis-1/3">
+                <CarouselItem key={card.id} className="basis-full">
                   {card.link ? (
                     <a href={card.link} target="_blank" rel="noopener noreferrer" className="block h-full group">
                       {inner}
