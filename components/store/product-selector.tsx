@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useRef } from "react"
+import { useState, useMemo, useRef, useEffect } from "react"
 import Image from "next/image"
 import { ImagePlus, Loader2, Pencil } from "lucide-react"
 import { seoClean } from "@/lib/utils"
@@ -189,6 +189,21 @@ export function ProductSelector({
   }
 
   const [selectedImage, setSelectedImage] = useState(0)
+  const [brokenImageIdx, setBrokenImageIdx] = useState<Set<number>>(new Set())
+  const markImageBroken = (index: number) => {
+    setBrokenImageIdx((prev) => {
+      if (prev.has(index)) return prev
+      const next = new Set(prev)
+      next.add(index)
+      return next
+    })
+  }
+  const visibleImages = allImages.map((img, index) => ({ img, index })).filter(({ index }) => !brokenImageIdx.has(index))
+  useEffect(() => {
+    if (brokenImageIdx.has(selectedImage) && visibleImages.length > 0) {
+      setSelectedImage(visibleImages[0].index)
+    }
+  }, [brokenImageIdx, selectedImage, visibleImages])
 
   const sizes: SizeWithStock[] = product.sizes || []
 
@@ -285,9 +300,9 @@ export function ProductSelector({
       {/* Columna izquierda: Miniaturas + Imagen principal */}
       <div className="flex gap-4 self-start">
         {/* Miniaturas verticales */}
-        {allImages.length > 1 && (
+        {visibleImages.length > 1 && (
           <div className="flex flex-col gap-2 flex-shrink-0">
-            {allImages.map((img, index) => (
+            {visibleImages.map(({ img, index }) => (
               <button
                 key={index}
                 onClick={() => setSelectedImage(index)}
@@ -303,6 +318,7 @@ export function ProductSelector({
                   fill
                   className="object-cover"
                   sizes="80px"
+                  onError={() => markImageBroken(index)}
                 />
               </button>
             ))}
@@ -318,13 +334,14 @@ export function ProductSelector({
           style={editMode && allImages.length === 1 ? { outline: hoverImage ? `2px dashed ${accentColor}` : "2px dashed transparent", outlineOffset: "3px" } : undefined}
         >
           <Image
-            src={allImages[selectedImage] || "/images/placeholders/placeholder.svg"}
+            src={(brokenImageIdx.has(selectedImage) ? null : allImages[selectedImage]) || "/images/placeholders/placeholder.svg"}
             alt={fields.name}
             width={0}
             height={0}
             sizes="(max-width: 1023px) 100vw, 50vw"
             className="w-full h-auto"
             priority
+            onError={() => markImageBroken(selectedImage)}
           />
           {product.compare_price && product.compare_price > fields.price && (
             <span className="absolute top-4 left-4 bg-red-500 text-white text-sm px-3 py-1 rounded">
