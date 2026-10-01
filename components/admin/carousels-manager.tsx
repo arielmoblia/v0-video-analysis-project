@@ -102,17 +102,25 @@ export function CarouselsManager({ storeId, initialCarousels }: CarouselsManager
             onDragStart={() => setDragIndex(index)}
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => handleDropBlock(index)}
-            className={`rounded-lg border border-slate-200 overflow-hidden bg-white ${
-              dragIndex === index ? "opacity-40" : ""
-            }`}
+            className={`rounded-lg border overflow-hidden bg-white ${
+              block.type === "products" ? "border-blue-200" : "border-amber-200"
+            } ${dragIndex === index ? "opacity-40" : ""}`}
           >
-            <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200 cursor-grab">
+            <div
+              className={`flex items-center gap-2 px-4 py-3 border-b cursor-grab ${
+                block.type === "products"
+                  ? "bg-blue-50 border-blue-200"
+                  : block.type === "text"
+                    ? "bg-amber-50 border-amber-200"
+                    : "bg-slate-50 border-slate-200"
+              }`}
+            >
               <GripVertical className="w-4 h-4 text-slate-400 shrink-0" />
               <p className="font-medium text-sm text-slate-800 flex-1">
                 {block.type === "products"
-                  ? "Carrusel de productos destacados"
+                  ? "🖼️ Carrusel de productos destacados"
                   : block.type === "text"
-                    ? "Carrusel de textos"
+                    ? "📝 Carrusel de textos"
                     : "Carrusel de texto (heredado del clonado)"}
               </p>
               <button onClick={() => removeBlock(block.id)} className="text-slate-400 hover:text-red-600">
@@ -190,15 +198,18 @@ function ProductsBlockEditor({
   onChange: (patch: Partial<CarouselBlock>) => void
 }) {
   const [dragIndex, setDragIndex] = useState<number | null>(null)
-  const [showPicker, setShowPicker] = useState(false)
   const [search, setSearch] = useState("")
 
   const selectedIds = block.productIds || []
   const byId = new Map(products.map((p) => [p.id, p]))
   const selected = selectedIds.map((id) => byId.get(id)).filter((p): p is ProductLite => !!p)
-  const available = products.filter(
-    (p) => !selectedIds.includes(p.id) && p.name.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = products.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+
+  const toggleProduct = (id: string) => {
+    onChange({
+      productIds: selectedIds.includes(id) ? selectedIds.filter((pid) => pid !== id) : [...selectedIds, id],
+    })
+  }
 
   const reorder = (dropIndex: number) => {
     if (dragIndex === null || dragIndex === dropIndex) return
@@ -262,45 +273,48 @@ function ProductsBlockEditor({
         )}
       </div>
 
-      <div className="relative">
-        <button
-          onClick={() => setShowPicker((v) => !v)}
-          className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
-        >
-          <Plus className="w-4 h-4" /> Agregar producto
-        </button>
-        {showPicker && (
-          <div className="absolute z-10 mt-1 w-72 max-h-72 overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg">
-            <div className="p-2 sticky top-0 bg-white border-b border-slate-100">
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar producto..."
-                className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm outline-none focus:border-blue-400"
-                autoFocus
-              />
+      <div>
+        <label className="text-xs text-slate-500">Elegí productos para esta franja</label>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar producto..."
+          className="mt-1 w-full max-w-xs rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+        />
+        <div className="mt-2 max-h-64 overflow-auto rounded-lg border border-slate-200 bg-blue-50/30 p-2">
+          {filtered.length === 0 ? (
+            <p className="text-xs text-slate-400 italic p-2">No hay productos que coincidan con la búsqueda.</p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              {filtered.map((p) => {
+                const isSelected = selectedIds.includes(p.id)
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => toggleProduct(p.id)}
+                    className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-left text-xs transition-colors ${
+                      isSelected
+                        ? "border-blue-400 bg-blue-100"
+                        : "border-slate-200 bg-white hover:bg-slate-50"
+                    }`}
+                  >
+                    <div
+                      className={`w-4 h-4 rounded-sm border flex items-center justify-center shrink-0 ${
+                        isSelected ? "bg-blue-600 border-blue-600" : "border-slate-300 bg-white"
+                      }`}
+                    >
+                      {isSelected && <Check className="w-3 h-3 text-white" />}
+                    </div>
+                    <div className="w-8 h-8 rounded bg-slate-100 overflow-hidden shrink-0">
+                      {p.image_url && <img src={p.image_url} alt="" className="w-full h-full object-cover" />}
+                    </div>
+                    <span className="truncate">{p.name}</span>
+                  </button>
+                )
+              })}
             </div>
-            {available.length === 0 ? (
-              <p className="text-xs text-slate-400 italic p-3">No hay más productos para agregar.</p>
-            ) : (
-              available.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => {
-                    onChange({ productIds: [...selectedIds, p.id] })
-                    setSearch("")
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50"
-                >
-                  <div className="w-8 h-8 rounded bg-slate-100 overflow-hidden shrink-0">
-                    {p.image_url && <img src={p.image_url} alt="" className="w-full h-full object-cover" />}
-                  </div>
-                  <span className="truncate">{p.name}</span>
-                </button>
-              ))
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   )
@@ -383,30 +397,43 @@ function TextBlockEditor({
             onDragStart={() => setDragIndex(index)}
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => reorder(index)}
-            className={`flex items-start gap-2 rounded-lg border border-slate-200 p-3 ${
+            className={`flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50/30 p-3 ${
               dragIndex === index ? "opacity-40" : ""
             }`}
           >
             <GripVertical className="w-4 h-4 text-slate-400 mt-2 cursor-grab shrink-0" />
-            <div className="flex-1 space-y-2">
-              <input
-                value={card.title}
-                onChange={(e) => updateCard(card.id, { title: e.target.value })}
-                placeholder="Título (Ej: Envíos a todo el país)"
-                className="w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm outline-none focus:border-blue-400"
-              />
-              <input
-                value={card.description || ""}
-                onChange={(e) => updateCard(card.id, { description: e.target.value })}
-                placeholder="Descripción (opcional)"
-                className="w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm outline-none focus:border-blue-400"
-              />
-              <input
-                value={card.link || ""}
-                onChange={(e) => updateCard(card.id, { link: e.target.value })}
-                placeholder="Link (opcional, ej: https://wa.me/549...)"
-                className="w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm outline-none focus:border-blue-400"
-              />
+            <div className="flex-1 space-y-3">
+              <div className="rounded-md border border-slate-200 bg-white p-3">
+                <p className="text-sm font-semibold text-slate-800">
+                  {card.title || "Así se vería el título"}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {card.description || "Así se vería la descripción"}
+                </p>
+                {card.link && (
+                  <p className="text-xs text-blue-600 underline mt-1 truncate">{card.link}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <input
+                  value={card.title}
+                  onChange={(e) => updateCard(card.id, { title: e.target.value })}
+                  placeholder="Título (Ej: Envíos a todo el país)"
+                  className="w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm outline-none focus:border-amber-400"
+                />
+                <input
+                  value={card.description || ""}
+                  onChange={(e) => updateCard(card.id, { description: e.target.value })}
+                  placeholder="Descripción (opcional)"
+                  className="w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm outline-none focus:border-amber-400"
+                />
+                <input
+                  value={card.link || ""}
+                  onChange={(e) => updateCard(card.id, { link: e.target.value })}
+                  placeholder="Link (opcional, ej: https://wa.me/549...)"
+                  className="w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm outline-none focus:border-amber-400"
+                />
+              </div>
             </div>
             <button onClick={() => removeCard(card.id)} className="text-slate-400 hover:text-red-600 mt-1">
               <Trash2 className="w-4 h-4" />
