@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
-import { Loader2, Check, GripVertical, Trash2, Plus, X, MessageCircle, Instagram } from "lucide-react"
+import { Loader2, Check, GripVertical, Trash2, Plus, X, MessageCircle, Instagram, Pencil, Link2 } from "lucide-react"
 import type { CarouselBlock, CarouselTextCard } from "@/components/store/store-carousels"
 
 interface ProductLite {
@@ -328,6 +328,7 @@ function TextBlockEditor({
   onChange: (patch: Partial<CarouselBlock>) => void
 }) {
   const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [editing, setEditing] = useState<{ cardId: string; field: "title" | "description" | "link" } | null>(null)
   const cards = block.cards || []
   const legacyPhrases = cards.length === 0 ? block.phrases?.filter(Boolean) || [] : []
 
@@ -402,37 +403,77 @@ function TextBlockEditor({
             }`}
           >
             <GripVertical className="w-4 h-4 text-slate-400 mt-2 cursor-grab shrink-0" />
-            <div className="flex-1 space-y-3">
-              <div className="rounded-md border border-slate-200 bg-white p-3">
-                <p className="text-sm font-semibold text-slate-800">
-                  {card.title || "Así se vería el título"}
-                </p>
-                <p className="text-xs text-slate-500 mt-1">
-                  {card.description || "Así se vería la descripción"}
-                </p>
-                {card.link && (
-                  <p className="text-xs text-blue-600 underline mt-1 truncate">{card.link}</p>
-                )}
-              </div>
-              <div className="space-y-2">
+            <div className="flex-1 rounded-md border border-slate-200 bg-white p-3">
+              {editing?.cardId === card.id && editing.field === "title" ? (
                 <input
+                  autoFocus
                   value={card.title}
                   onChange={(e) => updateCard(card.id, { title: e.target.value })}
+                  onBlur={() => setEditing(null)}
+                  onKeyDown={(e) => e.key === "Enter" && setEditing(null)}
                   placeholder="Título (Ej: Envíos a todo el país)"
-                  className="w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm outline-none focus:border-amber-400"
+                  className="w-full text-sm font-semibold text-slate-800 outline-none border-b border-amber-400"
                 />
+              ) : (
+                <p
+                  onClick={() => setEditing({ cardId: card.id, field: "title" })}
+                  className={`text-sm font-semibold cursor-text hover:bg-amber-50 rounded px-0.5 -mx-0.5 ${
+                    card.title ? "text-slate-800" : "text-slate-400 italic"
+                  }`}
+                >
+                  {card.title || "Tocá para escribir el título"}
+                </p>
+              )}
+
+              {editing?.cardId === card.id && editing.field === "description" ? (
                 <input
+                  autoFocus
                   value={card.description || ""}
                   onChange={(e) => updateCard(card.id, { description: e.target.value })}
+                  onBlur={() => setEditing(null)}
+                  onKeyDown={(e) => e.key === "Enter" && setEditing(null)}
                   placeholder="Descripción (opcional)"
-                  className="w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm outline-none focus:border-amber-400"
+                  className="w-full text-xs text-slate-500 outline-none border-b border-amber-400 mt-1"
                 />
-                <input
-                  value={card.link || ""}
-                  onChange={(e) => updateCard(card.id, { link: e.target.value })}
-                  placeholder="Link (opcional, ej: https://wa.me/549...)"
-                  className="w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm outline-none focus:border-amber-400"
-                />
+              ) : (
+                <p
+                  onClick={() => setEditing({ cardId: card.id, field: "description" })}
+                  className={`text-xs cursor-text hover:bg-amber-50 rounded px-0.5 -mx-0.5 mt-1 ${
+                    card.description ? "text-slate-500" : "text-slate-300 italic"
+                  }`}
+                >
+                  {card.description || "Tocá para escribir la descripción (opcional)"}
+                </p>
+              )}
+
+              <div className="flex items-center gap-1.5 mt-1.5">
+                {editing?.cardId === card.id && editing.field === "link" ? (
+                  <input
+                    autoFocus
+                    value={card.link || ""}
+                    onChange={(e) => updateCard(card.id, { link: e.target.value })}
+                    onBlur={() => setEditing(null)}
+                    onKeyDown={(e) => e.key === "Enter" && setEditing(null)}
+                    placeholder="https://wa.me/549... o /pagina/contacto"
+                    className="flex-1 text-xs outline-none border-b border-amber-400 py-0.5"
+                  />
+                ) : (
+                  <>
+                    {card.link ? (
+                      <Link2 className="w-3 h-3 text-blue-600 shrink-0" />
+                    ) : null}
+                    <p className={`text-xs truncate ${card.link ? "text-blue-600 underline" : "text-slate-300 italic"}`}>
+                      {card.link || "Sin link"}
+                    </p>
+                  </>
+                )}
+                <button
+                  onClick={() => setEditing({ cardId: card.id, field: "link" })}
+                  className="text-slate-400 hover:text-amber-600 shrink-0"
+                  title="Editar link"
+                >
+                  <Pencil className="w-3 h-3" />
+                </button>
               </div>
             </div>
             <button onClick={() => removeCard(card.id)} className="text-slate-400 hover:text-red-600 mt-1">
