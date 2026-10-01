@@ -152,8 +152,8 @@ function ProductsCarousel({
   return (
     <section className="py-14 px-6">
       <div className="container mx-auto">
-        {title && <h2 className="text-2xl md:text-3xl font-semibold tracking-wide text-left mb-8">{title}</h2>}
-        <Carousel opts={{ align: "start", loop: products.length > 3, slidesToScroll: "auto" }} setApi={setApi} className="w-full">
+        {title && <h2 className="text-2xl md:text-3xl font-normal tracking-wide text-left mb-8">{title}</h2>}
+        <Carousel opts={{ align: "start", loop: products.length > 3, slidesToScroll: "auto" }} setApi={setApi} className="w-full px-8 md:px-10">
           <CarouselContent>
             {products.map((product) => {
               const hasDiscount = !!product.compare_price && product.compare_price > product.price && exchangeRate === 0
@@ -194,8 +194,8 @@ function ProductsCarousel({
               )
             })}
           </CarouselContent>
-          <CarouselPrevious className="hidden md:flex md:-left-[14px] border-none shadow-none bg-transparent hover:bg-transparent text-neutral-900 [&_svg]:size-6" />
-          <CarouselNext className="hidden md:flex md:-right-[14px] border-none shadow-none bg-transparent hover:bg-transparent text-neutral-900 [&_svg]:size-6" />
+          <CarouselPrevious className="hidden md:flex md:left-0 border-none shadow-none bg-transparent hover:bg-transparent text-neutral-900 [&_svg]:size-6" />
+          <CarouselNext className="hidden md:flex md:right-0 border-none shadow-none bg-transparent hover:bg-transparent text-neutral-900 [&_svg]:size-6" />
         </Carousel>
         {snapCount > 1 && (
           <div className="flex justify-center items-center gap-2 mt-6">
