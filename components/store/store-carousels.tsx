@@ -169,7 +169,7 @@ function ProductsCarousel({
                         sizes="(max-width: 768px) 50vw, 25vw"
                       />
                     </div>
-                    <h3 className="text-sm tracking-wide text-center mb-1 group-hover:opacity-60 transition-opacity">
+                    <h3 className="text-sm tracking-wide text-center mb-2 group-hover:opacity-60 transition-opacity">
                       {product.name}
                     </h3>
                     <div className="flex items-center justify-center gap-2 flex-wrap">
