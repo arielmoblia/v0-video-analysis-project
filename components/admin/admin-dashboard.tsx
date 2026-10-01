@@ -3,6 +3,8 @@ import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
 import { LogOut, Mail } from "lucide-react"
 import type { Store } from "@/lib/store-context"
 import { ProductsManager } from "./products-manager"
@@ -80,6 +82,35 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
   const [purchasedFeatures, setPurchasedFeatures] = useState<string[]>([])
   const [trialFeatures, setTrialFeatures] = useState<{ code: string; daysLeft: number }[]>([])
   const [customVariants, setCustomVariants] = useState<{ name: string; options: string[] }[]>([])
+  const [soporteOpen, setSoporteOpen] = useState(false)
+  const [soporteMensaje, setSoporteMensaje] = useState("")
+  const [soporteEnviando, setSoporteEnviando] = useState(false)
+  const [soporteResultado, setSoporteResultado] = useState<"ok" | "error" | null>(null)
+
+  const enviarSoporte = async () => {
+    if (!soporteMensaje.trim()) return
+    setSoporteEnviando(true)
+    setSoporteResultado(null)
+    try {
+      const res = await fetch("/api/admin/soporte", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          storeName: store.site_title,
+          subdomain,
+          storeEmail: store.email,
+          message: soporteMensaje,
+        }),
+      })
+      if (!res.ok) throw new Error("fail")
+      setSoporteResultado("ok")
+      setSoporteMensaje("")
+    } catch {
+      setSoporteResultado("error")
+    } finally {
+      setSoporteEnviando(false)
+    }
+  }
 
   useEffect(() => {
     if (activarFeature) {
@@ -201,14 +232,14 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
             <a href={`/tienda/${subdomain}`} target="_blank" className="text-sm text-neutral-300 hover:text-white" rel="noreferrer">
               Ver tienda →
             </a>
-            <a
-              href={`mailto:soporte@tiendaonline.com.ar?subject=${encodeURIComponent(`Soporte - ${store.site_title} (${subdomain}.tol.ar)`)}`}
+            <button
+              onClick={() => setSoporteOpen(true)}
               className="flex items-center gap-1.5 text-sm text-neutral-300 hover:text-white"
               title="Escribinos si tenés un problema con tu tienda"
             >
               <Mail className="w-4 h-4" />
               Soporte
-            </a>
+            </button>
             <Button variant="outline" size="sm" onClick={handleLogout} className="border-neutral-600 text-white hover:bg-neutral-800 bg-transparent">
               <LogOut className="w-4 h-4 mr-2" />
               Salir
@@ -450,6 +481,39 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
       {ADMIN_CHAT_SUBDOMAINS.includes(subdomain) && (
         <AdminChat storeName={store.site_title} subdomain={subdomain} />
       )}
+
+      <Dialog
+        open={soporteOpen}
+        onOpenChange={(open) => {
+          setSoporteOpen(open)
+          if (!open) setSoporteResultado(null)
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Escribinos a soporte</DialogTitle>
+            <DialogDescription>Contanos qué problema tenés con tu tienda y te respondemos a la brevedad.</DialogDescription>
+          </DialogHeader>
+          {soporteResultado === "ok" ? (
+            <p className="text-sm text-green-600">Mensaje enviado. Te vamos a responder a la brevedad.</p>
+          ) : (
+            <>
+              <Textarea
+                value={soporteMensaje}
+                onChange={(e) => setSoporteMensaje(e.target.value)}
+                placeholder="Contanos tu problema..."
+                rows={5}
+              />
+              {soporteResultado === "error" && (
+                <p className="text-sm text-red-600">No se pudo enviar. Probá de nuevo en un momento.</p>
+              )}
+              <Button onClick={enviarSoporte} disabled={soporteEnviando || !soporteMensaje.trim()}>
+                {soporteEnviando ? "Enviando..." : "Enviar"}
+              </Button>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
