@@ -137,7 +137,7 @@ export function CarouselsManager({ storeId, initialCarousels }: CarouselsManager
               ) : block.type === "text" ? (
                 <TextBlockEditor block={block} onChange={(patch) => updateBlock(block.id, patch)} />
               ) : (
-                <CtaBlockViewer block={block} />
+                <CtaBlockViewer block={block} onChange={(patch) => updateBlock(block.id, patch)} />
               )}
             </div>
           </div>
@@ -490,15 +490,46 @@ function TextBlockEditor({
   )
 }
 
-function CtaBlockViewer({ block }: { block: CarouselBlock }) {
+function CtaBlockViewer({
+  block,
+  onChange,
+}: {
+  block: CarouselBlock
+  onChange: (patch: Partial<CarouselBlock>) => void
+}) {
+  const [editing, setEditing] = useState(false)
+
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3">
-      {block.ctaKind === "whatsapp" ? (
-        <MessageCircle className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
-      ) : (
-        <Instagram className="w-4 h-4 text-pink-500 shrink-0 mt-0.5" />
-      )}
-      <p className="text-sm text-slate-600">{block.ctaText}</p>
+    <div className="space-y-2">
+      <div className="flex items-start gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3">
+        {block.ctaKind === "whatsapp" ? (
+          <MessageCircle className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
+        ) : (
+          <Instagram className="w-4 h-4 text-pink-500 shrink-0 mt-0.5" />
+        )}
+        {editing ? (
+          <input
+            autoFocus
+            value={block.ctaText || ""}
+            onChange={(e) => onChange({ ctaText: e.target.value })}
+            onBlur={() => setEditing(false)}
+            onKeyDown={(e) => e.key === "Enter" && setEditing(false)}
+            placeholder="Texto del cartel"
+            className="flex-1 text-sm text-slate-600 outline-none border-b border-slate-400"
+          />
+        ) : (
+          <p
+            onClick={() => setEditing(true)}
+            className="flex-1 text-sm text-slate-600 cursor-text hover:bg-slate-100 rounded px-0.5 -mx-0.5"
+          >
+            {block.ctaText || "Tocá para escribir el texto"}
+          </p>
+        )}
+        <Pencil className="w-3 h-3 text-slate-400 shrink-0 mt-1" />
+      </div>
+      <p className="text-xs text-slate-400 italic px-1">
+        El link de este cartel es el {block.ctaKind === "whatsapp" ? "WhatsApp" : "Instagram"} que cargaste en Ajustes, no se edita acá.
+      </p>
     </div>
   )
 }
