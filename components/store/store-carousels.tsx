@@ -7,10 +7,24 @@ import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext
 import { formatPrice } from "@/lib/currency"
 import type { Product } from "@/lib/store-context"
 
+export interface CarouselTextCard {
+  id: string
+  title: string
+  description?: string
+  link?: string
+}
+
 export interface CarouselBlock {
   id: string
   type: "products" | "text" | "cta"
   title?: string
+  // type "products": productos elegidos a mano, en este orden. Sin esto (o
+  // vacío) cae al comportamiento viejo: destacados si hay, si no todos.
+  productIds?: string[]
+  // type "text": tarjetas con link propio. Sin esto (o vacío) cae al
+  // marquee viejo de "phrases" para no romper tiendas ya configuradas.
+  cards?: CarouselTextCard[]
+  // legacy
   phrases?: string[]
   ctaText?: string
   ctaKind?: "whatsapp" | "instagram"
@@ -42,6 +56,10 @@ export function StoreCarousels({ carousels, products, featuredProducts, subdomai
     <>
       {carousels.map((block) => {
         if (block.type === "text") {
+          const cards = block.cards?.filter((c) => c.title)
+          if (cards && cards.length > 0) {
+            return <CardsCarousel key={block.id} title={block.title} cards={cards} />
+          }
           const phrases = block.phrases?.filter(Boolean)
           if (!phrases || phrases.length === 0) return null
           return <TextCarousel key={block.id} phrases={phrases} />
@@ -56,7 +74,13 @@ export function StoreCarousels({ carousels, products, featuredProducts, subdomai
                 : null
           return <CtaBanner key={block.id} text={block.ctaText} linkUrl={linkUrl} />
         }
-        const items = featuredProducts.length > 0 ? featuredProducts : products
+        let items = products
+        if (block.productIds && block.productIds.length > 0) {
+          const byId = new Map(products.map((p) => [p.id, p]))
+          items = block.productIds.map((id) => byId.get(id)).filter((p): p is Product => !!p)
+        } else {
+          items = featuredProducts.length > 0 ? featuredProducts : products
+        }
         if (items.length === 0) return null
         return (
           <ProductsCarousel
@@ -109,6 +133,73 @@ function TextCarousel({ phrases }: { phrases: string[] }) {
         }
       `}</style>
     </div>
+  )
+}
+
+function CardsCarousel({ title, cards }: { title?: string; cards: CarouselTextCard[] }) {
+  const [api, setApi] = useState<CarouselApi>()
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [snapCount, setSnapCount] = useState(0)
+
+  useEffect(() => {
+    if (!api) return
+    setSnapCount(api.scrollSnapList().length)
+    setSelectedIndex(api.selectedScrollSnap())
+    const onSelect = () => setSelectedIndex(api.selectedScrollSnap())
+    api.on("select", onSelect)
+    api.on("reInit", onSelect)
+    return () => {
+      api.off("select", onSelect)
+    }
+  }, [api])
+
+  return (
+    <section className="py-14 px-6 bg-neutral-50">
+      <div className="container mx-auto">
+        {title && <h2 className="text-2xl md:text-3xl font-normal tracking-wide text-left mb-8">{title}</h2>}
+        <Carousel opts={{ align: "start", loop: cards.length > 3 }} setApi={setApi} className="w-full px-8 md:px-10">
+          <CarouselContent>
+            {cards.map((card) => {
+              const inner = (
+                <div className="bg-white border border-neutral-200 rounded-lg p-6 h-full flex flex-col items-center text-center gap-2">
+                  <h3 className="text-base font-medium tracking-wide">{card.title}</h3>
+                  {card.description && <p className="text-sm text-neutral-500">{card.description}</p>}
+                  {card.link && <span className="text-sm font-medium underline underline-offset-4 mt-1">Ver más</span>}
+                </div>
+              )
+              return (
+                <CarouselItem key={card.id} className="basis-full md:basis-1/2 lg:basis-1/3">
+                  {card.link ? (
+                    <a href={card.link} target="_blank" rel="noopener noreferrer" className="block h-full group">
+                      {inner}
+                    </a>
+                  ) : (
+                    inner
+                  )}
+                </CarouselItem>
+              )
+            })}
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex md:left-0 border-none shadow-none bg-transparent hover:bg-transparent text-neutral-900 [&_svg]:size-6" />
+          <CarouselNext className="hidden md:flex md:right-0 border-none shadow-none bg-transparent hover:bg-transparent text-neutral-900 [&_svg]:size-6" />
+        </Carousel>
+        {snapCount > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-6">
+            {Array.from({ length: snapCount }).map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`Ir a la página ${i + 1}`}
+                onClick={() => api?.scrollTo(i)}
+                className={`rounded-full transition-all ${
+                  i === selectedIndex ? "w-2 h-2 bg-neutral-900" : "w-2 h-2 bg-neutral-300"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
   )
 }
 
