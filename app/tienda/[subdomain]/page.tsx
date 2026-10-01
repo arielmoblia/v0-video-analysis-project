@@ -5,7 +5,6 @@ import { getStoreBySubdomain, getStoreProducts, getStoreCategories, getFeaturedP
 import { hasStoreFeature } from "@/lib/services/stores"
 import { getStorePages } from "@/lib/services/store-pages"
 import { seoClean } from "@/lib/utils"
-import { StoreDefaultLive } from "@/components/store/store-default-live"
 import { StoreModernoLive } from "@/components/store/store-moderno-live"
 import { StoreEleganteLive } from "@/components/store/store-elegante-live"
 import { StoreBoldLive } from "@/components/store/store-bold-live"
@@ -15,6 +14,7 @@ import { StoreLuxuryLive } from "@/components/store/store-luxury-live"
 import { StoreMinimalLive } from "@/components/store/store-minimal-live"
 import { StoreVintageLive } from "@/components/store/store-vintage-live"
 import { StoreBasicoLive } from "@/components/store/store-basico-live"
+import { StoreDefaultLive } from "@/components/store/store-default-live"
 
 const MODERNO_ACCENT = "#e8590c"
 const ELEGANTE_ACCENT = "#f7791e"
@@ -102,14 +102,18 @@ export default async function StorePage({ params }: StorePageProps) {
   // cargado tal cual (en CLP), sin conversión.
   const exchangeRate = hasDolarPeso && store.country !== "CL" ? (store.dolar_valor || 0) : 0
 
-  const [products, categories, featuredProducts, hasMayoristaMinorista, hasBannerDeslizante, storePages] = await Promise.all([
+  const [products, categories, featuredProducts, hasMayoristaMinorista, hasBannerDeslizante, hasBotoneraCabecera, allStorePages] = await Promise.all([
     getStoreProducts(store.id),
     getStoreCategories(store.id),
     getFeaturedProducts(store.id),
     hasStoreFeature(store.id, 'mayorista_minorista'),
     hasStoreFeature(store.id, 'banner_deslizante'),
+    hasStoreFeature(store.id, 'botonera_cabecera'),
     getStorePages(store.id),
   ])
+  // "Botonera Cabecera" es cosita paga: sin la compra, no se muestran las
+  // páginas propias en el menú aunque existan creadas.
+  const storePages = hasBotoneraCabecera ? allStorePages : []
 
   // Los temples "Moderno" y "Elegante" solo reemplazan el index (header/hero/
   // categorías/destacados). Todo lo demás —producto, categoría, checkout,
@@ -312,6 +316,7 @@ export default async function StorePage({ params }: StorePageProps) {
         hasMayoristaMinorista={hasMayoristaMinorista}
         hasBannerDeslizante={hasBannerDeslizante}
         isOwner={isOwner}
+        storePages={storePages}
       />
     )
   }

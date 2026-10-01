@@ -43,6 +43,7 @@ const FEATURE_NAMES: Record<string, string> = {
   mayorista_minorista: "Mayorista / Minorista",
   modelos_templates: "Modelos/Templates",
   customer_accounts: "Cuentas de clientes",
+  botonera_cabecera: "Botonera Cabecera",
 }
 
 const FEATURE_TAB: Record<string, string> = {
@@ -59,6 +60,7 @@ const FEATURE_TAB: Record<string, string> = {
   mayorista_minorista: "mayorista",
   modelos_templates: "plans",
   customer_accounts: "clientes",
+  botonera_cabecera: "paginas",
 }
 
 interface AdminDashboardProps {
@@ -228,7 +230,6 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
             {navGratis("shipping", "Envíos")}
             {navGratis("orders", "Pedidos")}
             {navGratis("contacto", "Contacto")}
-            {navGratis("paginas", "Páginas propias")}
             {navGratis("marketing", "Marketing")}
             {navGratis("facturacion", "Facturación electrónica")}
           </div>
@@ -252,6 +253,17 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
             >
               Leer más →
             </a>
+            {/* Independiente de "Modelos/Templates": es un pago único aparte ($10, clonado real
+                por link), no una tile de la grilla de modelos. Antes solo se podía llegar acá
+                si además tenías comprado Modelos/Templates ($1/mes) — ya no depende de eso. */}
+            <div
+              onClick={() => { setActiveTab("plans"); setPlansTab("clonar") }}
+              className={`flex items-center px-3 py-2 rounded-lg text-sm cursor-pointer mb-0.5 mt-1 transition-colors font-medium ${
+                activeTab === "plans" && plansTab === "clonar" ? "bg-violet-500 text-white" : "bg-violet-100 text-violet-700 hover:bg-violet-200"
+              }`}
+            >
+              ✨ Clonar con IA
+            </div>
           </div>
 
           {activeCositas.length > 0 && (
@@ -364,7 +376,9 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
             </TabsContent>
 
             <TabsContent value="paginas">
-              <StorePagesManager storeId={store.id} subdomain={subdomain} />
+              {purchasedFeatures.includes("botonera_cabecera") && (
+                <StorePagesManager storeId={store.id} subdomain={subdomain} />
+              )}
             </TabsContent>
 
             <TabsContent value="clientes">
@@ -397,6 +411,7 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
                 initialActiveTheme={store.plan_features?.active_theme || null}
                 initialCustomThemeRequest={store.plan_features?.custom_theme_request || null}
                 initialCarousels={store.plan_features?.carousels || null}
+                initialSliderImages={(store.plan_features?.slider_images || []).map((img: { url: string }) => img.url)}
                 purchasedFeatures={purchasedFeatures}
                 onFeaturePurchased={(code) => setPurchasedFeatures([...purchasedFeatures, code])}
                 activeTab={plansTab}

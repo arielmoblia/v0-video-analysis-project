@@ -11,6 +11,7 @@ import { ProductGrid } from "@/components/store/product-grid"
 import { StoreFooter } from "@/components/store/store-footer"
 import { StoreCarousels } from "@/components/store/store-carousels"
 import { MultiImageUpload } from "@/components/admin/multi-image-upload"
+import type { StorePage } from "@/lib/services/store-pages"
 
 interface StoreDefaultLiveProps {
   store: Store
@@ -22,6 +23,7 @@ interface StoreDefaultLiveProps {
   hasMayoristaMinorista: boolean
   hasBannerDeslizante: boolean
   isOwner: boolean
+  storePages?: StorePage[]
 }
 
 // Tema por defecto (tiendas clonadas tipo pink/pinkonlineoficial, sin un
@@ -41,6 +43,7 @@ export function StoreDefaultLive({
   hasMayoristaMinorista,
   hasBannerDeslizante,
   isOwner,
+  storePages = [],
 }: StoreDefaultLiveProps) {
   const initialSliderImages = ((store.plan_features?.slider_images as { url: string }[]) || []).map((img) => img.url)
   const [sliderImages, setSliderImages] = useState<string[]>(initialSliderImages)
@@ -79,7 +82,7 @@ export function StoreDefaultLive({
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {headerStyle === "pink" ? (
-        <StoreHeaderPink store={store} categories={categories} />
+        <StoreHeaderPink store={store} categories={categories} storePages={storePages} />
       ) : (
         <StoreHeader store={store} categories={categories} hasMayoristaMinorista={hasMayoristaMinorista} />
       )}

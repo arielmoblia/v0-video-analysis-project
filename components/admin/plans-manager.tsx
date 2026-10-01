@@ -16,6 +16,7 @@ import {
   BarChart3,
   Video,
   MessageSquare,
+  Users,
   EyeOff,
   Globe,
   Package,
@@ -45,10 +46,11 @@ import {
   ChevronDown,
   ChevronUp,
   GalleryHorizontal,
-  Users,
+  Images,
 } from "lucide-react"
 import CustomVariantsManager from "./custom-variants-manager" // Import CustomVariantsManager
 import { DolarManager } from "./dolar-manager"
+import { MultiImageUpload } from "./multi-image-upload"
 import type { CarouselBlock } from "@/components/store/store-carousels"
 
 const PAYPAL_CLIENT_ID = "ASYvylVa8L7Qf57IKodIEIYd6BalypfW9TGuFkanCnaCR55rP-B-XRemN1FcVLcx0Aii2DIKDtr68RSA"
@@ -63,6 +65,7 @@ interface PlansManagerProps {
   initialActiveTheme?: string | null
   initialCustomThemeRequest?: { url: string; status: string; requested_at: string } | null
   initialCarousels?: CarouselBlock[] | null
+  initialSliderImages?: string[] | null
   activeTab?: string
   onActiveTabChange?: (tab: string) => void
   onGoToProducts?: () => void
@@ -158,14 +161,13 @@ const pageDesigns = [
 ]
 
 // Separado de pageDesigns a propósito: no es un modelo prearmado ($1/mes de Modelos/Templates),
-// es el clonado real de la portada por link ($10 único, feature "theme_custom_url"). Antes vivía
-// mezclado como una tile más de la grilla y quedaba invisible; ahora es su propia sección "Portada
-// especial", siempre visible en el menú.
+// es el clonado real por link ($10 único, feature "theme_custom_url"). Antes vivía mezclado como
+// una tile más de la grilla y quedaba invisible; ahora es su propia sección, siempre visible.
 const customCloneDesign = {
   id: "nuevo_propio",
-  name: "Diseño Customizado de Portada",
+  name: "Clonar con IA",
   subtitle: "Copiá el estilo de otra tienda",
-  description: "Pegá el link de una tienda que te gusta y una IA arma una portada igual para vos, usando tus productos y fotos reales.",
+  description: "Pegá el link de una tienda que te gusta y armamos un modelo nuevo con ese estilo, usando tus productos y fotos reales.",
 }
 
 interface DbFeature {
@@ -191,7 +193,9 @@ const ICON_MAP: { [key: string]: any } = {
   Palette, // Add Palette to ICON_MAP
   Truck,
   GalleryHorizontal,
+  Images,
   Users,
+  FileText,
 }
 
 const FEATURE_CONFIG: { [key: string]: { configTitle: string; configDescription: string } } = {
@@ -232,7 +236,7 @@ const FEATURE_CONFIG: { [key: string]: { configTitle: string; configDescription:
   dolar_peso: {
     configTitle: "Dólar/Peso Automático",
     configDescription:
-      "Con esta función, podés cargar tus precios en dólares y tus clientes los verán automáticamente convertidos a pesos argentinos usando la cotización del dólar actualizada. Nunca más tenés que actualizar precios por inflación.",
+      "Con esta función, podés cargar tus precios en dólares y tus clientes los verán automáticamente convertidos a pesos argentinos usando la cotización del dólar blue actualizada. Nunca más tenés que actualizar precios por inflación.",
   },
   google_merchant: {
     configTitle: "Google Shopping",
@@ -259,20 +263,25 @@ const FEATURE_CONFIG: { [key: string]: { configTitle: string; configDescription:
     configDescription:
       "Poné la dirección de tu otra tienda (la mayorista o la minorista) y va a aparecer un botón en el encabezado de tu tienda que lleva directo a ella.",
   },
-  multi_images: {
-    configTitle: "Configurar Galería de Imágenes",
-    configDescription:
-      "Subí hasta 5 fotos por producto. Tus clientes las ven en una galería deslizable, con el producto desde todos los ángulos.",
-  },
   carousels: {
     configTitle: "Configurar Carruseles",
     configDescription:
       "Agregá una franja de productos destacados que se desliza, y/o una franja de texto con frases que van rotando (ej: promociones, envíos, redes). Aparecen en tu portada, debajo del banner principal.",
   },
+  banner_deslizante: {
+    configTitle: "Configurar Banner Deslizante",
+    configDescription:
+      "Cargá varias fotos (de tus productos o promociones) y se van a ir mostrando solas en el banner principal de tu portada, con flechas y puntitos para navegar. Reemplaza el banner fijo mientras esté activo.",
+  },
   customer_accounts: {
     configTitle: "Cuentas de Clientes",
     configDescription:
       "Una vez activada, en tu tienda aparece un botón para que tus clientes se registren y vean su historial de pedidos. En tu panel, en la pestaña \"Clientes\", vas a ver el listado completo con cuánto gastó cada uno.",
+  },
+  botonera_cabecera: {
+    configTitle: "Botonera Cabecera",
+    configDescription:
+      "Creá páginas propias (Quiénes somos, Cómo comprar, Guía de talles, Política de devolución, etc.) desde la pestaña \"Páginas\" de tu panel. Sin límite de páginas. Los links aparecen solos en el menú de tu tienda.",
   },
 }
 
@@ -283,20 +292,15 @@ const LEER_MAS_URLS: Record<string, string> = {
   lupa: `${APP_URL}/plan-cositas/lupa`,
   dropshipping: `${APP_URL}/plan-cositas/dropshipping`,
   mayorista_minorista: `${APP_URL}/plan-cositas/mayorista-minorista`,
-  modelos_templates: `${APP_URL}/plan-cositas/modelos-templates`,
-  nuevo_propio: `${APP_URL}/plan-cositas/portada-especial`,
-  multi_images: `${APP_URL}/plan-cositas/galeria-imagenes`,
   carousels: `${APP_URL}/plan-cositas/carruseles`,
+  banner_deslizante: `${APP_URL}/plan-cositas/banner-deslizante`,
   customer_accounts: `${APP_URL}/plan-cositas/cuentas-clientes`,
+  botonera_cabecera: `${APP_URL}/plan-cositas/botonera-cabecera`,
 }
 
-const getLeerMasUrl = (code: string, subdomain?: string) => {
-  const base = LEER_MAS_URLS[code] || `${APP_URL}/cositas#${code}`
-  if (!LEER_MAS_URLS[code] || !subdomain) return base
-  return `${base}?tienda=${encodeURIComponent(subdomain)}`
-}
+const getLeerMasUrl = (code: string) => LEER_MAS_URLS[code] || `${APP_URL}/cositas#${code}`
 
-export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialCustomThemeRequest, initialCarousels, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts, autoSelectFeature }: PlansManagerProps) {
+export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialCustomThemeRequest, initialCarousels, initialSliderImages, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts, autoSelectFeature }: PlansManagerProps) {
   const [internalActiveTab, setInternalActiveTab] = useState("cositas")
   const activeTab = controlledActiveTab ?? internalActiveTab
   const setActiveTab = onActiveTabChange ?? setInternalActiveTab
@@ -315,7 +319,6 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   // Modal de configuración
   const [configModal, setConfigModal] = useState<string | null>(null)
   const [trialModal, setTrialModal] = useState<{name: string, days: number} | null>(null)
-  const [trialIntroFeature, setTrialIntroFeature] = useState<DbFeature | null>(null)
   const [trialCardFeature, setTrialCardFeature] = useState<DbFeature | null>(null)
   const [trialCardLoadingBrick, setTrialCardLoadingBrick] = useState(false)
   const [trialCardSubmitting, setTrialCardSubmitting] = useState(false)
@@ -393,6 +396,28 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       setSavingCarousels(false)
     }
   }
+
+  const [sliderImages, setSliderImages] = useState<string[]>(initialSliderImages || [])
+  const [savingSliderImages, setSavingSliderImages] = useState(false)
+  const [sliderImagesSaved, setSliderImagesSaved] = useState(false)
+
+  const handleSaveSliderImages = async () => {
+    setSavingSliderImages(true)
+    setSliderImagesSaved(false)
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId, slider_images: sliderImages.map((url) => ({ url })) }),
+      })
+      if (res.ok) {
+        setSliderImagesSaved(true)
+        setTimeout(() => setSliderImagesSaved(false), 2000)
+      }
+    } finally {
+      setSavingSliderImages(false)
+    }
+  }
   const [customUrlDialogOpen, setCustomUrlDialogOpen] = useState(false)
   const [customUrl, setCustomUrl] = useState("")
   const [customUrlError, setCustomUrlError] = useState("")
@@ -435,7 +460,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
           const customThemeFeature = allFeatures.find((f) => f.code === "theme_custom_url")
           setPurchasedFeatures(data.features || [])
           setPurchasedDetails(data.purchasedDetails || [])
-          // "theme_custom_url" no se muestra como cosita genérica: se cobra desde la sección "Portada especial"
+          // "theme_custom_url" no se muestra como cosita genérica: se cobra desde el popup de "Nuevo/Propio"
           setAvailableFeatures(allFeatures.filter((f) => f.code !== "theme_custom_url"))
           if (customThemeFeature) setCustomThemePriceUSD(customThemeFeature.price)
           if (data.exchangeRate) {
@@ -456,17 +481,6 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   // cosita sola y lleva a la caja de pago, sin que haya que buscarla a mano.
   useEffect(() => {
     if (!autoSelectFeature || loading || autoSelectHandled.current) return
-    // "Portada especial" no es una cosita de la tabla (ver comentario en fetchFeatures),
-    // así que no está en availableFeatures: abre directo el diálogo de la URL a clonar.
-    if (autoSelectFeature === "nuevo_propio") {
-      autoSelectHandled.current = true
-      setCustomUrlDialogOpen(true)
-      setTimeout(() => {
-        const el = document.getElementById("feature-nuevo_propio")
-        el?.scrollIntoView({ behavior: "smooth", block: "center" })
-      }, 300)
-      return
-    }
     const feature = availableFeatures.find((f) => f.code === autoSelectFeature)
     if (!feature) return
     autoSelectHandled.current = true
@@ -533,9 +547,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       normalized = `https://${normalized}`
     }
     try {
-      const url = new URL(normalized)
-      if (!url.hostname.includes(".")) return null
-      return url.toString()
+      return new URL(normalized).toString()
     } catch {
       return null
     }
@@ -678,7 +690,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   normalizedCustomUrlRef.current = normalizedCustomUrl
 
   const renderCloneWithAICard = () => (
-    <div className="rounded-xl border-2 border-dashed border-violet-300 bg-violet-50 p-4 flex items-start gap-3">
+    <div className="mt-4 rounded-xl border-2 border-dashed border-violet-300 bg-violet-50 p-4 flex items-start gap-3">
       <div className="w-11 h-11 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0 text-violet-500">
         <Sparkles className="h-5 w-5" />
       </div>
@@ -686,7 +698,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
         <p className="text-sm font-semibold text-violet-900">{customCloneDesign.name}</p>
         <p className="text-xs text-violet-700 mt-0.5">{customCloneDesign.description}</p>
         <a
-          href={getLeerMasUrl(customCloneDesign.id, subdomain)}
+          href={getLeerMasUrl(customCloneDesign.id)}
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
@@ -694,11 +706,6 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
         >
           Leer más →
         </a>
-        {customThemeRequest?.url && (
-          <p className="text-xs text-violet-800 mt-1 break-all">
-            Página que clonaste: <span className="font-medium">{customThemeRequest.url}</span>
-          </p>
-        )}
         <div className="mt-2">
           {customThemeRequest?.status === "pendiente" ? (
             <p className="text-xs text-violet-600 font-medium">Lo estamos armando…</p>
@@ -710,7 +717,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
               onClick={() => setCustomUrlDialogOpen(true)}
               className="text-xs px-3 py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
             >
-              Comprar
+              Clonar con IA · USD {customThemePriceUSD}
             </button>
           )}
         </div>
@@ -726,7 +733,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   const clearCustomUrlCardBrick = async () => {
     // Igual que con el Brick de "Probar gratis": invalidamos la creación en
     // curso apenas arranca un clear, así si esa promesa vieja resuelve tarde
-    // se descarta sola en vez de pisar el contenedor.
+    // se descarta sola en vez de pisar el contenedor nuevo.
     customUrlCardBrickGen.current += 1
     if (customUrlCardBrickController.current) {
       try { await customUrlCardBrickController.current.unmount() } catch {}
@@ -738,8 +745,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
 
   // Igual que el Brick de "Probar gratis": si el SDK de Mercado Pago se cuelga
   // a mitad de camino (conexión lenta, bfcache al volver con "atrás"), sin este
-  // timeout el esqueleto gris de la imagen que mandó Ariel queda así para
-  // siempre, sin ningún mensaje de error.
+  // timeout el formulario queda cargando para siempre sin ningún mensaje de error.
   const CUSTOM_URL_BRICK_TIMEOUT_MS = 15000
 
   const initCustomUrlCardBrick = () => queueCustomUrlCardBrickOp(async () => {
@@ -836,17 +842,8 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
 
   const startTrial = (feature: any) => {
     if (!feature.trial_days || feature.trial_days === 0) return
-    // Primero mostramos qué es (o, en Modelos/Templates, los diseños para elegir)
-    // y recién después de esa elección se pide la tarjeta.
-    setTrialIntroFeature(feature)
-  }
-
-  const confirmTrialIntro = () => {
-    const feature = trialIntroFeature
-    setTrialIntroFeature(null)
-    if (!feature) return
-    // Ahora sí pedimos la tarjeta (Mercado Pago) para poder cobrar sola
-    // cuando termine el trial. Se abre el diálogo con el Brick.
+    // Antes de activar la prueba pedimos la tarjeta (Mercado Pago) para poder
+    // cobrar sola cuando termine el trial. Se abre el diálogo con el Brick.
     setTrialCardError("")
     trialCardBrickBuilt.current = false
     setTrialCardFeature(feature)
@@ -923,7 +920,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       trialCardBrickGen.current += 1
       trialCardBrickBuilt.current = false
       if (trialCardBrickRef.current) trialCardBrickRef.current.innerHTML = ""
-      setTrialCardError("El formulario de pago tardó demasiado en cargar. Si estás en una ventana de incógnito o con bloqueadores de cookies, probá en una ventana normal. Cerrá esto y probá de nuevo.")
+      setTrialCardError("El formulario de pago tardó demasiado en cargar. Cerrá esta ventana y probá de nuevo.")
     }, TRIAL_BRICK_TIMEOUT_MS)
 
     let controller: any = null
@@ -1171,7 +1168,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                   : "Activá esta función para empezar a usarla"}
               </p>
               <a
-                href={getLeerMasUrl("dolar_peso", subdomain)}
+                href={`${APP_URL}/plan-cositas/dolar-peso`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block mt-3 text-sm text-blue-600 hover:underline"
@@ -1606,7 +1603,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                     <span className="text-sm font-medium text-green-700">${priceARS.toLocaleString("es-AR")}/mes</span>
                                   )}
                                   <a
-                                    href={getLeerMasUrl(feature.code, subdomain)}
+                                    href={getLeerMasUrl(feature.code)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={(e) => e.stopPropagation()}
@@ -1708,6 +1705,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                         ),
                                       )}
                                     </div>
+                                    {renderCloneWithAICard()}
                                   </div>
                                 )}
                                 {expandedFeatures.has(feature.code) && feature.code === "dolar_peso" && (
@@ -1801,11 +1799,32 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                     )}
                                   </div>
                                 )}
+                                {expandedFeatures.has(feature.code) && feature.code === "banner_deslizante" && (
+                                  <div className="px-4 pb-4 pt-1 space-y-3">
+                                    <p className="text-xs text-green-700">{feature.description}</p>
+                                    <Label className="text-xs text-green-900">
+                                      Fotos del banner (van rotando solas, en el orden que las cargues)
+                                    </Label>
+                                    <MultiImageUpload value={sliderImages} onChange={setSliderImages} maxImages={8} />
+                                    <Button size="sm" disabled={savingSliderImages || sliderImages.length < 2} onClick={handleSaveSliderImages}>
+                                      {savingSliderImages ? "Guardando..." : "Guardar"}
+                                    </Button>
+                                    {sliderImages.length < 2 && (
+                                      <p className="text-xs text-neutral-500">Cargá al menos 2 fotos para que el banner deslizante se active.</p>
+                                    )}
+                                    {sliderImagesSaved && (
+                                      <p className="text-xs text-green-700 flex items-center gap-1">
+                                        <Check className="w-3.5 h-3.5" /> Guardado. Ya se ve en tu tienda.
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
                                 {expandedFeatures.has(feature.code) &&
                                   feature.code !== "modelos_templates" &&
                                   feature.code !== "mayorista_minorista" &&
                                   feature.code !== "multi_images" &&
                                   feature.code !== "carousels" &&
+                                  feature.code !== "banner_deslizante" &&
                                   feature.code !== "dolar_peso" && (
                                     <div className="px-4 pb-4 pt-1">
                                       <p className="text-xs text-green-700">{feature.description}</p>
@@ -1817,8 +1836,8 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                         </div>
                       )}
 
-                      {/* BLOQUE NARANJA: disponibles no compradas (siempre tiene al menos "Portada especial", fila manual) */}
-                      {(
+                      {/* BLOQUE NARANJA: disponibles no compradas */}
+                      {availableFeatures.filter(f => f.is_active && !purchasedFeatures.includes(f.code)).length > 0 && (
                         <div className="rounded-xl overflow-hidden border-2 border-orange-300">
                           <div className="bg-orange-100 px-4 py-2.5 flex items-center gap-2 border-b border-orange-200">
                             <div className="w-2 h-2 rounded-full bg-orange-500"></div>
@@ -1852,7 +1871,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                   </button>
                                 </div>
                                 <a
-                                  href={getLeerMasUrl(feature.code, subdomain)}
+                                  href={getLeerMasUrl(feature.code)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
@@ -1863,69 +1882,16 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                               </div>
                             )
                           })}
-
-                          {/* Fila manual: "Portada especial" no es una cosita de la tabla store_features
-                              (es un pago único aparte, feature "theme_custom_url"), pero el cliente la
-                              espera acá mezclada con el resto de las cositas, no escondida en el menú. */}
-                          <div id="feature-nuevo_propio" className="flex items-center gap-3 px-4 py-3 bg-orange-50">
-                            <div className="w-9 h-9 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0">
-                              <Sparkles className="h-4 w-4 text-violet-600" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-orange-900 text-sm">{customCloneDesign.name}</p>
-                              <p className="text-xs text-orange-600 truncate" title={customThemeRequest?.url}>
-                                {customThemeRequest?.url ? `Clonaste: ${customThemeRequest.url}` : customCloneDesign.description}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              {customThemeRequest?.status === "pendiente" ? (
-                                <span className="text-xs text-violet-600 font-medium whitespace-nowrap">Lo estamos armando…</span>
-                              ) : customThemeRequest?.status === "listo" ? (
-                                <span className="text-xs text-green-600 font-medium whitespace-nowrap">¡Listo!</span>
-                              ) : (
-                                <button
-                                  onClick={() => setCustomUrlDialogOpen(true)}
-                                  className="text-xs bg-violet-500 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-violet-600 whitespace-nowrap"
-                                >
-                                  Comprar
-                                </button>
-                              )}
-                            </div>
-                            <a
-                              href={getLeerMasUrl(customCloneDesign.id, subdomain)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-xs text-orange-600 hover:text-orange-700 hover:underline whitespace-nowrap flex-shrink-0"
-                            >
-                              Leer más →
-                            </a>
-                          </div>
                         </div>
                       )}
 
-                      {/* BLOQUE GRIS: proximamente (siempre tiene al menos "Clonar con IA", fila manual) */}
-                      {(
+                      {/* BLOQUE GRIS: proximamente */}
+                      {availableFeatures.filter(f => !f.is_active).length > 0 && (
                         <div className="rounded-xl overflow-hidden border border-slate-200 opacity-60">
                           <div className="bg-slate-100 px-4 py-2.5 flex items-center gap-2 border-b border-slate-200">
                             <div className="w-2 h-2 rounded-full bg-slate-400"></div>
                             <span className="text-sm font-medium text-slate-500">Próximamente</span>
                           </div>
-
-                          {/* Fila manual: "Clonar con IA" (tienda completa, catálogo incluido) todavía no
-                              tiene precio ni mecánica definida — distinto de "Portada especial" (arriba),
-                              que solo clona el diseño de la portada. Va acá hasta que se termine de armar. */}
-                          <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 cursor-not-allowed">
-                            <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
-                              <Copy className="h-4 w-4 text-slate-400" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-slate-400 text-sm">Clonar con IA</p>
-                              <p className="text-xs text-slate-400 truncate">Clonamos tu tienda web completa (catálogo y productos incluidos), no solo la portada.</p>
-                            </div>
-                            <span className="text-xs text-slate-400 border border-slate-200 px-3 py-1 rounded-full flex-shrink-0">Pronto</span>
-                          </div>
-
                           {availableFeatures.filter(f => !f.is_active).map(feature => {
                             const IconComponent = ICON_MAP[feature.icon] || Package
                             return (
@@ -2209,20 +2175,21 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
               <p className="text-xs text-muted-foreground mt-4">
                 Por ahora esto guarda tu preferencia de diseño. Todavía estamos conectando cada modelo a los productos y el carrito reales de tu tienda — te avisamos apenas "Moderno" quede funcionando 100% con tus datos.
               </p>
+              {renderCloneWithAICard()}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="portada" className="mt-6">
+        <TabsContent value="clonar" className="mt-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-violet-500" />
-                Diseño Customizado de Portada
+                Clonar con IA
               </CardTitle>
               <CardDescription>
-                Pago único aparte de Modelos/Templates. Vos pegás el link de una tienda que te gusta y una IA
-                arma una portada igual para vos, usando tus productos y fotos reales.
+                Pago único aparte de Modelos/Templates. Pegá el link de una tienda que te gusta y armamos un modelo
+                nuevo con ese estilo, usando tus productos y fotos reales.
               </CardDescription>
             </CardHeader>
             <CardContent>{renderCloneWithAICard()}</CardContent>
@@ -2273,25 +2240,24 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       >
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Diseño Customizado de Portada: pedila a partir de un link</DialogTitle>
+            <DialogTitle>Creá tu modelo a partir de un link</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <Input
+              placeholder="xxxxxx.com"
+              value={customUrl}
+              onChange={(e) => {
+                setCustomUrl(e.target.value)
+                setCustomUrlError("")
+              }}
+              disabled={submittingCustomUrl}
+            />
+            {customUrlError && <p className="text-xs text-red-600">{customUrlError}</p>}
+
             <ol className="space-y-3 text-sm">
-              <li className="space-y-2">
-                <div className="flex gap-2">
-                  <span className="font-semibold text-violet-700">1)</span>
-                  <span>Pegá el link de la página que te guste</span>
-                </div>
-                <Input
-                  placeholder="xxxxxx.com"
-                  value={customUrl}
-                  onChange={(e) => {
-                    setCustomUrl(e.target.value)
-                    setCustomUrlError("")
-                  }}
-                  disabled={submittingCustomUrl}
-                />
-                {customUrlError && <p className="text-xs text-red-600">{customUrlError}</p>}
+              <li className="flex gap-2">
+                <span className="font-semibold text-violet-700">1)</span>
+                <span>Pegá el link de la página que te guste</span>
               </li>
               <li className="space-y-2">
                 <div className="flex gap-2">
@@ -2330,63 +2296,6 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
         </DialogContent>
       </Dialog>
 
-      {/* Popup intermedio: explica qué es (o, en Modelos/Templates, deja ver los diseños) antes de pedir la tarjeta */}
-      <Dialog open={!!trialIntroFeature} onOpenChange={(open) => { if (!open) setTrialIntroFeature(null) }}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{trialIntroFeature?.name}</DialogTitle>
-            <DialogDescription>
-              {(trialIntroFeature && (FEATURE_CONFIG[trialIntroFeature.code]?.configDescription || (trialIntroFeature as any).full_description)) || trialIntroFeature?.description}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            {trialIntroFeature?.code === "modelos_templates" && (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {pageDesigns.filter(d => !d.comingSoon).map((design) => (
-                  <button
-                    key={design.id}
-                    type="button"
-                    onClick={() => setPreviewDesign(design)}
-                    className="relative h-20 w-full rounded-lg overflow-hidden bg-muted group block border"
-                  >
-                    <Image
-                      src={design.image || "/images/placeholders/placeholder.svg"}
-                      alt={design.name}
-                      fill
-                      className={`object-cover ${design.imagePosition || "object-top"}`}
-                      sizes="150px"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-end p-1">
-                      <span className="text-white text-[10px] font-medium drop-shadow">{design.name}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-            {trialIntroFeature?.code === "modelos_templates" && (
-              <p className="text-xs text-muted-foreground">
-                Tocá un diseño para verlo en grande. Vas a poder elegir cuál usar una vez activada la prueba.
-              </p>
-            )}
-            {trialIntroFeature && (
-              <a
-                href={getLeerMasUrl(trialIntroFeature.code, subdomain)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block text-xs text-orange-700 hover:text-orange-800 hover:underline"
-              >
-                Leer más →
-              </a>
-            )}
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setTrialIntroFeature(null)}>Cancelar</Button>
-              <Button onClick={confirmTrialIntro}>Continuar</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
       <Dialog open={!!trialCardFeature} onOpenChange={(open) => { if (!open) { setTrialCardFeature(null); setTrialCardError(""); unmountTrialCardBrick() } }}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -2417,9 +2326,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
               <p className="text-xs text-muted-foreground text-center">Guardando tarjeta...</p>
             )}
             {trialCardError && (
-              <div className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 text-center">
-                {trialCardError}
-              </div>
+              <p className="text-xs text-red-600 text-center">{trialCardError}</p>
             )}
             <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
               <Lock className="w-3 h-3" /> Tu tarjeta la guarda Mercado Pago, no nosotros

@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 import { useCart } from "@/components/store/cart-provider"
 import { formatPrice } from "@/lib/currency"
 import type { Store, Category } from "@/lib/store-context"
+import type { StorePage } from "@/lib/services/store-pages"
 
 function useCustomerName(subdomain: string) {
   const [name, setName] = useState<string | null>(null)
@@ -21,13 +22,14 @@ function useCustomerName(subdomain: string) {
 interface StoreHeaderPinkProps {
   store: Store
   categories: Category[]
+  storePages?: StorePage[]
 }
 
 // Cabecera "Pink": calco del header real de pinkonlineoficial.com.ar
 // (logo en dos líneas, buscador grande siempre visible, cuenta y carrito
 // con ícono circular rosa). Reutilizable: cualquier tienda puede sumarla
 // más adelante, no quedó atada solo a Pink.
-export function StoreHeaderPink({ store, categories }: StoreHeaderPinkProps) {
+export function StoreHeaderPink({ store, categories, storePages = [] }: StoreHeaderPinkProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [productsMenuOpen, setProductsMenuOpen] = useState(false)
   const [basePath, setBasePath] = useState(`/tienda/${store.subdomain}`)
@@ -176,6 +178,34 @@ export function StoreHeaderPink({ store, categories }: StoreHeaderPinkProps) {
                 </div>
               )}
             </div>
+
+            {storePages.length > 0 && (
+              <div className="flex items-center gap-6 ml-auto pr-[10pt]">
+                {storePages.map((page) => (
+                  <span key={page.id} className="contents">
+                    <Link
+                      href={`${basePath}/pagina/${page.slug}`}
+                      className="text-sm tracking-wide hover:opacity-60 transition-opacity whitespace-nowrap"
+                    >
+                      {page.title.toUpperCase()}
+                    </Link>
+                    {/* El arrepentimiento/devolución legal (Ley 24.240) ya tiene su propia
+                        página de sistema en /devoluciones, con los plazos correctos (10 días).
+                        No se creó como store_page aparte para no duplicar esos términos con
+                        otro texto (el original de 7 días que tenía pinkonlineoficial.com.ar
+                        no es compatible con la ley argentina) */}
+                    {page.slug === "como-comprar" && (
+                      <Link
+                        href="/devoluciones"
+                        className="text-sm tracking-wide hover:opacity-60 transition-opacity whitespace-nowrap"
+                      >
+                        POLÍTICA DE DEVOLUCIÓN
+                      </Link>
+                    )}
+                  </span>
+                ))}
+              </div>
+            )}
           </nav>
 
           {mobileMenuOpen && (
@@ -195,6 +225,22 @@ export function StoreHeaderPink({ store, categories }: StoreHeaderPinkProps) {
                     {cat.name}
                   </Link>
                 ))}
+                {storePages.length > 0 && (
+                  <div className="border-t border-neutral-100 pt-2 flex flex-col gap-4">
+                    {storePages.map((page) => (
+                      <span key={page.id} className="contents">
+                        <Link href={`${basePath}/pagina/${page.slug}`} className="text-sm tracking-wide py-2">
+                          {page.title}
+                        </Link>
+                        {page.slug === "como-comprar" && (
+                          <Link href="/devoluciones" className="text-sm tracking-wide py-2">
+                            Política de Devolución
+                          </Link>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </nav>
             </div>
           )}
