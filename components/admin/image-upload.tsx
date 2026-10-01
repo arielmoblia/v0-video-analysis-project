@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 interface ImageUploadProps {
   value?: string
   onChange: (url: string) => void
-  type?: "banner" | "product"
+  type?: "banner" | "product" | "logo"
 }
 
 export function ImageUpload({ value, onChange, type = "product" }: ImageUploadProps) {

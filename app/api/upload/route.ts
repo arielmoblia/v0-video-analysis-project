@@ -32,6 +32,11 @@ export async function POST(request: NextRequest) {
         .resize(1920, 1080, { fit: "inside", withoutEnlargement: true })
         .webp({ quality: 90 })
         .toBuffer()
+    } else if (type === "logo") {
+      processed = await sharp(buffer)
+        .resize(400, 400, { fit: "inside", withoutEnlargement: true })
+        .webp({ quality: 90 })
+        .toBuffer()
     } else {
       processed = await sharp(buffer)
         .resize(800, 1000, { fit: "inside", withoutEnlargement: true })

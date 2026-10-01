@@ -14,6 +14,7 @@ export interface Store {
   country?: string | null
   plan?: string
   admin_password?: string
+  logo_url?: string | null
   banner_image?: string | null
   banner_title?: string | null
   banner_subtitle?: string | null

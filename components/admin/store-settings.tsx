@@ -35,6 +35,7 @@ export function StoreSettings({ store }: StoreSettingsProps) {
   // Información básica
   const [storeName, setStoreName] = useState(store.site_title || "")
   const [storeEmail, setStoreEmail] = useState(store.email || "")
+  const [logoUrl, setLogoUrl] = useState(store.logo_url || "")
 
   // Subdominio (nombre.tol.ar)
   const [subdomain, setSubdomain] = useState(store.subdomain || "")
@@ -155,6 +156,7 @@ export function StoreSettings({ store }: StoreSettingsProps) {
           site_title: storeName,
           subdomain: normalizedSubdomain,
           email: storeEmail,
+          logo_url: logoUrl,
           banner_image: bannerImage,
           banner_title: bannerTitle,
           banner_subtitle: bannerSubtitle,
@@ -335,6 +337,14 @@ export function StoreSettings({ store }: StoreSettingsProps) {
               placeholder="tu@email.com"
               type="email"
             />
+          </div>
+          <div>
+            <Label className="mb-2 block">Logo</Label>
+            <ImageUpload value={logoUrl} onChange={setLogoUrl} type="logo" />
+            <p className="text-xs text-neutral-500 mt-2">
+              Si subís una imagen, reemplaza el nombre en letras del encabezado de tu tienda. Si no subís nada, se
+              sigue mostrando el nombre de la tienda en texto.
+            </p>
           </div>
           <div>
             <Label>Dirección</Label>

@@ -69,13 +69,19 @@ export function StoreHeaderPink({ store, categories, storePages = [] }: StoreHea
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
 
-            <Link href={basePath || "/"} className="shrink-0 leading-[0.85] font-black uppercase tracking-tight text-black">
-              <span className="block text-xl">{logoFirstWord}</span>
-              {logoSecondLine && <span className="block text-xl">{logoSecondLine}</span>}
+            <Link href={basePath || "/"} className="shrink-0">
+              {store.logo_url ? (
+                <img src={store.logo_url} alt={store.site_title || "Logo"} className="h-12 w-auto object-contain" />
+              ) : (
+                <span className="leading-[0.85] font-black uppercase tracking-tight text-black">
+                  <span className="block text-xl">{logoFirstWord}</span>
+                  {logoSecondLine && <span className="block text-xl">{logoSecondLine}</span>}
+                </span>
+              )}
             </Link>
 
             <div className="flex-1 hidden sm:block max-w-2xl">
-              <div className="flex items-stretch border border-neutral-300 rounded-sm overflow-hidden">
+              <div className="flex items-stretch border border-neutral-300 rounded-sm overflow-hidden h-10">
                 <input
                   type="search"
                   placeholder="¿Qué estás buscando?"
@@ -143,10 +149,10 @@ export function StoreHeaderPink({ store, categories, storePages = [] }: StoreHea
           </div>
 
           <nav
-            className="hidden md:flex items-center gap-8 h-12 border-t border-neutral-100"
+            className="hidden md:flex items-center gap-8 h-12 border-t border-neutral-100 text-neutral-600"
             aria-label="Navegacion principal de la tienda"
           >
-            <Link href={basePath || "/"} className="text-sm tracking-wide hover:opacity-60 transition-opacity">
+            <Link href={basePath || "/"} className="text-xs tracking-wide hover:opacity-60 transition-opacity">
               Inicio
             </Link>
 
@@ -155,7 +161,7 @@ export function StoreHeaderPink({ store, categories, storePages = [] }: StoreHea
               onMouseEnter={() => setProductsMenuOpen(true)}
               onMouseLeave={() => setProductsMenuOpen(false)}
             >
-              <button className="flex items-center gap-1 text-sm tracking-wide hover:opacity-60 transition-opacity" aria-label="Ver categorias de productos" aria-expanded={productsMenuOpen}>
+              <button className="flex items-center gap-1 text-xs tracking-wide hover:opacity-60 transition-opacity" aria-label="Ver categorias de productos" aria-expanded={productsMenuOpen}>
                 Productos
                 <ChevronDown className={`h-4 w-4 transition-transform ${productsMenuOpen ? "rotate-180" : ""}`} />
               </button>
@@ -185,7 +191,7 @@ export function StoreHeaderPink({ store, categories, storePages = [] }: StoreHea
                   <span key={page.id} className="contents">
                     <Link
                       href={`${basePath}/pagina/${page.slug}`}
-                      className="text-sm tracking-wide hover:opacity-60 transition-opacity whitespace-nowrap"
+                      className="text-xs tracking-wide hover:opacity-60 transition-opacity whitespace-nowrap"
                     >
                       {page.title.toUpperCase()}
                     </Link>
@@ -197,7 +203,7 @@ export function StoreHeaderPink({ store, categories, storePages = [] }: StoreHea
                     {page.slug === "como-comprar" && (
                       <Link
                         href="/devoluciones"
-                        className="text-sm tracking-wide hover:opacity-60 transition-opacity whitespace-nowrap"
+                        className="text-xs tracking-wide hover:opacity-60 transition-opacity whitespace-nowrap"
                       >
                         POLÍTICA DE DEVOLUCIÓN
                       </Link>
