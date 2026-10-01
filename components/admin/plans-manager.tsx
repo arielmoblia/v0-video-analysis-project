@@ -51,7 +51,6 @@ import {
 import CustomVariantsManager from "./custom-variants-manager" // Import CustomVariantsManager
 import { DolarManager } from "./dolar-manager"
 import { MultiImageUpload } from "./multi-image-upload"
-import type { CarouselBlock } from "@/components/store/store-carousels"
 
 const PAYPAL_CLIENT_ID = "ASYvylVa8L7Qf57IKodIEIYd6BalypfW9TGuFkanCnaCR55rP-B-XRemN1FcVLcx0Aii2DIKDtr68RSA"
 
@@ -64,11 +63,11 @@ interface PlansManagerProps {
   initialLinkedStoreLabel?: string | null
   initialActiveTheme?: string | null
   initialCustomThemeRequest?: { url: string; status: string; requested_at: string } | null
-  initialCarousels?: CarouselBlock[] | null
   initialSliderImages?: string[] | null
   activeTab?: string
   onActiveTabChange?: (tab: string) => void
   onGoToProducts?: () => void
+  onGoToCarousels?: () => void
   autoSelectFeature?: string | null
 }
 
@@ -300,7 +299,7 @@ const LEER_MAS_URLS: Record<string, string> = {
 
 const getLeerMasUrl = (code: string) => LEER_MAS_URLS[code] || `${APP_URL}/cositas#${code}`
 
-export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialCustomThemeRequest, initialCarousels, initialSliderImages, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts, autoSelectFeature }: PlansManagerProps) {
+export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialCustomThemeRequest, initialSliderImages, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts, onGoToCarousels, autoSelectFeature }: PlansManagerProps) {
   const [internalActiveTab, setInternalActiveTab] = useState("cositas")
   const activeTab = controlledActiveTab ?? internalActiveTab
   const setActiveTab = onActiveTabChange ?? setInternalActiveTab
@@ -348,55 +347,6 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   const [customThemeRequest, setCustomThemeRequest] = useState<{ url: string; status: string; requested_at: string } | null>(
     initialCustomThemeRequest || null,
   )
-  const [carouselsConfig, setCarouselsConfig] = useState<CarouselBlock[]>(initialCarousels || [])
-  const [savingCarousels, setSavingCarousels] = useState(false)
-  const [carouselsSaved, setCarouselsSaved] = useState(false)
-
-  const hasProductsCarousel = carouselsConfig.some((c) => c.type === "products")
-  const productsCarouselTitle = carouselsConfig.find((c) => c.type === "products")?.title || "Destacados"
-  const textCarouselPhrases = (carouselsConfig.find((c) => c.type === "text")?.phrases || []).join("\n")
-
-  const toggleProductsCarousel = (checked: boolean) => {
-    setCarouselsConfig((prev) => {
-      const rest = prev.filter((c) => c.type !== "products")
-      return checked ? [...rest, { id: "products_default", type: "products" as const, title: productsCarouselTitle }] : rest
-    })
-  }
-
-  const updateProductsCarouselTitle = (title: string) => {
-    setCarouselsConfig((prev) => prev.map((c) => (c.type === "products" ? { ...c, title } : c)))
-  }
-
-  const updateTextCarousel = (raw: string) => {
-    const phrases = raw
-      .split("\n")
-      .map((p) => p.trim())
-      .filter(Boolean)
-      .slice(0, 6)
-    setCarouselsConfig((prev) => {
-      const rest = prev.filter((c) => c.type !== "text")
-      return phrases.length > 0 ? [...rest, { id: "text_default", type: "text" as const, phrases }] : rest
-    })
-  }
-
-  const handleSaveCarousels = async () => {
-    setSavingCarousels(true)
-    setCarouselsSaved(false)
-    try {
-      const res = await fetch("/api/admin/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ storeId, carousels: carouselsConfig }),
-      })
-      if (res.ok) {
-        setCarouselsSaved(true)
-        setTimeout(() => setCarouselsSaved(false), 2000)
-      }
-    } finally {
-      setSavingCarousels(false)
-    }
-  }
-
   const [sliderImages, setSliderImages] = useState<string[]>(initialSliderImages || [])
   const [savingSliderImages, setSavingSliderImages] = useState(false)
   const [sliderImagesSaved, setSliderImagesSaved] = useState(false)
@@ -1759,44 +1709,11 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                   </div>
                                 )}
                                 {expandedFeatures.has(feature.code) && feature.code === "carousels" && (
-                                  <div className="px-4 pb-4 pt-1 space-y-3">
+                                  <div className="px-4 pb-4 pt-1 space-y-2">
                                     <p className="text-xs text-green-700">{feature.description}</p>
-                                    <label className="flex items-center gap-2 text-sm text-green-900">
-                                      <input
-                                        type="checkbox"
-                                        checked={hasProductsCarousel}
-                                        onChange={(e) => toggleProductsCarousel(e.target.checked)}
-                                      />
-                                      Carrusel de productos destacados
-                                    </label>
-                                    {hasProductsCarousel && (
-                                      <Input
-                                        placeholder="Título (ej: Destacados)"
-                                        value={productsCarouselTitle}
-                                        onChange={(e) => updateProductsCarouselTitle(e.target.value)}
-                                        className="bg-white max-w-xs"
-                                      />
-                                    )}
-                                    <div>
-                                      <Label className="text-xs text-green-900">
-                                        Franja de texto (una frase por línea, van rotando)
-                                      </Label>
-                                      <Textarea
-                                        placeholder={"Ej: Envíos a todo el país\nSeguinos en Instagram"}
-                                        value={textCarouselPhrases}
-                                        onChange={(e) => updateTextCarousel(e.target.value)}
-                                        className="mt-1 bg-white"
-                                        rows={3}
-                                      />
-                                    </div>
-                                    <Button size="sm" disabled={savingCarousels} onClick={handleSaveCarousels}>
-                                      {savingCarousels ? "Guardando..." : "Guardar"}
+                                    <Button size="sm" onClick={onGoToCarousels}>
+                                      Ir a Carruseles <ArrowRight className="h-3.5 w-3.5 ml-1" />
                                     </Button>
-                                    {carouselsSaved && (
-                                      <p className="text-xs text-green-700 flex items-center gap-1">
-                                        <Check className="w-3.5 h-3.5" /> Guardado. Ya se ve en tu tienda.
-                                      </p>
-                                    )}
                                   </div>
                                 )}
                                 {expandedFeatures.has(feature.code) && feature.code === "banner_deslizante" && (

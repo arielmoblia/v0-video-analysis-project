@@ -25,6 +25,7 @@ import { AdminChat } from "./admin-chat"
 import { InvoicingManager } from "./invoicing-manager"
 import { StorePagesManager } from "./store-pages-manager"
 import { CustomersManager } from "./customers-manager"
+import { CarouselsManager } from "./carousels-manager"
 
 // Prueba aislada: solo esta tienda tiene el asistente de chat en el admin
 const ADMIN_CHAT_SUBDOMAINS = ["prueba3"]
@@ -44,6 +45,7 @@ const FEATURE_NAMES: Record<string, string> = {
   modelos_templates: "Modelos/Templates",
   customer_accounts: "Cuentas de clientes",
   botonera_cabecera: "Botonera Cabecera",
+  carousels: "Carruseles",
 }
 
 const FEATURE_TAB: Record<string, string> = {
@@ -61,6 +63,7 @@ const FEATURE_TAB: Record<string, string> = {
   modelos_templates: "plans",
   customer_accounts: "clientes",
   botonera_cabecera: "paginas",
+  carousels: "carruseles",
 }
 
 interface AdminDashboardProps {
@@ -387,6 +390,12 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
               )}
             </TabsContent>
 
+            <TabsContent value="carruseles">
+              {purchasedFeatures.includes("carousels") && (
+                <CarouselsManager storeId={store.id} initialCarousels={store.plan_features?.carousels || null} />
+              )}
+            </TabsContent>
+
             {purchasedFeatures.includes("whatsapp_chat") && (
               <TabsContent value="whatsapp">
                 <ContactManager storeId={store.id} subdomain={subdomain} storeName={store.site_title} defaultSection="whatsapp" />
@@ -410,13 +419,13 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
                 initialLinkedStoreLabel={store.linked_store_label}
                 initialActiveTheme={store.plan_features?.active_theme || null}
                 initialCustomThemeRequest={store.plan_features?.custom_theme_request || null}
-                initialCarousels={store.plan_features?.carousels || null}
                 initialSliderImages={(store.plan_features?.slider_images || []).map((img: { url: string }) => img.url)}
                 purchasedFeatures={purchasedFeatures}
                 onFeaturePurchased={(code) => setPurchasedFeatures([...purchasedFeatures, code])}
                 activeTab={plansTab}
                 onActiveTabChange={setPlansTab}
                 onGoToProducts={() => setActiveTab("products")}
+                onGoToCarousels={() => setActiveTab("carruseles")}
                 autoSelectFeature={activarFeature}
               />
               {(purchasedFeatures.includes("custom_variants") || store.template === "variants") && (
