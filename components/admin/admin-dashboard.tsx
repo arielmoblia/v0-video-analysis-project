@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { LogOut, Mail, Sparkles } from "lucide-react"
+import { LogOut, Mail } from "lucide-react"
 import type { Store } from "@/lib/store-context"
 import { ProductsManager } from "./products-manager"
 import { CategoriesManager } from "./categories-manager"
@@ -247,18 +247,6 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
             >
               Leer más →
             </a>
-            {/* Pago único aparte de Modelos/Templates: clona el diseño de la portada (index) de otra
-                página usando tus productos y fotos reales. Antes vivía escondida como una tile más
-                adentro de Modelos/Templates y solo se veía si además tenías esa cosita comprada. */}
-            <div
-              onClick={() => { setActiveTab("plans"); setPlansTab("portada") }}
-              className={`flex items-center px-3 py-2 rounded-lg text-sm cursor-pointer mb-0.5 mt-1 transition-colors font-medium gap-1.5 ${
-                activeTab === "plans" && plansTab === "portada" ? "bg-violet-500 text-white" : "bg-violet-100 text-violet-700 hover:bg-violet-200"
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              Diseño Customizado de Portada
-            </div>
           </div>
 
           {activeCositas.length > 0 && (
