@@ -137,35 +137,50 @@ function ProductsCarousel({
   return (
     <section className="py-14 px-6">
       <div className="container mx-auto">
-        {title && <h2 className="text-2xl font-light tracking-wide text-center mb-8">{title}</h2>}
+        {title && <h2 className="text-2xl md:text-3xl font-semibold tracking-wide text-left mb-8">{title}</h2>}
         <Carousel opts={{ align: "start", loop: products.length > 3 }} className="w-full">
           <CarouselContent>
-            {products.map((product) => (
-              <CarouselItem key={product.id} className="basis-1/2 md:basis-1/3 lg:basis-1/4">
-                <Link href={`${basePath}/producto/${product.slug}`} className="group block">
-                  <div className="aspect-[3/4] relative overflow-hidden bg-neutral-100 mb-3">
-                    <Image
-                      src={product.image_url || "/images/placeholders/placeholder.svg"}
-                      alt={product.name}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      sizes="(max-width: 768px) 50vw, 25vw"
-                    />
-                  </div>
-                  <h3 className="text-sm tracking-wide text-center mb-1 group-hover:opacity-60 transition-opacity">
-                    {product.name}
-                  </h3>
-                  <p className="text-sm text-center">
-                    {exchangeRate > 0
-                      ? formatPrice(product.price * exchangeRate, country)
-                      : formatPrice(product.price, country)}
-                  </p>
-                </Link>
-              </CarouselItem>
-            ))}
+            {products.map((product) => {
+              const hasDiscount = !!product.compare_price && product.compare_price > product.price && exchangeRate === 0
+              return (
+                <CarouselItem key={product.id} className="basis-1/2 md:basis-1/3 lg:basis-1/5">
+                  <Link href={`${basePath}/producto/${product.slug}`} className="group block">
+                    <div className="aspect-[3/4] relative overflow-hidden bg-neutral-100 mb-3">
+                      <Image
+                        src={product.image_url || "/images/placeholders/placeholder.svg"}
+                        alt={product.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="(max-width: 768px) 50vw, 25vw"
+                      />
+                    </div>
+                    <h3 className="text-sm tracking-wide text-center mb-1 group-hover:opacity-60 transition-opacity">
+                      {product.name}
+                    </h3>
+                    <div className="flex items-center justify-center gap-2 flex-wrap">
+                      {hasDiscount && (
+                        <span className="text-sm text-neutral-400 line-through">
+                          {formatPrice(product.compare_price as number, country)}
+                        </span>
+                      )}
+                      <span className="text-sm font-medium">
+                        {exchangeRate > 0
+                          ? formatPrice(product.price * exchangeRate, country)
+                          : formatPrice(product.price, country)}
+                      </span>
+                      {hasDiscount && (
+                        <span className="text-sm text-pink-600 font-medium">
+                          {Math.round((1 - product.price / (product.compare_price as number)) * 100)}% OFF
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                </CarouselItem>
+              )
+            })}
           </CarouselContent>
-          <CarouselPrevious className="hidden md:flex" />
-          <CarouselNext className="hidden md:flex" />
+          <CarouselPrevious className="hidden md:flex md:-left-10 border-none shadow-none bg-transparent hover:bg-transparent text-neutral-900 [&_svg]:size-6" />
+          <CarouselNext className="hidden md:flex md:-right-10 border-none shadow-none bg-transparent hover:bg-transparent text-neutral-900 [&_svg]:size-6" />
         </Carousel>
       </div>
     </section>
