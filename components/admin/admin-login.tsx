@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,12 +21,7 @@ export function AdminLogin({ store, subdomain }: AdminLoginProps) {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-  const [mounted, setMounted] = useState(false)
   const router = useRouter()
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -92,11 +87,9 @@ export function AdminLogin({ store, subdomain }: AdminLoginProps) {
               />
             </div>
             {error && <p className="text-sm text-red-600 text-center">{error}</p>}
-            <Button type="submit" className="w-full bg-black hover:bg-neutral-800" disabled={loading || !mounted}>
+            <Button type="submit" className="w-full bg-black hover:bg-neutral-800" disabled={loading}>
               {loading ? (
                 "Ingresando..."
-              ) : !mounted ? (
-                "Cargando..."
               ) : (
                 <>
                   <Lock className="w-4 h-4 mr-2" />
