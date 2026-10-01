@@ -32,6 +32,7 @@ export async function PUT(request: NextRequest) {
       category_images,
       template_texts,
       carousels,
+      slider_images,
     } = body
 
     if (!storeId) {
@@ -55,7 +56,7 @@ export async function PUT(request: NextRequest) {
     // plan_features es un jsonb que ya usan otras cositas (ej. dropshipping);
     // hay que leerlo y mergear para no pisar lo que ya tenga guardado.
     let mergedPlanFeatures: Record<string, any> | undefined
-    if (active_theme !== undefined || category_images !== undefined || template_texts !== undefined || carousels !== undefined) {
+    if (active_theme !== undefined || category_images !== undefined || template_texts !== undefined || carousels !== undefined || slider_images !== undefined) {
       const { data: currentStore } = await supabase
         .from("stores")
         .select("plan_features")
@@ -66,6 +67,7 @@ export async function PUT(request: NextRequest) {
       if (category_images !== undefined) nextPlanFeatures.category_images = category_images
       if (template_texts !== undefined) nextPlanFeatures.template_texts = template_texts
       if (carousels !== undefined) nextPlanFeatures.carousels = carousels
+      if (slider_images !== undefined) nextPlanFeatures.slider_images = slider_images
       mergedPlanFeatures = nextPlanFeatures
     }
 

@@ -5,10 +5,7 @@ import { getStoreBySubdomain, getStoreProducts, getStoreCategories, getFeaturedP
 import { hasStoreFeature } from "@/lib/services/stores"
 import { getStorePages } from "@/lib/services/store-pages"
 import { seoClean } from "@/lib/utils"
-import { StoreHeader } from "@/components/store/store-header"
-import { StoreHero } from "@/components/store/store-hero"
-import { ProductGrid } from "@/components/store/product-grid"
-import { StoreFooter } from "@/components/store/store-footer"
+import { StoreDefaultLive } from "@/components/store/store-default-live"
 import { StoreModernoLive } from "@/components/store/store-moderno-live"
 import { StoreEleganteLive } from "@/components/store/store-elegante-live"
 import { StoreBoldLive } from "@/components/store/store-bold-live"
@@ -18,7 +15,6 @@ import { StoreLuxuryLive } from "@/components/store/store-luxury-live"
 import { StoreMinimalLive } from "@/components/store/store-minimal-live"
 import { StoreVintageLive } from "@/components/store/store-vintage-live"
 import { StoreBasicoLive } from "@/components/store/store-basico-live"
-import { StoreCarousels } from "@/components/store/store-carousels"
 
 const MODERNO_ACCENT = "#e8590c"
 const ELEGANTE_ACCENT = "#f7791e"
@@ -106,11 +102,12 @@ export default async function StorePage({ params }: StorePageProps) {
   // cargado tal cual (en CLP), sin conversión.
   const exchangeRate = hasDolarPeso && store.country !== "CL" ? (store.dolar_valor || 0) : 0
 
-  const [products, categories, featuredProducts, hasMayoristaMinorista, storePages] = await Promise.all([
+  const [products, categories, featuredProducts, hasMayoristaMinorista, hasBannerDeslizante, storePages] = await Promise.all([
     getStoreProducts(store.id),
     getStoreCategories(store.id),
     getFeaturedProducts(store.id),
     hasStoreFeature(store.id, 'mayorista_minorista'),
+    hasStoreFeature(store.id, 'banner_deslizante'),
     getStorePages(store.id),
   ])
 
@@ -300,55 +297,22 @@ export default async function StorePage({ params }: StorePageProps) {
     )
   }
 
-  return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <StoreHeader store={store} categories={categories} hasMayoristaMinorista={hasMayoristaMinorista} />
-      <main className="flex-1">
-        {!store.plan_features?.custom_theme_request?.carousels_only && <StoreHero store={store} />}
+  {
+    const cookieStore = await cookies()
+    const isOwner = cookieStore.get(`admin_${subdomain.toLowerCase()}`)?.value === "true"
 
-        <StoreCarousels
-          carousels={store.plan_features?.carousels}
-          products={products}
-          featuredProducts={featuredProducts}
-          subdomain={subdomain}
-          exchangeRate={exchangeRate}
-          country={store.country}
-          whatsapp={store.social_whatsapp}
-          instagram={store.social_instagram}
-        />
-
-        {featuredProducts.length > 0 && (
-          <section className="py-20 px-6">
-            <div className="container mx-auto">
-              <div className="text-center mb-14">
-                <p className="text-xs tracking-[0.3em] uppercase text-neutral-500 mb-3">Lo mejor</p>
-                <h2 className="text-3xl font-light tracking-wide">Productos Destacados</h2>
-              </div>
-              <ProductGrid products={featuredProducts} subdomain={subdomain} exchangeRate={exchangeRate} country={store.country} />
-            </div>
-          </section>
-        )}
-
-        <section id="productos" className="py-20 px-6 bg-neutral-50">
-          <div className="container mx-auto">
-            <div className="text-center mb-14">
-              <p className="text-xs tracking-[0.3em] uppercase text-neutral-500 mb-3">Explorar</p>
-              <h2 className="text-3xl font-light tracking-wide">Todos los Productos</h2>
-            </div>
-            {products.length > 0 ? (
-              <ProductGrid products={products} subdomain={subdomain} exchangeRate={exchangeRate} country={store.country} />
-            ) : (
-              <div className="text-center py-20">
-                <p className="text-neutral-500 text-lg font-light">Esta tienda aún no tiene productos.</p>
-                <p className="text-sm text-neutral-400 mt-3">
-                  El dueño puede agregar productos desde el panel de administración.
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
-      </main>
-      <StoreFooter store={store} />
-    </div>
-  )
+    return (
+      <StoreDefaultLive
+        store={store}
+        categories={categories}
+        products={products}
+        featuredProducts={featuredProducts}
+        subdomain={subdomain}
+        exchangeRate={exchangeRate}
+        hasMayoristaMinorista={hasMayoristaMinorista}
+        hasBannerDeslizante={hasBannerDeslizante}
+        isOwner={isOwner}
+      />
+    )
+  }
 }
