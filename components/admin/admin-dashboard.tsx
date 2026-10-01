@@ -24,6 +24,7 @@ import { LinkedStoreManager } from "./linked-store-manager"
 import { AdminChat } from "./admin-chat"
 import { InvoicingManager } from "./invoicing-manager"
 import { StorePagesManager } from "./store-pages-manager"
+import { CustomersManager } from "./customers-manager"
 
 // Prueba aislada: solo esta tienda tiene el asistente de chat en el admin
 const ADMIN_CHAT_SUBDOMAINS = ["prueba3"]
@@ -41,6 +42,7 @@ const FEATURE_NAMES: Record<string, string> = {
   dropshipping: "Dropshipping",
   mayorista_minorista: "Mayorista / Minorista",
   modelos_templates: "Modelos/Templates",
+  customer_accounts: "Cuentas de clientes",
 }
 
 const FEATURE_TAB: Record<string, string> = {
@@ -56,6 +58,7 @@ const FEATURE_TAB: Record<string, string> = {
   dropshipping: "dropship",
   mayorista_minorista: "mayorista",
   modelos_templates: "plans",
+  customer_accounts: "clientes",
 }
 
 interface AdminDashboardProps {
@@ -362,6 +365,12 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
 
             <TabsContent value="paginas">
               <StorePagesManager storeId={store.id} subdomain={subdomain} />
+            </TabsContent>
+
+            <TabsContent value="clientes">
+              {purchasedFeatures.includes("customer_accounts") && (
+                <CustomersManager storeId={store.id} country={store.country} />
+              )}
             </TabsContent>
 
             {purchasedFeatures.includes("whatsapp_chat") && (

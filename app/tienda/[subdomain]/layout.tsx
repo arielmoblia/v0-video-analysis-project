@@ -4,6 +4,7 @@ import { CartDrawer } from "@/components/store/cart-drawer"
 import { PageTracker } from "@/components/store/page-tracker"
 import { TrackingPixels } from "@/components/store/tracking-pixels"
 import { WhatsAppButton } from "@/components/store/whatsapp-button"
+import { CustomerAccountButton } from "@/components/store/customer-account-button"
 import { getStoreBySubdomain, getStorePurchasedFeatures } from "@/lib/store-context"
 import { LupaTracker } from "@/components/store/lupa-tracker"
 
@@ -25,6 +26,7 @@ export default async function StoreLayout({
   const purchasedFeatures = store ? await getStorePurchasedFeatures(store.id) : []
   const hasWhatsAppFeature = purchasedFeatures.includes("whatsapp_chat")
     const hasLupaFeature = purchasedFeatures.includes("lupa")
+  const hasCustomerAccounts = purchasedFeatures.includes("customer_accounts")
   const whatsappNumber = store?.social_whatsapp || store?.whatsapp_number
 
   return (
@@ -43,6 +45,7 @@ export default async function StoreLayout({
       {hasWhatsAppFeature && whatsappNumber && (
         <WhatsAppButton phoneNumber={whatsappNumber} storeName={store?.site_title} />
       )}
+      {hasCustomerAccounts && <CustomerAccountButton subdomain={subdomain} />}
     </CartProvider>
   )
 }

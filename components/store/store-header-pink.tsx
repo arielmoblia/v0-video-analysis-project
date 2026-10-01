@@ -7,6 +7,17 @@ import { useCart } from "@/components/store/cart-provider"
 import { formatPrice } from "@/lib/currency"
 import type { Store, Category } from "@/lib/store-context"
 
+function useCustomerName(subdomain: string) {
+  const [name, setName] = useState<string | null>(null)
+  useEffect(() => {
+    fetch(`/api/customer/me?subdomain=${subdomain}`)
+      .then((r) => r.json())
+      .then((data) => setName(data.customer?.name?.split(" ")[0] || null))
+      .catch(() => {})
+  }, [subdomain])
+  return name
+}
+
 interface StoreHeaderPinkProps {
   store: Store
   categories: Category[]
@@ -21,6 +32,7 @@ export function StoreHeaderPink({ store, categories }: StoreHeaderPinkProps) {
   const [productsMenuOpen, setProductsMenuOpen] = useState(false)
   const [basePath, setBasePath] = useState(`/tienda/${store.subdomain}`)
   const { items, total, setCartOpen } = useCart()
+  const customerName = useCustomerName(store.subdomain)
 
   const itemCount = items.reduce((acc, item) => acc + item.quantity, 0)
 
@@ -79,20 +91,23 @@ export function StoreHeaderPink({ store, categories }: StoreHeaderPinkProps) {
             </div>
 
             <div className="flex items-center gap-5 ml-auto">
-              <button
-                type="button"
+              <Link
+                href={`${basePath}/cuenta`}
                 className="hidden sm:flex items-center gap-2"
-                aria-label="Entrá o registrate"
-                title="Próximamente: cuenta de cliente"
+                aria-label={customerName ? `Mi cuenta, ${customerName}` : "Entrá o registrate"}
               >
                 <span className="h-9 w-9 rounded-full bg-[#e6007e] flex items-center justify-center shrink-0">
                   <User className="h-4 w-4 text-white" />
                 </span>
-                <span className="text-left leading-tight">
-                  <span className="block text-sm font-semibold text-black">Entrá /</span>
-                  <span className="block text-sm text-blue-600">Registrate</span>
-                </span>
-              </button>
+                {customerName ? (
+                  <span className="block text-sm font-semibold text-black">Hola, {customerName}</span>
+                ) : (
+                  <span className="text-left leading-tight">
+                    <span className="block text-sm font-semibold text-black">Entrá /</span>
+                    <span className="block text-sm text-blue-600">Registrate</span>
+                  </span>
+                )}
+              </Link>
 
               <button
                 type="button"

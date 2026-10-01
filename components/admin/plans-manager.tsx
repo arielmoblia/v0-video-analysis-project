@@ -45,6 +45,7 @@ import {
   ChevronDown,
   ChevronUp,
   GalleryHorizontal,
+  Users,
 } from "lucide-react"
 import CustomVariantsManager from "./custom-variants-manager" // Import CustomVariantsManager
 import { DolarManager } from "./dolar-manager"
@@ -190,6 +191,7 @@ const ICON_MAP: { [key: string]: any } = {
   Palette, // Add Palette to ICON_MAP
   Truck,
   GalleryHorizontal,
+  Users,
 }
 
 const FEATURE_CONFIG: { [key: string]: { configTitle: string; configDescription: string } } = {
@@ -267,6 +269,11 @@ const FEATURE_CONFIG: { [key: string]: { configTitle: string; configDescription:
     configDescription:
       "Agregá una franja de productos destacados que se desliza, y/o una franja de texto con frases que van rotando (ej: promociones, envíos, redes). Aparecen en tu portada, debajo del banner principal.",
   },
+  customer_accounts: {
+    configTitle: "Cuentas de Clientes",
+    configDescription:
+      "Una vez activada, en tu tienda aparece un botón para que tus clientes se registren y vean su historial de pedidos. En tu panel, en la pestaña \"Clientes\", vas a ver el listado completo con cuánto gastó cada uno.",
+  },
 }
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://tol.ar"
@@ -280,6 +287,7 @@ const LEER_MAS_URLS: Record<string, string> = {
   nuevo_propio: `${APP_URL}/plan-cositas/portada-especial`,
   multi_images: `${APP_URL}/plan-cositas/galeria-imagenes`,
   carousels: `${APP_URL}/plan-cositas/carruseles`,
+  customer_accounts: `${APP_URL}/plan-cositas/cuentas-clientes`,
 }
 
 const getLeerMasUrl = (code: string, subdomain?: string) => {
