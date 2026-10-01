@@ -288,46 +288,58 @@ export function StoreSettings({ store }: StoreSettingsProps) {
           <CardDescription>Datos básicos de tu tienda</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label>Nombre de la tienda</Label>
-            <Input
-              value={storeName}
-              onChange={(e) => setStoreName(e.target.value)}
-              placeholder="Nombre de tu tienda"
-            />
-          </div>
-          <div>
-            <Label>Subdominio</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                value={subdomain}
-                onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ""))}
-                placeholder="nombretienda"
-              />
-              <span className="text-sm text-neutral-500 whitespace-nowrap">.tol.ar</span>
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-4 md:gap-6">
+            <div className="space-y-4">
+              <div>
+                <Label>Nombre de la tienda</Label>
+                <Input
+                  value={storeName}
+                  onChange={(e) => setStoreName(e.target.value)}
+                  placeholder="Nombre de tu tienda"
+                />
+              </div>
+              <div>
+                <Label>Subdominio</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={subdomain}
+                    onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ""))}
+                    placeholder="nombretienda"
+                  />
+                  <span className="text-sm text-neutral-500 whitespace-nowrap">.tol.ar</span>
+                </div>
+                {subdomainStatus === "checking" && (
+                  <p className="text-xs text-neutral-500 mt-1">Verificando disponibilidad...</p>
+                )}
+                {subdomainStatus === "available" && (
+                  <p className="text-xs text-green-600 mt-1">Disponible</p>
+                )}
+                {subdomainStatus === "taken" && (
+                  <p className="text-xs text-red-500 mt-1">Ese nombre ya está en uso, elegí otro</p>
+                )}
+                {subdomainStatus === "invalid" && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Mínimo 4 caracteres, solo letras y números, sin espacios ni símbolos
+                  </p>
+                )}
+                {subdomain.toLowerCase().trim() !== (store.subdomain || "").toLowerCase() &&
+                  subdomainStatus !== "invalid" &&
+                  subdomainStatus !== "taken" && (
+                    <p className="text-xs text-amber-600 mt-1">
+                      Ojo: al guardar, tu tienda pasa a {subdomain}.tol.ar y el link viejo ({store.subdomain}.tol.ar)
+                      deja de funcionar.
+                    </p>
+                  )}
+              </div>
             </div>
-            {subdomainStatus === "checking" && (
-              <p className="text-xs text-neutral-500 mt-1">Verificando disponibilidad...</p>
-            )}
-            {subdomainStatus === "available" && (
-              <p className="text-xs text-green-600 mt-1">Disponible</p>
-            )}
-            {subdomainStatus === "taken" && (
-              <p className="text-xs text-red-500 mt-1">Ese nombre ya está en uso, elegí otro</p>
-            )}
-            {subdomainStatus === "invalid" && (
-              <p className="text-xs text-red-500 mt-1">
-                Mínimo 4 caracteres, solo letras y números, sin espacios ni símbolos
+            <div>
+              <Label className="mb-2 block">Logo</Label>
+              <ImageUpload value={logoUrl} onChange={setLogoUrl} type="logo" />
+              <p className="text-xs text-neutral-500 mt-2">
+                Si subís una imagen, reemplaza el nombre en letras del encabezado de tu tienda. Si no subís nada, se
+                sigue mostrando el nombre de la tienda en texto.
               </p>
-            )}
-            {subdomain.toLowerCase().trim() !== (store.subdomain || "").toLowerCase() &&
-              subdomainStatus !== "invalid" &&
-              subdomainStatus !== "taken" && (
-                <p className="text-xs text-amber-600 mt-1">
-                  Ojo: al guardar, tu tienda pasa a {subdomain}.tol.ar y el link viejo ({store.subdomain}.tol.ar)
-                  deja de funcionar.
-                </p>
-              )}
+            </div>
           </div>
           <div>
             <Label>Correo electrónico</Label>
@@ -337,14 +349,6 @@ export function StoreSettings({ store }: StoreSettingsProps) {
               placeholder="tu@email.com"
               type="email"
             />
-          </div>
-          <div>
-            <Label className="mb-2 block">Logo</Label>
-            <ImageUpload value={logoUrl} onChange={setLogoUrl} type="logo" />
-            <p className="text-xs text-neutral-500 mt-2">
-              Si subís una imagen, reemplaza el nombre en letras del encabezado de tu tienda. Si no subís nada, se
-              sigue mostrando el nombre de la tienda en texto.
-            </p>
           </div>
           <div>
             <Label>Dirección</Label>
