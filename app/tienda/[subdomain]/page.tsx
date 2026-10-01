@@ -301,7 +301,7 @@ export default async function StorePage({ params }: StorePageProps) {
     <div className="min-h-screen flex flex-col bg-white">
       <StoreHeader store={store} categories={categories} hasMayoristaMinorista={hasMayoristaMinorista} />
       <main className="flex-1">
-        <StoreHero store={store} />
+        {!store.plan_features?.custom_theme_request?.carousels_only && <StoreHero store={store} />}
 
         <StoreCarousels
           carousels={store.plan_features?.carousels}
