@@ -16,6 +16,28 @@ interface StoreClonedIndexLiveProps {
   cloned: ClonedIndexData
 }
 
+// El motor de clonado (extractSwiperColumnsMap/applySwiperColumnsToWrappers
+// en clone-store.ts) ya graba cuántos productos van por fila en
+// data-desktop-columns/data-mobile-columns de cada .swiper-wrapper. El
+// useEffect de abajo usa ese dato para fijar el ancho real de cada
+// producto, pero recién corre después de hidratar en el cliente — en el
+// primer pixel pintado (HTML+CSS del servidor) el tema original trae
+// ".swiper-slide { width: 100% }" (pensado para que el JS de Swiper, que
+// nunca cargamos, mueva un slide a la vez), así que sin esto cada producto
+// ocupaba toda la pantalla hasta que el JS "saltaba" al layout correcto
+// (bug real visto en prueba99: flash de 1 producto gigante en Destacados
+// antes del carrusel completo). Generamos acá las mismas reglas como CSS
+// server-rendered para que el ancho correcto esté desde el primer pixel.
+const COLUMN_WIDTH_CSS = Array.from({ length: 12 }, (_, i) => i + 1)
+  .map((n) => {
+    const pct = (100 / n).toFixed(4)
+    return [
+      `@media (min-width: 768px) { .tol-cloned-index .swiper-wrapper[data-desktop-columns="${n}"] > * { flex: 0 0 ${pct}% !important; width: ${pct}% !important; } }`,
+      `@media (max-width: 767.98px) { .tol-cloned-index .swiper-wrapper[data-mobile-columns="${n}"] > * { flex: 0 0 ${pct}% !important; width: ${pct}% !important; } }`,
+    ].join("\n")
+  })
+  .join("\n")
+
 // Render del "Clonado de Index": reemplaza TODA la portada (header/menú/grilla)
 // por el HTML/CSS clonado del sitio de referencia (armado por
 // cloneIndexDesign en scraping.tol.ar/server/clone-store.ts). Los links de
@@ -234,6 +256,7 @@ export function StoreClonedIndexLive({ store, cloned }: StoreClonedIndexLiveProp
         .tol-cloned-index .swiper-wrapper > * {
           flex-shrink: 0 !important;
         }
+        ${COLUMN_WIDTH_CSS}
       `}</style>
       {cloned.stylesheetHrefs.map((href) => (
         <link key={href} rel="stylesheet" href={href} />
