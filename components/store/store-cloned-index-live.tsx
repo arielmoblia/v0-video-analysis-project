@@ -21,9 +21,10 @@ interface StoreClonedIndexLiveProps {
 // cloneIndexDesign en scraping.tol.ar/server/clone-store.ts). Los links de
 // producto de la grilla clonada ya vienen reescritos a nuestras fichas reales
 // (/tienda/{subdomain}/producto/{slug}, productos placeholder "pendiente de
-// completar") — el resto de los links del sitio original (menú, redes, etc.)
-// quedan apuntando al sitio de origen tal cual, salvo el logo/home que vuelve
-// a nuestra propia tienda. Primera versión (02/10), solo para prueba99.
+// completar") y el servidor neutraliza (href="#") cualquier otro link que
+// apunte al dominio original (menú, redes, etc.) — el listener de abajo es
+// una segunda red de contención por si algún link externo se escapa del
+// sanitizado del servidor. Primera versión (02/10), solo para prueba99.
 export function StoreClonedIndexLive({ store, cloned }: StoreClonedIndexLiveProps) {
   const rootRef = useRef<HTMLDivElement>(null)
 
@@ -78,6 +79,27 @@ export function StoreClonedIndexLive({ store, cloned }: StoreClonedIndexLiveProp
 
     return () => cleanups.forEach((fn) => fn())
   }, [cloned.html])
+
+  useEffect(() => {
+    const root = rootRef.current
+    if (!root) return
+    const onClick = (e: MouseEvent) => {
+      const link = (e.target as HTMLElement)?.closest("a[href]") as HTMLAnchorElement | null
+      if (!link) return
+      let url: URL
+      try {
+        url = new URL(link.href, window.location.href)
+      } catch {
+        return
+      }
+      if (url.hostname !== window.location.hostname) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+    }
+    root.addEventListener("click", onClick)
+    return () => root.removeEventListener("click", onClick)
+  }, [])
 
   return (
     <>
