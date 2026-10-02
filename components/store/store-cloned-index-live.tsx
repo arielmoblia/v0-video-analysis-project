@@ -30,52 +30,100 @@ export function StoreClonedIndexLive({ store, cloned }: StoreClonedIndexLiveProp
 
   // El HTML clonado trae marcado de carruseles de la plataforma de origen
   // (ej. Swiper de TiendaNube: .swiper-wrapper / .swiper-slide / botones
-  // prev-next) pero nunca su JS — sacamos todo <script> por seguridad, así
-  // que sin esto las fotos quedan apiladas en una sola fila que desborda y
-  // las flechas no hacen nada. En vez de reimplementar el motor original,
-  // lo convertimos en un carrusel por scroll nativo: si el contenido
-  // realmente desborda su contenedor, lo hacemos deslizable y las flechas
-  // (detectadas por clase, cualquiera sea el tema de origen) mueven el
-  // scroll un "página" a la vez. Si el tema de origen ya lo mostraba como
-  // grilla sin desborde, no se toca nada.
+  // prev-next) pero nunca su JS. El propio CSS base de Swiper (cargado vía
+  // <link> del sitio original) define .swiper-wrapper con
+  // flex-direction:column — es el JS de Swiper el que lo pasa a "row" al
+  // inicializar según el modo (slider/grid). Sin ese JS, cualquier wrapper
+  // que no forcemos a row queda con las fotos apiladas una debajo de la
+  // otra (bug real visto en prueba99: Marcas "una en cada fila", Novedades/
+  // Ofertas "una sola imagen" porque el contenedor recorta la columna).
+  // Las secciones de producto (Destacados/Novedades/Ofertas) y los banners
+  // (ej. home-banner) sí traen data-desktop-format/data-mobile-format +
+  // data-desktop-columns/data-mobile-columns con la intención real de diseño
+  // (ej. Destacados: slider de a 5 en desktop, grilla de a 2 en mobile) —
+  // leemos esos atributos (propios del wrapper o de un ancestro, según el
+  // tema) para decidir grilla fija (sin scroll) vs. carrusel de una fila
+  // (con scroll) según el ancho de pantalla actual. Sliders sin esos datos
+  // (ej. "Nuestras marcas", testimoniales) van siempre a carrusel de una
+  // fila con todo su contenido en tamaño natural.
   useEffect(() => {
     const root = rootRef.current
     if (!root) return
-    const wrappers = root.querySelectorAll<HTMLElement>(".swiper-wrapper")
+    const wrappers = Array.from(root.querySelectorAll<HTMLElement>(".swiper-wrapper"))
     const cleanups: Array<() => void> = []
 
-    wrappers.forEach((wrap) => {
-      // Las grillas de producto (Destacados, Novedades, Ofertas) reusan la
-      // misma clase "swiper-wrapper" que los sliders decorativos, pero traen
-      // "grid" + data-desktop-columns/data-mobile-columns: en el sitio
-      // original eso lo arma el JS de Swiper (slides al 20% de ancho,
-      // paginado con puntitos), que nosotros no corremos. Sin este caso
-      // aparte, la regla de abajo (desbordó → convertilo en carrusel de una
-      // foto gigante por vez) se comía también estas grillas — bug real
-      // visto en prueba99 (Destacados mostraba un solo producto enorme en
-      // vez de la grilla completa). Para estas, mostramos todos los
-      // productos en una grilla que ajusta sola las columnas, sin scroll.
-      if (wrap.classList.contains("grid")) {
-        wrap.style.display = "grid"
-        wrap.style.gridTemplateColumns = "repeat(auto-fit, minmax(160px, 1fr))"
-        wrap.style.gap = "1rem"
-        return
-      }
+    const applyLayout = () => {
+      const desktop = window.matchMedia("(min-width: 768px)").matches
+      wrappers.forEach((wrap) => {
+        const formatHost =
+          (wrap.closest("[data-desktop-format], [data-mobile-format]") as HTMLElement | null) || wrap
+        const format = (desktop ? formatHost.dataset.desktopFormat : formatHost.dataset.mobileFormat) || "slider"
+        const columnsAttr = desktop ? formatHost.dataset.desktopColumns : formatHost.dataset.mobileColumns
+        const columns = columnsAttr ? parseInt(columnsAttr, 10) : null
 
-      if (wrap.scrollWidth <= wrap.clientWidth + 4) return
+        if (format === "grid") {
+          wrap.style.display = "grid"
+          wrap.style.gridTemplateColumns =
+            columns && columns > 0 ? `repeat(${columns}, 1fr)` : "repeat(auto-fit, minmax(160px, 1fr))"
+          wrap.style.gap = "1rem"
+          wrap.style.flexDirection = ""
+          wrap.style.overflowX = ""
+          return
+        }
 
-      wrap.style.display = "flex"
-      wrap.style.flexWrap = "nowrap"
-      wrap.style.overflowX = "auto"
-      wrap.style.scrollSnapType = "x mandatory"
-      wrap.style.scrollBehavior = "smooth"
-      Array.from(wrap.children).forEach((child) => {
-        const slide = child as HTMLElement
-        slide.style.flexShrink = "0"
-        slide.style.scrollSnapAlign = "start"
+        wrap.style.display = "flex"
+        wrap.style.flexDirection = "row"
+
+        if (!columns || columns <= 0) {
+          // Sin columnas declaradas (ej. "Nuestras marcas", testimoniales):
+          // el tema trae ".swiper-slide { width: 100% }" pensado para que el
+          // JS de Swiper mueva un slide a la vez. Angostamos cada uno a su
+          // tamaño real de contenido y los dejamos pasar a la línea
+          // siguiente en vez de forzarlos a una sola fila con scroll — con
+          // pocos ítems (6-8 logos típico) entran todos a la vista de una,
+          // sin que el visitante tenga que tocar flechas para verlos todos
+          // (bug real visto en prueba99: "Marcas" solo mostraba 2 de 6 logos
+          // por vez, el resto quedaba oculto detrás del borde recortado).
+          wrap.style.flexWrap = "wrap"
+          wrap.style.justifyContent = "center"
+          wrap.style.overflowX = ""
+          wrap.style.scrollSnapType = ""
+          wrap.style.scrollBehavior = ""
+          Array.from(wrap.children).forEach((child) => {
+            const slide = child as HTMLElement
+            slide.style.flexShrink = "0"
+            slide.style.flexBasis = "auto"
+            slide.style.width = "auto"
+            slide.style.scrollSnapAlign = ""
+          })
+          return
+        }
+
+        wrap.style.flexWrap = "nowrap"
+        wrap.style.justifyContent = ""
+        Array.from(wrap.children).forEach((child) => {
+          ;(child as HTMLElement).style.flex = `0 0 ${100 / columns}%`
+        })
+
+        const overflowing = wrap.scrollWidth > wrap.clientWidth + 4
+        wrap.style.overflowX = overflowing ? "auto" : ""
+        wrap.style.scrollSnapType = overflowing ? "x mandatory" : ""
+        wrap.style.scrollBehavior = overflowing ? "smooth" : ""
+        Array.from(wrap.children).forEach((child) => {
+          ;(child as HTMLElement).style.scrollSnapAlign = overflowing ? "start" : ""
+        })
       })
+    }
 
-      const section = wrap.closest("section") || wrap.parentElement
+    applyLayout()
+    window.addEventListener("resize", applyLayout)
+    cleanups.push(() => window.removeEventListener("resize", applyLayout))
+
+    // Las flechas prev/next se enganchan una sola vez (no en applyLayout,
+    // que se vuelve a correr en cada resize) para no acumular listeners
+    // duplicados cada vez que cambia el ancho de pantalla.
+    wrappers.forEach((wrap) => {
+      const section = wrap.closest("section") || wrap.closest(".swiper-container") || wrap.parentElement
       const prevBtn = section?.querySelector<HTMLElement>('[class*="prev" i]')
       const nextBtn = section?.querySelector<HTMLElement>('[class*="next" i]')
 
