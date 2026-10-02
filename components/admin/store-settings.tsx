@@ -36,6 +36,7 @@ export function StoreSettings({ store }: StoreSettingsProps) {
   const [storeName, setStoreName] = useState(store.site_title || "")
   const [storeEmail, setStoreEmail] = useState(store.email || "")
   const [logoUrl, setLogoUrl] = useState(store.logo_url || "")
+  const [dataFiscalUrl, setDataFiscalUrl] = useState(store.data_fiscal_url || "")
 
   // Subdominio (nombre.tol.ar)
   const [subdomain, setSubdomain] = useState(store.subdomain || "")
@@ -157,6 +158,7 @@ export function StoreSettings({ store }: StoreSettingsProps) {
           subdomain: normalizedSubdomain,
           email: storeEmail,
           logo_url: logoUrl,
+          data_fiscal_url: dataFiscalUrl,
           banner_image: bannerImage,
           banner_title: bannerTitle,
           banner_subtitle: bannerSubtitle,
@@ -339,6 +341,36 @@ export function StoreSettings({ store }: StoreSettingsProps) {
                 Si subís una imagen, reemplaza el nombre en letras del encabezado de tu tienda. Si no subís nada, se
                 sigue mostrando el nombre de la tienda en texto.
               </p>
+            </div>
+          </div>
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <p className="text-sm font-medium text-amber-900">
+              Obligaciones de AFIP y Defensa del Consumidor para tiendas online en Argentina
+            </p>
+            <ul className="mt-2 space-y-1 text-xs text-amber-800 list-disc pl-4">
+              <li>
+                <strong>Botón de Arrepentimiento</strong> (Resolución 424/2020): ya está puesto solo en tu tienda, no
+                tenés que hacer nada.
+              </li>
+              <li>
+                <strong>QR Data Fiscal de AFIP</strong> (Formulario 960/D): es obligatorio mostrarlo en tu tienda, pero
+                es único por cada comerciante (está atado a tu CUIT) — nosotros no te lo podemos generar. Lo sacás
+                gratis entrando a{" "}
+                <a
+                  href="https://www.afip.gob.ar/960/formulario-960/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  afip.gob.ar
+                </a>{" "}
+                con tu Clave Fiscal, pedís el "Formulario 960/D", y te da una imagen con el código QR. Subila acá
+                abajo y listo.
+              </li>
+            </ul>
+            <div className="mt-3 max-w-[200px]">
+              <Label className="mb-2 block text-xs">QR Data Fiscal (AFIP)</Label>
+              <ImageUpload value={dataFiscalUrl} onChange={setDataFiscalUrl} type="qr" />
             </div>
           </div>
           <div>

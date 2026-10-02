@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 interface ImageUploadProps {
   value?: string
   onChange: (url: string) => void
-  type?: "banner" | "product" | "logo"
+  type?: "banner" | "product" | "logo" | "qr"
 }
 
 export function ImageUpload({ value, onChange, type = "product" }: ImageUploadProps) {
@@ -122,7 +122,9 @@ export function ImageUpload({ value, onChange, type = "product" }: ImageUploadPr
           <img
             src={value || "/images/placeholders/placeholder.svg"}
             alt="Producto"
-            className="w-full h-48 object-cover rounded-lg border"
+            className={`w-full h-48 rounded-lg border ${
+              type === "logo" || type === "qr" ? "object-contain bg-white p-2" : "object-cover"
+            }`}
           />
           <Button
             type="button"

@@ -37,6 +37,12 @@ export async function POST(request: NextRequest) {
         .resize(400, 400, { fit: "inside", withoutEnlargement: true })
         .webp({ quality: 90 })
         .toBuffer()
+    } else if (type === "qr") {
+      // Códigos QR (ej. Data Fiscal de AFIP): menos compresión, para que no pierdan nitidez y sigan siendo escaneables
+      processed = await sharp(buffer)
+        .resize(500, 500, { fit: "inside", withoutEnlargement: true })
+        .webp({ quality: 95 })
+        .toBuffer()
     } else {
       processed = await sharp(buffer)
         .resize(800, 1000, { fit: "inside", withoutEnlargement: true })
