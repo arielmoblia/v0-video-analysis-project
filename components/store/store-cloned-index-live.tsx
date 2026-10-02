@@ -45,6 +45,23 @@ export function StoreClonedIndexLive({ store, cloned }: StoreClonedIndexLiveProp
     const cleanups: Array<() => void> = []
 
     wrappers.forEach((wrap) => {
+      // Las grillas de producto (Destacados, Novedades, Ofertas) reusan la
+      // misma clase "swiper-wrapper" que los sliders decorativos, pero traen
+      // "grid" + data-desktop-columns/data-mobile-columns: en el sitio
+      // original eso lo arma el JS de Swiper (slides al 20% de ancho,
+      // paginado con puntitos), que nosotros no corremos. Sin este caso
+      // aparte, la regla de abajo (desbordó → convertilo en carrusel de una
+      // foto gigante por vez) se comía también estas grillas — bug real
+      // visto en prueba99 (Destacados mostraba un solo producto enorme en
+      // vez de la grilla completa). Para estas, mostramos todos los
+      // productos en una grilla que ajusta sola las columnas, sin scroll.
+      if (wrap.classList.contains("grid")) {
+        wrap.style.display = "grid"
+        wrap.style.gridTemplateColumns = "repeat(auto-fit, minmax(160px, 1fr))"
+        wrap.style.gap = "1rem"
+        return
+      }
+
       if (wrap.scrollWidth <= wrap.clientWidth + 4) return
 
       wrap.style.display = "flex"
@@ -100,6 +117,52 @@ export function StoreClonedIndexLive({ store, cloned }: StoreClonedIndexLiveProp
     root.addEventListener("click", onClick)
     return () => root.removeEventListener("click", onClick)
   }, [])
+
+  // El HTML clonado trae formularios reales del sitio de origen (carrito,
+  // "agregar al carrito" rápido desde la grilla) con action="/comprar/" u
+  // otra ruta propia de la plataforma origen. Esa ruta no existe en tol.ar
+  // (el carrito real es el drawer de cart-provider, no una página), así que
+  // si el form llega a enviarse el navegador termina en un 404 real. Esta
+  // es solo la portada clonada (diseño), no el carrito funcional, así que
+  // cualquier submit originado acá se neutraliza — igual criterio que ya se
+  // usa arriba para los links que escapan al dominio original.
+  useEffect(() => {
+    const root = rootRef.current
+    if (!root) return
+    const onSubmit = (e: SubmitEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    root.addEventListener("submit", onSubmit)
+    return () => root.removeEventListener("submit", onSubmit)
+  }, [])
+
+  // El HTML clonado trae el lazy-load nativo de la plataforma de origen
+  // (ej. TiendaNube: img con src de placeholder 1x1 transparente y la URL
+  // real en data-srcset/data-src, más una clase "lazyloaded" que su propio
+  // JS agrega para subir la opacidad de 0 a 1 vía CSS). Como sacamos todo
+  // <script> del clonado por seguridad, ese JS nunca corre y las fotos
+  // quedan en blanco. Hacemos acá el mismo swap a mano, una sola vez al
+  // montar.
+  useEffect(() => {
+    const root = rootRef.current
+    if (!root) return
+    const lazyImgs = root.querySelectorAll<HTMLImageElement>("img[data-srcset], img[data-src]")
+    lazyImgs.forEach((img) => {
+      const srcset = img.getAttribute("data-srcset")
+      const dataSrc = img.getAttribute("data-src")
+      if (srcset) {
+        img.srcset = srcset
+        const last = srcset.split(",").map((s) => s.trim().split(" ")[0]).filter(Boolean).pop()
+        if (last) img.src = last
+      } else if (dataSrc) {
+        img.src = dataSrc
+      }
+      img.removeAttribute("data-srcset")
+      img.removeAttribute("data-src")
+      img.classList.add("lazyloaded")
+    })
+  }, [cloned.html])
 
   return (
     <>
