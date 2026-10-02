@@ -15,6 +15,7 @@ import { StoreMinimalLive } from "@/components/store/store-minimal-live"
 import { StoreVintageLive } from "@/components/store/store-vintage-live"
 import { StoreBasicoLive } from "@/components/store/store-basico-live"
 import { StoreDefaultLive } from "@/components/store/store-default-live"
+import { StoreClonedIndexLive } from "@/components/store/store-cloned-index-live"
 
 const MODERNO_ACCENT = "#e8590c"
 const ELEGANTE_ACCENT = "#f7791e"
@@ -120,6 +121,15 @@ export default async function StorePage({ params }: StorePageProps) {
   // carrito— sigue siendo el ecommerce estándar de tol.ar: los links de acá
   // abajo van a esas mismas rutas.
   const activeTheme = store.plan_features?.active_theme
+
+  // "Clonado de Index" (en prueba, solo tiendas que lo tengan activado a mano
+  // en plan_features.cloned_index — hoy únicamente prueba99): reemplaza TODA
+  // la portada por el HTML/CSS clonado del sitio de referencia. Va antes que
+  // cualquier otro theme porque pisa el index entero, no solo una sección.
+  const clonedIndex = store.plan_features?.cloned_index
+  if (clonedIndex?.active && clonedIndex?.html) {
+    return <StoreClonedIndexLive store={store} cloned={clonedIndex} />
+  }
 
   if (activeTheme === "moderno") {
     const cookieStore = await cookies()
