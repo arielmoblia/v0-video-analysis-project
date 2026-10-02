@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation"
 import { getStoreBySubdomain, getStoreCategories } from "@/lib/store-context"
 import { hasStoreFeature } from "@/lib/services/stores"
+import { getStorePages } from "@/lib/services/store-pages"
 import { StoreHeader } from "@/components/store/store-header"
+import { StoreHeaderPink } from "@/components/store/store-header-pink"
 import { StoreFooter } from "@/components/store/store-footer"
 import { StoreLegalPage } from "@/components/store/store-legal-page"
 
@@ -27,14 +29,20 @@ export default async function StoreDevolucionesPage({ params }: PageProps) {
   const store = await getStoreBySubdomain(subdomain)
   if (!store) notFound()
 
-  const [categories, hasMayoristaMinorista] = await Promise.all([
+  const [categories, hasMayoristaMinorista, storePages] = await Promise.all([
     getStoreCategories(store.id),
     hasStoreFeature(store.id, "mayorista_minorista"),
+    getStorePages(store.id),
   ])
+  const headerStyle = store.plan_features?.header_style
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <StoreHeader store={store} categories={categories} hasMayoristaMinorista={hasMayoristaMinorista} />
+      {headerStyle === "pink" ? (
+        <StoreHeaderPink store={store} categories={categories} storePages={storePages} />
+      ) : (
+        <StoreHeader store={store} categories={categories} hasMayoristaMinorista={hasMayoristaMinorista} />
+      )}
       <StoreLegalPage
         subdomain={subdomain}
         page="devoluciones"

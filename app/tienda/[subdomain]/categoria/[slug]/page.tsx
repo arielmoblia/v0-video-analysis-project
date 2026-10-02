@@ -1,6 +1,8 @@
 import { getStoreBySubdomain, getStoreCategories, getStoreProducts } from "@/lib/store-context"
 import { hasStoreFeature } from "@/lib/services/stores"
+import { getStorePages } from "@/lib/services/store-pages"
 import { StoreHeader } from "@/components/store/store-header"
+import { StoreHeaderPink } from "@/components/store/store-header-pink"
 import { StoreFooter } from "@/components/store/store-footer"
 import { ProductGrid } from "@/components/store/product-grid"
 import { redirect } from "next/navigation"
@@ -19,11 +21,13 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     redirect("/")
   }
 
-  const [categories, allProducts, hasMayoristaMinorista] = await Promise.all([
+  const [categories, allProducts, hasMayoristaMinorista, storePages] = await Promise.all([
     getStoreCategories(store.id),
     getStoreProducts(store.id),
     hasStoreFeature(store.id, "mayorista_minorista"),
+    getStorePages(store.id),
   ])
+  const headerStyle = store.plan_features?.header_style
 
   // Encontrar la categoría actual
   const currentCategory = categories.find((cat) => cat.slug === slug)
@@ -37,7 +41,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <StoreHeader store={store} categories={categories} hasMayoristaMinorista={hasMayoristaMinorista} />
+      {headerStyle === "pink" ? (
+        <StoreHeaderPink store={store} categories={categories} storePages={storePages} />
+      ) : (
+        <StoreHeader store={store} categories={categories} hasMayoristaMinorista={hasMayoristaMinorista} />
+      )}
 
       <main className="flex-1">
         <div className="container mx-auto px-6 py-12">

@@ -7,7 +7,9 @@ import { seoClean, seoDesc } from "@/lib/utils"
 import { getStoreBySubdomain, getProductBySlug } from "@/lib/store-context"
 import { hasStoreFeature } from "@/lib/services/stores"
 import { getStoreCategories } from "@/lib/store-context"
+import { getStorePages } from "@/lib/services/store-pages"
 import { StoreHeader } from "@/components/store/store-header"
+import { StoreHeaderPink } from "@/components/store/store-header-pink"
 import { StoreFooter } from "@/components/store/store-footer"
 import { ProductSelector } from "@/components/store/product-selector"
 import { ProductEditable } from "@/components/store/product-editable"
@@ -94,12 +96,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound()
   }
 
-  const [product, hasMultiImages, hasDolarPeso, hasMayoristaMinorista] = await Promise.all([
+  const [product, hasMultiImages, hasDolarPeso, hasMayoristaMinorista, categories, storePages] = await Promise.all([
     getProductBySlug(store.id, slug),
     hasStoreFeature(store.id, "multi_images"),
     hasStoreFeature(store.id, 'dolar_peso'),
     hasStoreFeature(store.id, 'mayorista_minorista'),
+    getStoreCategories(store.id),
+    getStorePages(store.id),
   ])
+  const headerStyle = store.plan_features?.header_style
 
   if (!product) {
     notFound()
@@ -175,7 +180,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
-      <StoreHeader store={store} categories={[]} hasMayoristaMinorista={hasMayoristaMinorista} />
+      {headerStyle === "pink" ? (
+        <StoreHeaderPink store={store} categories={categories} storePages={storePages} />
+      ) : (
+        <StoreHeader store={store} categories={[]} hasMayoristaMinorista={hasMayoristaMinorista} />
+      )}
 
       <main className="flex-1">
         <div className="container mx-auto px-4 py-8">
