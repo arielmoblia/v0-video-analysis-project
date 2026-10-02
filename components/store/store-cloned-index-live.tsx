@@ -214,6 +214,27 @@ export function StoreClonedIndexLive({ store, cloned }: StoreClonedIndexLiveProp
 
   return (
     <>
+      {/* El CSS del tema original define .swiper-wrapper en flex-direction:
+          column (es el JS de Swiper, que nunca cargamos, el que lo pasa a
+          "row" al inicializar). Sin esto, hasta que el useEffect de arriba
+          corre (puede tardar: ~1MB de HTML clonado + varias hojas de estilo
+          externas), el visitante ve los carruseles apilados en columna —
+          bug real visto en prueba99 (Destacados en 2 filas en vez de una
+          sola scrolleable, Novedades/Ofertas mostrando una sola foto,
+          Marcas una marca por fila). Este estilo va server-rendered (no por
+          JS) para estar presente desde el primer pixel pintado. */}
+      <style>{`
+        .tol-cloned-index .swiper-wrapper {
+          display: flex !important;
+          flex-direction: row !important;
+          flex-wrap: nowrap !important;
+          overflow-x: auto !important;
+          -webkit-overflow-scrolling: touch;
+        }
+        .tol-cloned-index .swiper-wrapper > * {
+          flex-shrink: 0 !important;
+        }
+      `}</style>
       {cloned.stylesheetHrefs.map((href) => (
         <link key={href} rel="stylesheet" href={href} />
       ))}
