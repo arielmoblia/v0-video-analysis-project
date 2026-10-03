@@ -167,6 +167,24 @@ export function StoreClonedIndexLive({ store, cloned, featuredProducts, ofertaDe
         mainImgLink.appendChild(badge)
       }
 
+      let counterEl: HTMLSpanElement | null = null
+      if (images.length > 1) {
+        counterEl = document.createElement("span")
+        counterEl.textContent = `1/${images.length}`
+        Object.assign(counterEl.style, {
+          position: "absolute",
+          bottom: "0.75rem",
+          right: "0.75rem",
+          background: "rgba(0,0,0,0.6)",
+          color: "#fff",
+          fontSize: "0.75rem",
+          fontWeight: "600",
+          padding: "0.2rem 0.55rem",
+          borderRadius: "999px",
+        })
+        mainImgLink.appendChild(counterEl)
+      }
+
       if (images.length > 1) {
         const thumbs = document.createElement("div")
         Object.assign(thumbs.style, { display: "flex", flexDirection: "column", gap: "0.5rem", flexShrink: "0" })
@@ -190,6 +208,7 @@ export function StoreClonedIndexLive({ store, cloned, featuredProducts, ofertaDe
           thumbBtn.appendChild(thumbImg)
           thumbBtn.addEventListener("click", () => {
             mainImg.src = src
+            if (counterEl) counterEl.textContent = `${i + 1}/${images.length}`
             Array.from(thumbs.children).forEach((c) => {
               ;(c as HTMLElement).style.border = "2px solid transparent"
             })
@@ -243,10 +262,40 @@ export function StoreClonedIndexLive({ store, cloned, featuredProducts, ofertaDe
 
       if (product.description) {
         const desc = document.createElement("p")
-        const text = product.description.replace(/<[^>]+>/g, " ").trim()
-        desc.textContent = text.length > 160 ? `${text.slice(0, 160)}…` : text
+        const fullText = product.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
+        const shortText = fullText.length > 160 ? `${fullText.slice(0, 160)}…` : fullText
         Object.assign(desc.style, { fontSize: "0.9rem", color: "#555", marginTop: "1rem", lineHeight: "1.5" })
-        infoCol.appendChild(desc)
+
+        if (fullText.length > 160) {
+          let expanded = false
+          const textSpan = document.createElement("span")
+          textSpan.textContent = shortText
+          const toggleLink = document.createElement("button")
+          toggleLink.type = "button"
+          toggleLink.textContent = "Ver más"
+          Object.assign(toggleLink.style, {
+            display: "block",
+            marginTop: "0.4rem",
+            background: "none",
+            border: "none",
+            padding: "0",
+            color: "#111",
+            fontWeight: "600",
+            textDecoration: "underline",
+            cursor: "pointer",
+            fontSize: "0.9rem",
+          })
+          toggleLink.addEventListener("click", () => {
+            expanded = !expanded
+            textSpan.textContent = expanded ? fullText : shortText
+            toggleLink.textContent = expanded ? "Ver menos" : "Ver más"
+          })
+          desc.appendChild(textSpan)
+          infoCol.append(desc, toggleLink)
+        } else {
+          desc.textContent = fullText
+          infoCol.appendChild(desc)
+        }
       }
 
       // Selector de cantidad: decorativo (ajusta solo el número mostrado acá);
