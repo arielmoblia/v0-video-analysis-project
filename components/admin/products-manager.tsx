@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Pencil, Trash2, Package, Copy, FileSpreadsheet } from "lucide-react"
+import { Plus, Pencil, Trash2, Package, Copy, FileSpreadsheet, Star } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { MultiImageUpload } from "./multi-image-upload"
 import { CsvImporter } from "./csv-importer"
@@ -27,6 +27,7 @@ interface Product {
   category_id?: string
   active: boolean
   display_order?: number
+  featured?: boolean
 }
 
 interface Category {
@@ -364,6 +365,21 @@ export function ProductsManager({ storeId, template = "default", customVariants,
       ))
     } catch (error) {
       console.error("Error updating order:", error)
+    }
+  }
+
+  const handleToggleFeatured = async (productId: string, featured: boolean) => {
+    try {
+      await fetch("/api/admin/products/featured", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, featured }),
+      })
+      setProducts(prev => prev.map(p =>
+        p.id === productId ? { ...p, featured } : p
+      ))
+    } catch (error) {
+      console.error("Error updating featured:", error)
     }
   }
 
@@ -718,6 +734,15 @@ export function ProductsManager({ storeId, template = "default", customVariants,
                   </td>
                   <td className="py-3">
                     <div className="flex gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleToggleFeatured(product.id, !product.featured)}
+                        className={product.featured ? "text-amber-500 hover:text-amber-600 border-amber-300" : ""}
+                        title={product.featured ? "Quitar de destacados" : "Destacar en el inicio"}
+                      >
+                        <Star className={`w-4 h-4 ${product.featured ? "fill-amber-400" : ""}`} />
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => handleDuplicate(product)} title="Duplicar">
                         <Copy className="w-4 h-4" />
                       </Button>
