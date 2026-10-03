@@ -28,12 +28,19 @@ interface StoreClonedIndexLiveProps {
 // (bug real visto en prueba99: flash de 1 producto gigante en Destacados
 // antes del carrusel completo). Generamos acá las mismas reglas como CSS
 // server-rendered para que el ancho correcto esté desde el primer pixel.
+// Separación real entre productos del carrusel (antes no había gap ni
+// margen entre slides, quedaban pegados uno con otro a diferencia del
+// carrusel original). Mismo valor usado acá (CSS server-rendered) y en el
+// useEffect de abajo (runtime), para que el ancho de cada producto deje
+// lugar al gap y no se corte el último visible.
+const CAROUSEL_GAP_REM = 1
+
 const COLUMN_WIDTH_CSS = Array.from({ length: 12 }, (_, i) => i + 1)
   .map((n) => {
-    const pct = (100 / n).toFixed(4)
+    const widthExpr = n === 1 ? "100%" : `calc((100% - ${(n - 1) * CAROUSEL_GAP_REM}rem) / ${n})`
     return [
-      `@media (min-width: 768px) { .tol-cloned-index .swiper-wrapper[data-desktop-columns="${n}"] > * { flex: 0 0 ${pct}% !important; width: ${pct}% !important; } }`,
-      `@media (max-width: 767.98px) { .tol-cloned-index .swiper-wrapper[data-mobile-columns="${n}"] > * { flex: 0 0 ${pct}% !important; width: ${pct}% !important; } }`,
+      `@media (min-width: 768px) { .tol-cloned-index .swiper-wrapper[data-desktop-columns="${n}"] > * { flex: 0 0 ${widthExpr} !important; width: ${widthExpr} !important; } }`,
+      `@media (max-width: 767.98px) { .tol-cloned-index .swiper-wrapper[data-mobile-columns="${n}"] > * { flex: 0 0 ${widthExpr} !important; width: ${widthExpr} !important; } }`,
     ].join("\n")
   })
   .join("\n")
@@ -123,8 +130,12 @@ export function StoreClonedIndexLive({ store, cloned }: StoreClonedIndexLiveProp
 
         wrap.style.flexWrap = "nowrap"
         wrap.style.justifyContent = ""
+        wrap.style.gap = `${CAROUSEL_GAP_REM}rem`
         Array.from(wrap.children).forEach((child) => {
-          ;(child as HTMLElement).style.flex = `0 0 ${100 / columns}%`
+          ;(child as HTMLElement).style.flex =
+            columns === 1
+              ? "0 0 100%"
+              : `0 0 calc((100% - ${(columns - 1) * CAROUSEL_GAP_REM}rem) / ${columns})`
         })
 
         const overflowing = wrap.scrollWidth > wrap.clientWidth + 4
@@ -292,6 +303,12 @@ export function StoreClonedIndexLive({ store, cloned }: StoreClonedIndexLiveProp
           flex-wrap: nowrap !important;
           overflow-x: auto !important;
           -webkit-overflow-scrolling: touch;
+          gap: ${CAROUSEL_GAP_REM}rem;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .tol-cloned-index .swiper-wrapper::-webkit-scrollbar {
+          display: none;
         }
         .tol-cloned-index .swiper-wrapper > * {
           flex-shrink: 0 !important;
