@@ -129,7 +129,6 @@ export function StoreClonedIndexLive({ store, cloned }: StoreClonedIndexLiveProp
         }
 
         wrap.style.flexWrap = "nowrap"
-        wrap.style.justifyContent = ""
         wrap.style.gap = `${CAROUSEL_GAP_REM}rem`
         Array.from(wrap.children).forEach((child) => {
           ;(child as HTMLElement).style.flex =
@@ -139,6 +138,14 @@ export function StoreClonedIndexLive({ store, cloned }: StoreClonedIndexLiveProp
         })
 
         const overflowing = wrap.scrollWidth > wrap.clientWidth + 4
+        // Si hay menos ítems que columnas declaradas (ej. "Nuestras marcas"
+        // con slidesPerView:10 del sitio original pero solo 6 logos reales),
+        // la fila no llega a llenar el ancho y quedaba pegada a la izquierda
+        // con un hueco vacío antes de la flecha derecha (bug real visto en
+        // prueba99). Sin necesidad de scroll, centramos en vez de alinear a
+        // la izquierda; con scroll real (carrusel de productos lleno) se
+        // mantiene el alineado a la izquierda de siempre.
+        wrap.style.justifyContent = overflowing ? "" : "center"
         wrap.style.overflowX = overflowing ? "auto" : ""
         wrap.style.scrollSnapType = overflowing ? "x mandatory" : ""
         wrap.style.scrollBehavior = overflowing ? "smooth" : ""
