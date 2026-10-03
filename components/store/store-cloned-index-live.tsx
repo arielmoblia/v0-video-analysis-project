@@ -162,6 +162,46 @@ export function StoreClonedIndexLive({ store, cloned }: StoreClonedIndexLiveProp
         nextBtn.addEventListener("click", goNext)
         cleanups.push(() => nextBtn.removeEventListener("click", goNext))
       }
+
+      // Puntitos de paginación: el servidor ya los generó como HTML estático
+      // (populateSwiperPaginationBullets en clone-store.ts, misma cantidad de
+      // "páginas" que usaría Swiper real). Acá solo los hacemos clickeables
+      // (saltan a esa página) y les sincronizamos cuál está activo según el
+      // scroll real del carrusel — mismo criterio que ya se usa para las
+      // flechas prev/next de arriba.
+      const paginationEl = section?.querySelector<HTMLElement>('[class*="pagination-bullets" i]')
+      const bullets = paginationEl
+        ? Array.from(paginationEl.querySelectorAll<HTMLElement>(".swiper-pagination-bullet"))
+        : []
+      if (bullets.length > 0) {
+        const formatHost =
+          (wrap.closest("[data-desktop-format], [data-mobile-format]") as HTMLElement | null) || wrap
+        const columnsFor = () => {
+          const desktop = window.matchMedia("(min-width: 768px)").matches
+          const attr = desktop ? formatHost.dataset.desktopColumns : formatHost.dataset.mobileColumns
+          return Math.max(1, parseInt(attr || "1", 10) || 1)
+        }
+        const pageWidth = () => {
+          const child = wrap.children[0] as HTMLElement | undefined
+          const slideWidth = child ? child.getBoundingClientRect().width : wrap.clientWidth
+          return columnsFor() * slideWidth
+        }
+        bullets.forEach((bullet, index) => {
+          bullet.style.cursor = "pointer"
+          const onClick = () => wrap.scrollTo({ left: index * pageWidth(), behavior: "smooth" })
+          bullet.addEventListener("click", onClick)
+          cleanups.push(() => bullet.removeEventListener("click", onClick))
+        })
+        const syncActiveBullet = () => {
+          const width = pageWidth()
+          const page = width > 0 ? Math.round(wrap.scrollLeft / width) : 0
+          bullets.forEach((bullet, i) =>
+            bullet.classList.toggle("swiper-pagination-bullet-active", i === page)
+          )
+        }
+        wrap.addEventListener("scroll", syncActiveBullet)
+        cleanups.push(() => wrap.removeEventListener("scroll", syncActiveBullet))
+      }
     })
 
     return () => cleanups.forEach((fn) => fn())
