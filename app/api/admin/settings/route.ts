@@ -35,6 +35,7 @@ export async function PUT(request: NextRequest) {
       template_texts,
       carousels,
       slider_images,
+      oferta_destacada,
     } = body
 
     if (!storeId) {
@@ -58,7 +59,7 @@ export async function PUT(request: NextRequest) {
     // plan_features es un jsonb que ya usan otras cositas (ej. dropshipping);
     // hay que leerlo y mergear para no pisar lo que ya tenga guardado.
     let mergedPlanFeatures: Record<string, any> | undefined
-    if (active_theme !== undefined || category_images !== undefined || template_texts !== undefined || carousels !== undefined || slider_images !== undefined) {
+    if (active_theme !== undefined || category_images !== undefined || template_texts !== undefined || carousels !== undefined || slider_images !== undefined || oferta_destacada !== undefined) {
       const { data: currentStore } = await supabase
         .from("stores")
         .select("plan_features")
@@ -70,6 +71,12 @@ export async function PUT(request: NextRequest) {
       if (template_texts !== undefined) nextPlanFeatures.template_texts = template_texts
       if (carousels !== undefined) nextPlanFeatures.carousels = carousels
       if (slider_images !== undefined) nextPlanFeatures.slider_images = slider_images
+      // Hasta 3 productos elegidos a mano para la sección "Oferta Destacada"
+      // del index clonado (independiente del campo `featured`/estrella, que
+      // ya controla la sección "Destacados" propia del clon).
+      if (oferta_destacada !== undefined) {
+        nextPlanFeatures.oferta_destacada = Array.isArray(oferta_destacada) ? oferta_destacada.slice(0, 3) : []
+      }
       mergedPlanFeatures = nextPlanFeatures
     }
 

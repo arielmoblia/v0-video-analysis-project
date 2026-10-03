@@ -28,6 +28,7 @@ import { InvoicingManager } from "./invoicing-manager"
 import { StorePagesManager } from "./store-pages-manager"
 import { CustomersManager } from "./customers-manager"
 import { CarouselsManager } from "./carousels-manager"
+import { OfertaDestacadaManager } from "./oferta-destacada-manager"
 
 // Prueba aislada: solo esta tienda tiene el asistente de chat en el admin
 const ADMIN_CHAT_SUBDOMAINS = ["prueba3"]
@@ -164,6 +165,12 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
     router.refresh()
   }
 
+  // Solo tiene sentido para tiendas con "Clonado de Index" activo (hoy
+  // prueba99): es el único caso donde la sección "Destacados" normal ya no
+  // sirve para elegir qué se muestra arriba, porque viene fija del HTML
+  // clonado del sitio de referencia.
+  const hasClonedIndex = !!store.plan_features?.cloned_index?.active
+
   const trialCodes = trialFeatures.map(t => t.code)
   const cositaCodes = Object.keys(FEATURE_NAMES).filter(code =>
     code !== "dropshipping" || store.is_dropship
@@ -266,6 +273,7 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
             {navGratis("contacto", "Contacto")}
             {navGratis("marketing", "Marketing")}
             {navGratis("facturacion", "Facturación electrónica")}
+            {hasClonedIndex && navGratis("oferta-destacada", "Oferta Destacada")}
           </div>
 
           <div className="px-2 pb-2 border-t border-neutral-200 pt-3">
@@ -426,6 +434,16 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
                 <CarouselsManager storeId={store.id} initialCarousels={store.plan_features?.carousels || null} />
               )}
             </TabsContent>
+
+            {hasClonedIndex && (
+              <TabsContent value="oferta-destacada">
+                <OfertaDestacadaManager
+                  storeId={store.id}
+                  country={store.country}
+                  initialProductIds={store.plan_features?.oferta_destacada || []}
+                />
+              </TabsContent>
+            )}
 
             {purchasedFeatures.includes("whatsapp_chat") && (
               <TabsContent value="whatsapp">

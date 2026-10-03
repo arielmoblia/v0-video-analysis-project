@@ -1,7 +1,9 @@
 "use client"
 
-import { useEffect, useRef } from "react"
-import type { Store } from "@/lib/types"
+import { useEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
+import type { Product, Store } from "@/lib/types"
+import { formatPrice } from "@/lib/currency"
 
 interface ClonedIndexData {
   active: boolean
@@ -14,6 +16,8 @@ interface ClonedIndexData {
 interface StoreClonedIndexLiveProps {
   store: Store
   cloned: ClonedIndexData
+  featuredProducts: Product[]
+  ofertaDestacadaProducts?: Product[]
 }
 
 // El motor de clonado (extractSwiperColumnsMap/applySwiperColumnsToWrappers
@@ -54,8 +58,135 @@ const COLUMN_WIDTH_CSS = Array.from({ length: 12 }, (_, i) => i + 1)
 // apunte al dominio original (menú, redes, etc.) — el listener de abajo es
 // una segunda red de contención por si algún link externo se escapa del
 // sanitizado del servidor. Primera versión (02/10), solo para prueba99.
-export function StoreClonedIndexLive({ store, cloned }: StoreClonedIndexLiveProps) {
+export function StoreClonedIndexLive({ store, cloned, featuredProducts, ofertaDestacadaProducts = [] }: StoreClonedIndexLiveProps) {
   const rootRef = useRef<HTMLDivElement>(null)
+  const [destacadosNode, setDestacadosNode] = useState<HTMLElement | null>(null)
+
+  // El motor de clonado marca el contenedor de "Destacados" (y solo ese, ver
+  // markDynamicDestacadosContainer en clone-store.ts) con data-tol-dynamic-
+  // destacados. Si el comerciante ya eligió sus 3 productos con la estrella
+  // ("Destacar en el inicio", igual mecanismo que las tiendas sin clonado),
+  // vaciamos ese contenedor y los mostramos ahí de verdad — hasta entonces
+  // queda la copia estática del sitio original como venía. El resto de la
+  // portada clonada (Novedades, Ofertas, Marcas, etc.) nunca se toca.
+  useEffect(() => {
+    const root = rootRef.current
+    if (!root) return
+    const node = root.querySelector<HTMLElement>("[data-tol-dynamic-destacados]")
+    if (node && featuredProducts.length > 0) node.innerHTML = ""
+    setDestacadosNode(node)
+  }, [cloned.html, featuredProducts])
+
+  // "Oferta Destacada": hasta 3 productos elegidos a mano (panel propio en el
+  // admin, distinto de la estrella) mostrados completos en el mismo lugar
+  // que tenía la idea original de Pink: después de la franja "¿No encontraste
+  // lo que buscás?" (clase real del tema TiendaNube clonado,
+  // .js-section-institutional-home, confirmada en el HTML de prueba99) y
+  // antes de "Nuestras marcas" (.section-brands-home). Si el sitio clonado
+  // no trae esa franja (otro tema de origen), caemos al mismo lugar que usa
+  // "Destacados" como segunda opción, para no dejar el panel sin efecto. Sin
+  // productos elegidos no se inserta nada — una tienda que nunca usó este
+  // panel no ve ningún cambio.
+  // Nota: a diferencia de "Destacados" (arriba), este efecto NUNCA llama a
+  // setState — solo escribe DOM a mano. Probado en vivo (prueba99, 03/10):
+  // cualquier setState acá adentro terminaba en un loop infinito en dev
+  // (cada reinserción disparaba un re-render que el motor de Fast Refresh
+  // usaba como excusa para volver a pintar TODO el HTML clonado desde cero,
+  // lo que borraba el nodo recién insertado, lo que volvía a disparar el
+  // setState — así sin parar). Construyendo el contenido a mano y
+  // reinsertándolo de forma puramente imperativa evita ese ciclo.
+  useEffect(() => {
+    const root = rootRef.current
+    if (!root || ofertaDestacadaProducts.length === 0) return
+
+    const buildCard = (product: Product): HTMLAnchorElement => {
+      const card = document.createElement("a")
+      card.href = `/tienda/${store.subdomain}/producto/${product.slug}`
+      Object.assign(card.style, {
+        display: "block",
+        width: "260px",
+        textAlign: "center",
+        textDecoration: "none",
+        color: "inherit",
+        border: "1px solid #e5e5e5",
+        borderRadius: "12px",
+        padding: "1rem",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+      })
+
+      const img = document.createElement("img")
+      img.src = product.image_url || "/placeholder.svg"
+      img.alt = product.name
+      Object.assign(img.style, { width: "100%", aspectRatio: "1 / 1", objectFit: "cover", borderRadius: "8px" })
+
+      const name = document.createElement("div")
+      name.textContent = product.name
+      Object.assign(name.style, { marginTop: "0.75rem", fontSize: "1rem" })
+
+      const price = document.createElement("div")
+      price.textContent = formatPrice(product.price, store.country)
+      Object.assign(price.style, { fontWeight: "600", marginTop: "0.25rem" })
+
+      const buyBtn = document.createElement("div")
+      buyBtn.textContent = "Comprar"
+      Object.assign(buyBtn.style, {
+        marginTop: "0.75rem",
+        display: "inline-block",
+        padding: "0.5rem 1.25rem",
+        borderRadius: "8px",
+        background: "#111",
+        color: "#fff",
+        fontSize: "0.85rem",
+        fontWeight: "600",
+      })
+
+      card.append(img, name, price, buyBtn)
+      return card
+    }
+
+    const buildContent = (container: HTMLElement) => {
+      container.innerHTML = ""
+      const title = document.createElement("h2")
+      title.textContent = "Oferta Destacada"
+      Object.assign(title.style, { fontSize: "1.5rem", fontWeight: "700", marginBottom: "1.5rem" })
+
+      const grid = document.createElement("div")
+      Object.assign(grid.style, { display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "1.5rem" })
+      ofertaDestacadaProducts.slice(0, 3).forEach((product) => grid.appendChild(buildCard(product)))
+
+      container.append(title, grid)
+    }
+
+    const ensureInserted = () => {
+      let node = root.querySelector<HTMLElement>("[data-tol-oferta-destacada]")
+      if (node) return
+      node = document.createElement("div")
+      node.setAttribute("data-tol-oferta-destacada", "1")
+      node.style.padding = "2rem 1rem"
+      node.style.textAlign = "center"
+      buildContent(node)
+      const institutionalSection = root.querySelector(".js-section-institutional-home")
+      const destacadosSection = root.querySelector("[data-tol-dynamic-destacados]")?.closest("section")
+      const anchor = institutionalSection || destacadosSection
+      if (anchor) {
+        anchor.insertAdjacentElement("afterend", node)
+      } else {
+        root.insertBefore(node, root.firstChild)
+      }
+    }
+
+    ensureInserted()
+
+    // Red de contención: si el HTML clonado se vuelve a pintar entero por
+    // cualquier motivo (visto en pruebas reales en dev), el nodo recién
+    // insertado desaparece con él. Lo reinsertamos apenas se detecta, sin
+    // tocar React state, para no dejar el panel pagado sin efecto.
+    const observer = new MutationObserver(() => {
+      if (!root.querySelector("[data-tol-oferta-destacada]")) ensureInserted()
+    })
+    observer.observe(root, { childList: true, subtree: true })
+    return () => observer.disconnect()
+  }, [cloned.html, ofertaDestacadaProducts, store.subdomain, store.country])
 
   // El HTML clonado trae marcado de carruseles de la plataforma de origen
   // (ej. Swiper de TiendaNube: .swiper-wrapper / .swiper-slide / botones
@@ -335,6 +466,36 @@ export function StoreClonedIndexLive({ store, cloned }: StoreClonedIndexLiveProp
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: cloned.html }}
       />
+      {destacadosNode &&
+        featuredProducts.length > 0 &&
+        createPortal(
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: "1.5rem",
+              padding: "1rem 0",
+            }}
+          >
+            {featuredProducts.slice(0, 3).map((product) => (
+              <a
+                key={product.id}
+                href={`/tienda/${store.subdomain}/producto/${product.slug}`}
+                style={{ display: "block", width: 220, textAlign: "center", textDecoration: "none", color: "inherit" }}
+              >
+                <img
+                  src={product.image_url || "/placeholder.svg"}
+                  alt={product.name}
+                  style={{ width: "100%", aspectRatio: "1 / 1", objectFit: "cover", borderRadius: 8 }}
+                />
+                <div style={{ marginTop: "0.5rem", fontSize: "0.95rem" }}>{product.name}</div>
+                <div style={{ fontWeight: 600 }}>{formatPrice(product.price, store.country)}</div>
+              </a>
+            ))}
+          </div>,
+          destacadosNode
+        )}
     </>
   )
 }
