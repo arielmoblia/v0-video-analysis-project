@@ -71,11 +71,11 @@ export async function PUT(request: NextRequest) {
       if (template_texts !== undefined) nextPlanFeatures.template_texts = template_texts
       if (carousels !== undefined) nextPlanFeatures.carousels = carousels
       if (slider_images !== undefined) nextPlanFeatures.slider_images = slider_images
-      // Hasta 3 productos elegidos a mano para la sección "Oferta Destacada"
-      // del index clonado (independiente del campo `featured`/estrella, que
-      // ya controla la sección "Destacados" propia del clon).
+      // 1 producto elegido a mano para la sección "Oferta Destacada" del
+      // index clonado (independiente del campo `featured`/estrella, que ya
+      // controla la sección "Destacados" propia del clon).
       if (oferta_destacada !== undefined) {
-        nextPlanFeatures.oferta_destacada = Array.isArray(oferta_destacada) ? oferta_destacada.slice(0, 3) : []
+        nextPlanFeatures.oferta_destacada = Array.isArray(oferta_destacada) ? oferta_destacada.slice(0, 1) : []
       }
       mergedPlanFeatures = nextPlanFeatures
     }

@@ -16,7 +16,7 @@ interface OfertaDestacadaManagerProps {
   initialProductIds?: string[]
 }
 
-const MAX_PRODUCTS = 3
+const MAX_PRODUCTS = 1
 
 export function OfertaDestacadaManager({ storeId, country, initialProductIds }: OfertaDestacadaManagerProps) {
   const [products, setProducts] = useState<ProductLite[]>([])
@@ -77,13 +77,13 @@ export function OfertaDestacadaManager({ storeId, country, initialProductIds }: 
       <div>
         <h1 className="text-4xl font-bold tracking-tight">Oferta Destacada</h1>
         <p className="text-xl text-muted-foreground mt-2">
-          Elegí hasta {MAX_PRODUCTS} productos para mostrar completos (foto, precio y botón de compra) en un lugar
+          Elegí el producto que querés mostrar completo (galería de fotos, precio y botón de compra) en un lugar
           fijo del inicio de tu tienda.
         </p>
       </div>
 
       <div>
-        <label className="text-xs text-slate-500">Productos elegidos ({selected.length}/{MAX_PRODUCTS})</label>
+        <label className="text-xs text-slate-500">Producto elegido ({selected.length}/{MAX_PRODUCTS})</label>
         {selected.length === 0 ? (
           <p className="text-xs text-slate-400 italic mt-2">Todavía no elegiste ningún producto.</p>
         ) : (

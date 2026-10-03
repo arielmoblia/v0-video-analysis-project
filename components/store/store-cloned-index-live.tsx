@@ -77,15 +77,16 @@ export function StoreClonedIndexLive({ store, cloned, featuredProducts, ofertaDe
     setDestacadosNode(node)
   }, [cloned.html, featuredProducts])
 
-  // "Oferta Destacada": hasta 3 productos elegidos a mano (panel propio en el
-  // admin, distinto de la estrella) mostrados completos en el mismo lugar
-  // que tenía la idea original de Pink: después de la franja "¿No encontraste
-  // lo que buscás?" (clase real del tema TiendaNube clonado,
+  // "Oferta Destacada": 1 producto elegido a mano (panel propio en el admin,
+  // distinto de la estrella) mostrado completo (galería, precio con
+  // descuento, botón) en el mismo lugar y con el mismo formato que tenía la
+  // idea original de Pink (pinkonlineoficial.com.ar): después de la franja
+  // "¿No encontraste lo que buscás?" (clase real del tema TiendaNube clonado,
   // .js-section-institutional-home, confirmada en el HTML de prueba99) y
   // antes de "Nuestras marcas" (.section-brands-home). Si el sitio clonado
   // no trae esa franja (otro tema de origen), caemos al mismo lugar que usa
   // "Destacados" como segunda opción, para no dejar el panel sin efecto. Sin
-  // productos elegidos no se inserta nada — una tienda que nunca usó este
+  // producto elegido no se inserta nada — una tienda que nunca usó este
   // panel no ve ningún cambio.
   // Nota: a diferencia de "Destacados" (arriba), este efecto NUNCA llama a
   // setState — solo escribe DOM a mano. Probado en vivo (prueba99, 03/10):
@@ -99,62 +100,211 @@ export function StoreClonedIndexLive({ store, cloned, featuredProducts, ofertaDe
     const root = rootRef.current
     if (!root || ofertaDestacadaProducts.length === 0) return
 
-    const buildCard = (product: Product): HTMLAnchorElement => {
-      const card = document.createElement("a")
-      card.href = `/tienda/${store.subdomain}/producto/${product.slug}`
-      Object.assign(card.style, {
-        display: "block",
-        width: "260px",
-        textAlign: "center",
-        textDecoration: "none",
-        color: "inherit",
-        border: "1px solid #e5e5e5",
-        borderRadius: "12px",
-        padding: "1rem",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+    const product = ofertaDestacadaProducts[0]
+    const productUrl = `/tienda/${store.subdomain}/producto/${product.slug}`
+    const hasDiscount = !!(product.compare_price && product.compare_price > product.price)
+
+    // Vista completa de 1 producto (galería con miniaturas, precio con
+    // descuento, botón) — mismo formato que pinkonlineoficial.com.ar. El
+    // link entero navega a la ficha real del producto (ahí sí funciona el
+    // carrito, talles, etc.): este cuadro es una vidriera, no un carrito
+    // embebido.
+    const buildContent = (container: HTMLElement) => {
+      container.innerHTML = ""
+
+      const wrap = document.createElement("div")
+      Object.assign(wrap.style, {
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "2.5rem",
+        maxWidth: "900px",
+        margin: "0 auto",
+        textAlign: "left",
       })
 
-      const img = document.createElement("img")
-      img.src = product.image_url || "/placeholder.svg"
-      img.alt = product.name
-      Object.assign(img.style, { width: "100%", aspectRatio: "1 / 1", objectFit: "cover", borderRadius: "8px" })
+      // --- Galería ---
+      const images = ((product.images && product.images.length > 0 ? product.images : [product.image_url]).filter(
+        Boolean
+      ) as string[]) || []
+      if (images.length === 0) images.push("/placeholder.svg")
 
-      const name = document.createElement("div")
-      name.textContent = product.name
-      Object.assign(name.style, { marginTop: "0.75rem", fontSize: "1rem" })
+      const galleryCol = document.createElement("div")
+      Object.assign(galleryCol.style, { display: "flex", gap: "0.75rem", flex: "1 1 320px" })
 
-      const price = document.createElement("div")
-      price.textContent = formatPrice(product.price, store.country)
-      Object.assign(price.style, { fontWeight: "600", marginTop: "0.25rem" })
+      const mainImgLink = document.createElement("a")
+      mainImgLink.href = productUrl
+      Object.assign(mainImgLink.style, {
+        position: "relative",
+        display: "block",
+        flex: "1",
+        background: "#f5f5f5",
+        borderRadius: "8px",
+        overflow: "hidden",
+        aspectRatio: "1 / 1",
+      })
 
-      const buyBtn = document.createElement("div")
-      buyBtn.textContent = "Comprar"
+      const mainImg = document.createElement("img")
+      mainImg.src = images[0]
+      mainImg.alt = product.name
+      Object.assign(mainImg.style, { width: "100%", height: "100%", objectFit: "cover", display: "block" })
+      mainImgLink.appendChild(mainImg)
+
+      if (hasDiscount) {
+        const off = Math.round((1 - product.price / (product.compare_price as number)) * 100)
+        const badge = document.createElement("span")
+        badge.textContent = `${off}% OFF`
+        Object.assign(badge.style, {
+          position: "absolute",
+          top: "0.75rem",
+          left: "0.75rem",
+          background: "#ef4444",
+          color: "#fff",
+          fontSize: "0.8rem",
+          fontWeight: "600",
+          padding: "0.25rem 0.6rem",
+          borderRadius: "4px",
+        })
+        mainImgLink.appendChild(badge)
+      }
+
+      if (images.length > 1) {
+        const thumbs = document.createElement("div")
+        Object.assign(thumbs.style, { display: "flex", flexDirection: "column", gap: "0.5rem", flexShrink: "0" })
+        images.slice(0, 5).forEach((src, i) => {
+          const thumbBtn = document.createElement("button")
+          thumbBtn.type = "button"
+          Object.assign(thumbBtn.style, {
+            width: "56px",
+            height: "56px",
+            borderRadius: "6px",
+            overflow: "hidden",
+            border: i === 0 ? "2px solid #111" : "2px solid transparent",
+            padding: "0",
+            cursor: "pointer",
+            flexShrink: "0",
+          })
+          const thumbImg = document.createElement("img")
+          thumbImg.src = src
+          thumbImg.alt = `${product.name} ${i + 1}`
+          Object.assign(thumbImg.style, { width: "100%", height: "100%", objectFit: "cover", display: "block" })
+          thumbBtn.appendChild(thumbImg)
+          thumbBtn.addEventListener("click", () => {
+            mainImg.src = src
+            Array.from(thumbs.children).forEach((c) => {
+              ;(c as HTMLElement).style.border = "2px solid transparent"
+            })
+            thumbBtn.style.border = "2px solid #111"
+          })
+          thumbs.appendChild(thumbBtn)
+        })
+        galleryCol.append(thumbs, mainImgLink)
+      } else {
+        galleryCol.append(mainImgLink)
+      }
+
+      // --- Info ---
+      const infoCol = document.createElement("div")
+      Object.assign(infoCol.style, { flex: "1 1 280px", display: "flex", flexDirection: "column" })
+
+      const nameLink = document.createElement("a")
+      nameLink.href = productUrl
+      nameLink.textContent = product.name
+      Object.assign(nameLink.style, {
+        fontSize: "1.4rem",
+        fontWeight: "600",
+        color: "inherit",
+        textDecoration: "none",
+        marginBottom: "0.75rem",
+      })
+
+      const priceRow = document.createElement("div")
+      Object.assign(priceRow.style, { display: "flex", alignItems: "baseline", gap: "0.75rem", flexWrap: "wrap" })
+
+      const priceEl = document.createElement("span")
+      priceEl.textContent = formatPrice(product.price, store.country)
+      Object.assign(priceEl.style, { fontSize: "1.5rem", fontWeight: "700" })
+      priceRow.appendChild(priceEl)
+
+      if (hasDiscount) {
+        const compareEl = document.createElement("span")
+        compareEl.textContent = formatPrice(product.compare_price as number, store.country)
+        Object.assign(compareEl.style, { fontSize: "1rem", color: "#999", textDecoration: "line-through" })
+        priceRow.appendChild(compareEl)
+      }
+
+      infoCol.append(nameLink, priceRow)
+
+      if (hasDiscount) {
+        const savingsEl = document.createElement("div")
+        savingsEl.textContent = `Ahorrás: ${formatPrice((product.compare_price as number) - product.price, store.country)}`
+        Object.assign(savingsEl.style, { fontSize: "0.85rem", color: "#16a34a", fontWeight: "600", marginTop: "0.25rem" })
+        infoCol.appendChild(savingsEl)
+      }
+
+      if (product.description) {
+        const desc = document.createElement("p")
+        const text = product.description.replace(/<[^>]+>/g, " ").trim()
+        desc.textContent = text.length > 160 ? `${text.slice(0, 160)}…` : text
+        Object.assign(desc.style, { fontSize: "0.9rem", color: "#555", marginTop: "1rem", lineHeight: "1.5" })
+        infoCol.appendChild(desc)
+      }
+
+      // Selector de cantidad: decorativo (ajusta solo el número mostrado acá);
+      // la compra real (con el carrito funcionando de verdad) se hace en la
+      // ficha del producto, a la que lleva el botón de abajo.
+      let qty = 1
+      const qtyRow = document.createElement("div")
+      Object.assign(qtyRow.style, { display: "flex", alignItems: "center", gap: "0.75rem", margin: "1.25rem 0" })
+
+      const makeStepBtn = (label: string): HTMLButtonElement => {
+        const btn = document.createElement("button")
+        btn.type = "button"
+        btn.textContent = label
+        Object.assign(btn.style, {
+          width: "32px",
+          height: "32px",
+          borderRadius: "6px",
+          border: "1px solid #ddd",
+          background: "#fff",
+          cursor: "pointer",
+          fontSize: "1rem",
+        })
+        return btn
+      }
+
+      const minusBtn = makeStepBtn("−")
+      const qtyLabel = document.createElement("span")
+      qtyLabel.textContent = String(qty)
+      Object.assign(qtyLabel.style, { minWidth: "1.5rem", textAlign: "center", fontWeight: "600" })
+      const plusBtn = makeStepBtn("+")
+      minusBtn.addEventListener("click", () => {
+        qty = Math.max(1, qty - 1)
+        qtyLabel.textContent = String(qty)
+      })
+      plusBtn.addEventListener("click", () => {
+        qty += 1
+        qtyLabel.textContent = String(qty)
+      })
+      qtyRow.append(minusBtn, qtyLabel, plusBtn)
+
+      const buyBtn = document.createElement("a")
+      buyBtn.href = productUrl
+      buyBtn.textContent = "Agregar al carrito"
       Object.assign(buyBtn.style, {
-        marginTop: "0.75rem",
         display: "inline-block",
-        padding: "0.5rem 1.25rem",
+        textAlign: "center",
+        padding: "0.85rem 1.5rem",
         borderRadius: "8px",
         background: "#111",
         color: "#fff",
-        fontSize: "0.85rem",
+        fontSize: "0.95rem",
         fontWeight: "600",
+        textDecoration: "none",
       })
 
-      card.append(img, name, price, buyBtn)
-      return card
-    }
-
-    const buildContent = (container: HTMLElement) => {
-      container.innerHTML = ""
-      const title = document.createElement("h2")
-      title.textContent = "Oferta Destacada"
-      Object.assign(title.style, { fontSize: "1.5rem", fontWeight: "700", marginBottom: "1.5rem" })
-
-      const grid = document.createElement("div")
-      Object.assign(grid.style, { display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "1.5rem" })
-      ofertaDestacadaProducts.slice(0, 3).forEach((product) => grid.appendChild(buildCard(product)))
-
-      container.append(title, grid)
+      infoCol.append(qtyRow, buyBtn)
+      wrap.append(galleryCol, infoCol)
+      container.appendChild(wrap)
     }
 
     const ensureInserted = () => {

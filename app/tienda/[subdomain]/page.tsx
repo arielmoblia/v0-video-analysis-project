@@ -128,11 +128,11 @@ export default async function StorePage({ params }: StorePageProps) {
   // cualquier otro theme porque pisa el index entero, no solo una sección.
   const clonedIndex = store.plan_features?.cloned_index
   if (clonedIndex?.active && clonedIndex?.html) {
-    // "Oferta Destacada": hasta 3 productos elegidos a mano en su propio
-    // panel del admin (independiente de la estrella/featured, ver
-    // store-cloned-index-live.tsx). Se guardan como ids en
-    // plan_features.oferta_destacada; acá se resuelven contra el catálogo
-    // ya cargado, preservando el orden elegido.
+    // "Oferta Destacada": 1 producto elegido a mano en su propio panel del
+    // admin (independiente de la estrella/featured, ver
+    // store-cloned-index-live.tsx). Se guarda como id en
+    // plan_features.oferta_destacada; acá se resuelve contra el catálogo
+    // ya cargado.
     const ofertaDestacadaIds: string[] = store.plan_features?.oferta_destacada || []
     const ofertaDestacadaProducts = ofertaDestacadaIds
       .map((id) => products.find((p) => p.id === id))
