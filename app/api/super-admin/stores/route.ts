@@ -85,7 +85,7 @@ export async function DELETE(request: Request) {
     }
 
     // Proteger solo tiendas template reales y arielmobilia (NO tiendas de clientes creadas desde templates)
-    const PROTECTED_SUBDOMAINS = ["perfumes", "ropa", "zapatos", "electronicos", "base", "pruebas", "template", "arielmobilia"]
+    const PROTECTED_SUBDOMAINS = ["perfumes", "ropa", "zapatos", "electronicos", "base", "pruebas", "template", "arielmobilia", "plantillainterna"]
     const { data: storeToDelete } = await supabase.from("stores").select("subdomain").eq("id", storeId).single()
     if (storeToDelete && PROTECTED_SUBDOMAINS.includes(storeToDelete.subdomain)) {
       return NextResponse.json({ error: "No se puede eliminar una tienda template protegida" }, { status: 403, headers: { "Cache-Control": "no-store" } })
