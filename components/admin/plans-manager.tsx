@@ -370,6 +370,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   }
   const [customUrlDialogOpen, setCustomUrlDialogOpen] = useState(false)
   const [customUrl, setCustomUrl] = useState("")
+  const [cloneConsentChecked, setCloneConsentChecked] = useState(false)
   const [customUrlError, setCustomUrlError] = useState("")
   const [submittingCustomUrl, setSubmittingCustomUrl] = useState(false)
   const [customThemePriceUSD, setCustomThemePriceUSD] = useState(10)
@@ -506,6 +507,10 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   const handleCustomUrlCardSubmit = async (cardData: any) => {
     const normalized = normalizedCustomUrlRef.current
     if (!normalized) return
+    if (!cloneConsentChecked) {
+      setCustomUrlError("Tenés que tildar la autorización de arriba antes de pagar")
+      return
+    }
     setSubmittingCustomUrl(true)
     setCustomUrlError("")
     try {
@@ -519,6 +524,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
           amountARS: getPriceARS(customThemePriceUSD),
           storeName,
           subdomain,
+          cloneConsentAccepted: true,
         }),
       })
       const data = await res.json()
@@ -539,6 +545,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       setCustomThemeRequest(data.custom_theme_request)
       setCustomUrlDialogOpen(false)
       setCustomUrl("")
+      setCloneConsentChecked(false)
     } catch {
       setCustomUrlError("Error al procesar el pago, probá de nuevo")
     } finally {
@@ -774,7 +781,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   })
 
   useEffect(() => {
-    if (!customUrlDialogOpen || !hasValidCustomUrl) {
+    if (!customUrlDialogOpen || !hasValidCustomUrl || !cloneConsentChecked) {
       queueCustomUrlCardBrickOp(clearCustomUrlCardBrick)
       return
     }
@@ -788,7 +795,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
     }, 400)
 
     return () => clearTimeout(timer)
-  }, [customUrlDialogOpen, hasValidCustomUrl, customThemePriceUSD, storeId, storeName, subdomain])
+  }, [customUrlDialogOpen, hasValidCustomUrl, cloneConsentChecked, customThemePriceUSD, storeId, storeName, subdomain])
 
   const startTrial = (feature: any) => {
     if (!feature.trial_days || feature.trial_days === 0) return
@@ -2151,6 +2158,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
           if (!open) {
             setCustomUrlError("")
             setCustomUrl("")
+            setCloneConsentChecked(false)
             queueCustomUrlCardBrickOp(clearCustomUrlCardBrick)
           }
         }}
@@ -2176,6 +2184,31 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                 <span className="font-semibold text-violet-700">1)</span>
                 <span>Pegá el link de la página que te guste</span>
               </li>
+              {normalizedCustomUrl && (
+                <li className="flex gap-2">
+                  <input
+                    type="checkbox"
+                    id="clone-consent-checkbox"
+                    checked={cloneConsentChecked}
+                    onChange={(e) => {
+                      setCloneConsentChecked(e.target.checked)
+                      setCustomUrlError("")
+                    }}
+                    disabled={submittingCustomUrl}
+                    className="mt-1 h-4 w-4 flex-shrink-0 accent-violet-600"
+                  />
+                  <label htmlFor="clone-consent-checkbox" className="text-xs text-slate-600 leading-relaxed">
+                    Declaro ser el titular (o tener autorización del titular) del sitio que indiqué arriba, y
+                    autorizo a tol.ar a extraer de esa URL imágenes, textos, precios y estructura de diseño,
+                    únicamente para armar la portada de mi tienda en tol.ar. Soy responsable si ese contenido
+                    pertenece a terceros. Leí la cláusula 12 de los{" "}
+                    <a href="/terminos" target="_blank" rel="noreferrer" className="underline">
+                      Términos y Condiciones
+                    </a>
+                    .
+                  </label>
+                </li>
+              )}
               <li className="space-y-2">
                 <div className="flex gap-2">
                   <span className="font-semibold text-violet-700">2)</span>
@@ -2186,7 +2219,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                     armamos nosotros en los próximos días).
                   </span>
                 </div>
-                <div className={`rounded-lg border border-violet-200 bg-violet-50 p-3 space-y-2 ${normalizedCustomUrl ? "" : "hidden"}`}>
+                <div className={`rounded-lg border border-violet-200 bg-violet-50 p-3 space-y-2 ${normalizedCustomUrl && cloneConsentChecked ? "" : "hidden"}`}>
                   {submittingCustomUrl && (
                     <div className="flex items-center justify-center py-2">
                       <Loader2 className="w-4 h-4 animate-spin text-violet-600" />
@@ -2199,6 +2232,9 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                     {customUrlCardLoadingBrick && <p className="text-[11px] text-muted-foreground">Cargando formulario de pago…</p>}
                   </div>
                 </div>
+                {normalizedCustomUrl && !cloneConsentChecked && (
+                  <p className="text-[11px] text-slate-400">Tildá la autorización de arriba para habilitar el pago.</p>
+                )}
               </li>
               <li className="flex gap-2">
                 <span className="font-semibold text-violet-700">3)</span>

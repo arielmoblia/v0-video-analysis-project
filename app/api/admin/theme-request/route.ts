@@ -3,16 +3,27 @@ import { createClient } from "@supabase/supabase-js"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
+const CLONE_CONSENT_TERMINOS_VERSION = "v1-2026-10"
+
 // Cobra la "Portada especial" (pago único) con Mercado Pago y guarda el pedido.
 // El cobro se hace acá, del lado del servidor, con el cardToken de un solo uso
 // que generó el Brick en el navegador — nunca confiamos en un "aprobado" que
 // venga del cliente.
 export async function POST(request: NextRequest) {
   try {
-    const { storeId, url, cardData, amountARS, storeName, subdomain } = await request.json()
+    const { storeId, url, cardData, amountARS, storeName, subdomain, cloneConsentAccepted } = await request.json()
 
     if (!storeId) {
       return NextResponse.json({ error: "Store ID requerido" }, { status: 400 })
+    }
+
+    // Dictamen del Jurista (03/10/2026): el checkbox general de los Términos
+    // no alcanza para autorizar la clonación de una URL de terceros, porque
+    // ese pedido puntual no existía al momento de aceptar el contrato marco.
+    // Hace falta un consentimiento específico, registrado en este mismo
+    // momento — sin eso, ni se cobra ni se clona nada.
+    if (cloneConsentAccepted !== true) {
+      return NextResponse.json({ error: "Falta la autorización para clonar esa página" }, { status: 400 })
     }
 
     let parsed: URL
@@ -23,6 +34,24 @@ export async function POST(request: NextRequest) {
     }
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
       return NextResponse.json({ error: "Link inválido" }, { status: 400 })
+    }
+
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown"
+    const userAgent = request.headers.get("user-agent") || "unknown"
+
+    const { error: consentError } = await supabase.from("portada_clone_consent").insert({
+      store_id: storeId,
+      store_name: storeName || null,
+      subdomain: subdomain || null,
+      url: parsed.toString(),
+      terminos_version: CLONE_CONSENT_TERMINOS_VERSION,
+      ip_address: ip,
+      user_agent: userAgent,
+    })
+
+    if (consentError) {
+      console.error("[theme-request] Error registrando consentimiento de clonación:", consentError)
+      return NextResponse.json({ error: "No pudimos registrar la autorización, probá de nuevo" }, { status: 500 })
     }
 
     const { data: currentStore } = await supabase
