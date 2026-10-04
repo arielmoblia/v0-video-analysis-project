@@ -146,6 +146,9 @@ export default async function ClonarConIAPage({ searchParams }: { searchParams: 
               { q: "¿Cuánto tarda en estar listo?", a: "Depende de la modalidad: portada sola o catálogo sin diseño, los más rápidos; sistema completo o todo clonado, un poco más. Te confirmamos un plazo exacto junto con el precio antes de arrancar." },
               { q: "¿Cuándo se paga?", a: "Primero te confirmamos el pedido (qué se clona, precio y plazo) y el pago se hace al aceptar esa confirmación, antes de empezar el trabajo." },
               { q: "¿Qué pasa si solo quiero una parte puntual (ej. el checkout)?", a: "Elegís la modalidad 'Solo una parte puntual' y nos contás qué sección." },
+              { q: "¿Necesito tener ya una tienda en tol.ar?", a: "Sí, el pedido se hace desde el admin de tu tienda tol.ar. Si todavía no tenés una, primero creás la tienda (es gratis) y después pedís el clonado desde ahí." },
+              { q: "¿El precio incluye dominio propio?", a: "No, el precio es solo por el trabajo de clonado sobre tu tienda tol.ar. Dominio propio y otras cositas se contratan aparte." },
+              { q: "¿Cómo me entero de que ya está listo?", a: "Te contactamos por el mismo medio que dejaste al pedirlo: primero para confirmar precio y plazo, después cuando el trabajo está terminado." },
             ].map((faq, i) => (
               <div key={i} className="p-6">
                 <h3 className="font-semibold text-slate-900 mb-2">{faq.q}</h3>
