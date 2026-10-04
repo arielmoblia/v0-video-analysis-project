@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import type { Product, Store } from "@/lib/types"
 import { formatPrice } from "@/lib/currency"
+import type { CarouselBlock } from "@/components/store/store-carousels"
 
 interface ClonedIndexData {
   active: boolean
@@ -18,6 +19,91 @@ interface StoreClonedIndexLiveProps {
   cloned: ClonedIndexData
   featuredProducts: Product[]
   ofertaDestacadaProducts?: Product[]
+  // Catálogo completo (para resolver los productIds de la cosita
+  // "Carruseles") + los bloques configurados ahí mismo (panel admin normal,
+  // components/admin/carousels-manager.tsx). Opcionales para no romper
+  // ningún caller viejo.
+  products?: Product[]
+  carousels?: CarouselBlock[] | null
+}
+
+// Mismo criterio que CAROUSEL_CONTAINER_HINT/markDynamicDestacadosContainer
+// en scraping.tol.ar/server/clone-store.ts, pero corrido acá en vez de en el
+// motor de clonado: el HTML de prueba99 ya está guardado en la base de datos
+// sin estas marcas para ninguna sección salvo "Destacados" (la única que el
+// clonado marca hoy), así que para las demás (Novedades, Ofertas, etc.) hay
+// que detectarlas en vivo contra el DOM ya pintado, no en el momento del scrapeo.
+const CAROUSEL_CONTAINER_HINT = /swiper|slick|splide|glide|owl-carousel|carousel|slider/i
+
+function findCarouselContainers(root: HTMLElement): { el: HTMLElement; title: string }[] {
+  const candidates = Array.from(
+    root.querySelectorAll<HTMLElement>(
+      "[class*='swiper' i], [class*='slick' i], [class*='splide' i], [class*='glide' i], [class*='carousel' i], [class*='slider' i]"
+    )
+  )
+  const results: { el: HTMLElement; title: string }[] = []
+  for (const el of candidates) {
+    if (!CAROUSEL_CONTAINER_HINT.test(el.className || "")) continue
+    if (/brand/i.test(el.className || "")) continue
+    const nestedInsideAnother = el.parentElement?.closest(
+      "[class*='swiper' i], [class*='slick' i], [class*='splide' i], [class*='glide' i], [class*='carousel' i], [class*='slider' i]"
+    )
+    if (nestedInsideAnother) continue
+
+    let title = ""
+    let prev = el.previousElementSibling
+    while (prev) {
+      if (/^H[1-4]$/.test(prev.tagName)) {
+        title = prev.textContent?.trim() || ""
+        break
+      }
+      prev = prev.previousElementSibling
+    }
+    if (!title && el.parentElement) {
+      const heading = el.parentElement.querySelector(":scope > h1, :scope > h2, :scope > h3, :scope > h4")
+      if (heading) title = heading.textContent?.trim() || ""
+    }
+    if (title) results.push({ el, title })
+  }
+  return results
+}
+
+// Un bloque configurado en la cosita "Carruseles" (panel admin) se conecta a
+// una franja real del HTML clonado por título (sin importar mayúsculas):
+// coincidencia exacta primero, si no, que uno contenga al otro — así "Ofertas"
+// (cloned) matchea con un bloque titulado "Ofertas de la semana" o viceversa.
+function matchCarouselBlock<T extends CarouselBlock>(title: string, blocks: T[]): T | null {
+  const normalized = title.trim().toLowerCase()
+  if (!normalized) return null
+  const exact = blocks.find((b) => (b.title || "").trim().toLowerCase() === normalized)
+  if (exact) return exact
+  const partial = blocks.find((b) => {
+    const bt = (b.title || "").trim().toLowerCase()
+    return bt && (bt.includes(normalized) || normalized.includes(bt))
+  })
+  return partial || null
+}
+
+function CarouselProductsGrid({ products, subdomain, country }: { products: Product[]; subdomain: string; country?: string | null }) {
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "1.5rem", padding: "1rem 0" }}>
+      {products.map((product) => (
+        <a
+          key={product.id}
+          href={`/tienda/${subdomain}/producto/${product.slug}`}
+          style={{ display: "block", width: 220, textAlign: "center", textDecoration: "none", color: "inherit" }}
+        >
+          <img
+            src={product.image_url || "/placeholder.svg"}
+            alt={product.name}
+            style={{ width: "100%", aspectRatio: "1 / 1", objectFit: "cover", borderRadius: 8 }}
+          />
+          <div style={{ marginTop: "0.5rem", fontSize: "0.95rem" }}>{product.name}</div>
+          <div style={{ fontWeight: 600 }}>{formatPrice(product.price, country)}</div>
+        </a>
+      ))}
+    </div>
+  )
 }
 
 // El motor de clonado (extractSwiperColumnsMap/applySwiperColumnsToWrappers
@@ -58,24 +144,99 @@ const COLUMN_WIDTH_CSS = Array.from({ length: 12 }, (_, i) => i + 1)
 // apunte al dominio original (menú, redes, etc.) — el listener de abajo es
 // una segunda red de contención por si algún link externo se escapa del
 // sanitizado del servidor. Primera versión (02/10), solo para prueba99.
-export function StoreClonedIndexLive({ store, cloned, featuredProducts, ofertaDestacadaProducts = [] }: StoreClonedIndexLiveProps) {
+export function StoreClonedIndexLive({
+  store,
+  cloned,
+  featuredProducts,
+  ofertaDestacadaProducts = [],
+  products = [],
+  carousels,
+}: StoreClonedIndexLiveProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [destacadosNode, setDestacadosNode] = useState<HTMLElement | null>(null)
+  const [destacadosOverride, setDestacadosOverride] = useState<Product[] | null>(null)
+  const [otherCarouselTargets, setOtherCarouselTargets] = useState<{ el: HTMLElement; products: Product[] }[]>([])
+
+  // useMemo (no un .filter() directo en cada render): sin esto, los efectos
+  // de abajo que dependen de productBlocks lo ven como "cambiado" en TODOS
+  // los renders (array nuevo aunque el contenido sea igual), entran en loop
+  // infinito re-vaciando y re-pintando el contenedor — bug real visto en
+  // prueba99 (el portal nunca llegaba a verse, quedaba vacío). Con useMemo,
+  // la referencia solo cambia cuando "carousels" (la prop) cambia de verdad.
+  const productBlocks = useMemo(
+    () =>
+      (carousels || []).filter(
+        (b): b is CarouselBlock & { productIds: string[] } =>
+          b.type === "products" && !!b.productIds && b.productIds.length > 0
+      ),
+    [carousels]
+  )
 
   // El motor de clonado marca el contenedor de "Destacados" (y solo ese, ver
   // markDynamicDestacadosContainer en clone-store.ts) con data-tol-dynamic-
-  // destacados. Si el comerciante ya eligió sus 3 productos con la estrella
-  // ("Destacar en el inicio", igual mecanismo que las tiendas sin clonado),
-  // vaciamos ese contenedor y los mostramos ahí de verdad — hasta entonces
-  // queda la copia estática del sitio original como venía. El resto de la
-  // portada clonada (Novedades, Ofertas, Marcas, etc.) nunca se toca.
+  // destacados. Si el comerciante configuró un bloque "Destacados" en la
+  // cosita "Carruseles" (panel con buscador y checkboxes, hasta 11+
+  // productos elegidos a mano), esos son los que se muestran — es el mismo
+  // panel que ya usan las tiendas sin clonado. Sin ese bloque, caemos al
+  // mecanismo viejo: los 3 productos marcados con la estrella ("Destacar en
+  // el inicio"). El resto de la portada clonada (Novedades, Ofertas, Marcas,
+  // etc.) se resuelve aparte, ver el useEffect de abajo.
   useEffect(() => {
     const root = rootRef.current
     if (!root) return
     const node = root.querySelector<HTMLElement>("[data-tol-dynamic-destacados]")
-    if (node && featuredProducts.length > 0) node.innerHTML = ""
+    if (!node) {
+      setDestacadosNode(null)
+      return
+    }
+    const heading = (() => {
+      let prev = node.previousElementSibling
+      while (prev) {
+        if (/^H[1-4]$/.test(prev.tagName)) return prev.textContent?.trim() || ""
+        prev = prev.previousElementSibling
+      }
+      return ""
+    })()
+    const configuredBlock = matchCarouselBlock(heading || "Destacados", productBlocks)
+    const configuredProducts = configuredBlock
+      ? configuredBlock.productIds.map((id) => products.find((p) => p.id === id)).filter((p): p is Product => !!p)
+      : null
+
+    if ((configuredProducts && configuredProducts.length > 0) || featuredProducts.length > 0) {
+      node.innerHTML = ""
+    }
+    setDestacadosOverride(configuredProducts && configuredProducts.length > 0 ? configuredProducts : null)
     setDestacadosNode(node)
-  }, [cloned.html, featuredProducts])
+  }, [cloned.html, featuredProducts, products, productBlocks])
+
+  // Resto de franjas de carrusel que el HTML clonado trae estáticas
+  // (Novedades, Ofertas, etc., con los productos ajenos del sitio original):
+  // si el comerciante configuró un bloque con un título que coincide (ver
+  // matchCarouselBlock), se reemplaza esa franja puntual por sus propios
+  // productos reales de prueba99. Las franjas sin bloque configurado que las
+  // matchee quedan intactas, igual que siempre.
+  useEffect(() => {
+    const root = rootRef.current
+    if (!root || productBlocks.length === 0) {
+      setOtherCarouselTargets([])
+      return
+    }
+    const destacadosEl = root.querySelector<HTMLElement>("[data-tol-dynamic-destacados]")
+    const usedBlockIds = new Set<string>()
+    const targets: { el: HTMLElement; products: Product[] }[] = []
+
+    for (const { el, title } of findCarouselContainers(root)) {
+      if (el === destacadosEl) continue
+      const block = productBlocks.find((b) => !usedBlockIds.has(b.id) && matchCarouselBlock(title, [b]))
+      if (!block) continue
+      const resolved = block.productIds.map((id) => products.find((p) => p.id === id)).filter((p): p is Product => !!p)
+      if (resolved.length === 0) continue
+      usedBlockIds.add(block.id)
+      el.innerHTML = ""
+      targets.push({ el, products: resolved })
+    }
+    setOtherCarouselTargets(targets)
+  }, [cloned.html, products, productBlocks])
 
   // "Oferta Destacada": 1 producto elegido a mano (panel propio en el admin,
   // distinto de la estrella) mostrado completo (galería, precio con
@@ -408,11 +569,90 @@ export function StoreClonedIndexLive({ store, cloned, featuredProducts, ofertaDe
   useEffect(() => {
     const root = rootRef.current
     if (!root) return
-    const wrappers = Array.from(root.querySelectorAll<HTMLElement>(".swiper-wrapper"))
     const cleanups: Array<() => void> = []
+    // Nodos ya enganchados con flechas/paginación — evita escuchas
+    // duplicadas si bindControls se repite sobre el mismo wrapper (ver
+    // MutationObserver más abajo).
+    const boundWrappers = new WeakSet<HTMLElement>()
 
+    const bindControls = (wrappers: HTMLElement[]) => {
+      // Las flechas prev/next se enganchan una sola vez por wrapper (no en
+      // applyLayout, que se vuelve a correr en cada resize o repaint) para
+      // no acumular listeners duplicados.
+      wrappers.forEach((wrap) => {
+        if (boundWrappers.has(wrap)) return
+        boundWrappers.add(wrap)
+
+        const section = wrap.closest("section") || wrap.closest(".swiper-container") || wrap.parentElement
+        const prevBtn = section?.querySelector<HTMLElement>('[class*="prev" i]')
+        const nextBtn = section?.querySelector<HTMLElement>('[class*="next" i]')
+
+        const goPrev = () => wrap.scrollBy({ left: -wrap.clientWidth * 0.9, behavior: "smooth" })
+        const goNext = () => wrap.scrollBy({ left: wrap.clientWidth * 0.9, behavior: "smooth" })
+
+        if (prevBtn) {
+          prevBtn.style.cursor = "pointer"
+          prevBtn.addEventListener("click", goPrev)
+          cleanups.push(() => prevBtn.removeEventListener("click", goPrev))
+        }
+        if (nextBtn) {
+          nextBtn.style.cursor = "pointer"
+          nextBtn.addEventListener("click", goNext)
+          cleanups.push(() => nextBtn.removeEventListener("click", goNext))
+        }
+
+        // Puntitos de paginación: el servidor ya los generó como HTML
+        // estático (populateSwiperPaginationBullets en clone-store.ts,
+        // misma cantidad de "páginas" que usaría Swiper real). Acá solo los
+        // hacemos clickeables (saltan a esa página) y les sincronizamos
+        // cuál está activo según el scroll real del carrusel — mismo
+        // criterio que ya se usa para las flechas prev/next de arriba.
+        const paginationEl = section?.querySelector<HTMLElement>('[class*="pagination-bullets" i]')
+        const bullets = paginationEl
+          ? Array.from(paginationEl.querySelectorAll<HTMLElement>(".swiper-pagination-bullet"))
+          : []
+        if (bullets.length > 0) {
+          const formatHost =
+            (wrap.closest("[data-desktop-format], [data-mobile-format]") as HTMLElement | null) || wrap
+          const columnsFor = () => {
+            const desktop = window.matchMedia("(min-width: 768px)").matches
+            const attr = desktop ? formatHost.dataset.desktopColumns : formatHost.dataset.mobileColumns
+            return Math.max(1, parseInt(attr || "1", 10) || 1)
+          }
+          const pageWidth = () => {
+            const child = wrap.children[0] as HTMLElement | undefined
+            const slideWidth = child ? child.getBoundingClientRect().width : wrap.clientWidth
+            return columnsFor() * slideWidth
+          }
+          bullets.forEach((bullet, index) => {
+            bullet.style.cursor = "pointer"
+            const onClick = () => wrap.scrollTo({ left: index * pageWidth(), behavior: "smooth" })
+            bullet.addEventListener("click", onClick)
+            cleanups.push(() => bullet.removeEventListener("click", onClick))
+          })
+          const syncActiveBullet = () => {
+            const width = pageWidth()
+            const page = width > 0 ? Math.round(wrap.scrollLeft / width) : 0
+            bullets.forEach((bullet, i) =>
+              bullet.classList.toggle("swiper-pagination-bullet-active", i === page)
+            )
+          }
+          wrap.addEventListener("scroll", syncActiveBullet)
+          cleanups.push(() => wrap.removeEventListener("scroll", syncActiveBullet))
+        }
+      })
+    }
+
+    // Vuelve a calcular todo contra el DOM actual (no una lista capturada
+    // una sola vez al montar): el HTML clonado puede volver a pintarse
+    // entero por cualquier motivo (visto en vivo en pinkonlineoficial.tol.ar
+    // — "Nuestras marcas" quedaba sin centrar y con flechas de scroll
+    // porque este layout solo se había aplicado una vez, a nodos que ya no
+    // eran los que quedaron en pantalla). Sin re-consultar wrappers acá,
+    // reaplicar el layout después de un repaint no tendría efecto.
     const applyLayout = () => {
       const desktop = window.matchMedia("(min-width: 768px)").matches
+      const wrappers = Array.from(root.querySelectorAll<HTMLElement>(".swiper-wrapper"))
       wrappers.forEach((wrap) => {
         const formatHost =
           (wrap.closest("[data-desktop-format], [data-mobile-format]") as HTMLElement | null) || wrap
@@ -483,74 +723,34 @@ export function StoreClonedIndexLive({ store, cloned, featuredProducts, ofertaDe
           ;(child as HTMLElement).style.scrollSnapAlign = overflowing ? "start" : ""
         })
       })
+      bindControls(wrappers)
     }
 
     applyLayout()
     window.addEventListener("resize", applyLayout)
     cleanups.push(() => window.removeEventListener("resize", applyLayout))
 
-    // Las flechas prev/next se enganchan una sola vez (no en applyLayout,
-    // que se vuelve a correr en cada resize) para no acumular listeners
-    // duplicados cada vez que cambia el ancho de pantalla.
-    wrappers.forEach((wrap) => {
-      const section = wrap.closest("section") || wrap.closest(".swiper-container") || wrap.parentElement
-      const prevBtn = section?.querySelector<HTMLElement>('[class*="prev" i]')
-      const nextBtn = section?.querySelector<HTMLElement>('[class*="next" i]')
+    // Red de contención (mismo patrón ya usado más abajo para "Oferta
+    // Destacada" y las imágenes lazy): si el HTML clonado se vuelve a
+    // pintar entero, reaplicamos el layout sobre los nodos reales que
+    // quedaron en pantalla. Solo mira childList/subtree (no "attributes"),
+    // así que los cambios de estilo que hace el propio applyLayout no
+    // disparan este observer — sin loop.
+    const observer = new MutationObserver(() => applyLayout())
+    observer.observe(root, { childList: true, subtree: true })
+    cleanups.push(() => observer.disconnect())
 
-      const goPrev = () => wrap.scrollBy({ left: -wrap.clientWidth * 0.9, behavior: "smooth" })
-      const goNext = () => wrap.scrollBy({ left: wrap.clientWidth * 0.9, behavior: "smooth" })
-
-      if (prevBtn) {
-        prevBtn.style.cursor = "pointer"
-        prevBtn.addEventListener("click", goPrev)
-        cleanups.push(() => prevBtn.removeEventListener("click", goPrev))
-      }
-      if (nextBtn) {
-        nextBtn.style.cursor = "pointer"
-        nextBtn.addEventListener("click", goNext)
-        cleanups.push(() => nextBtn.removeEventListener("click", goNext))
-      }
-
-      // Puntitos de paginación: el servidor ya los generó como HTML estático
-      // (populateSwiperPaginationBullets en clone-store.ts, misma cantidad de
-      // "páginas" que usaría Swiper real). Acá solo los hacemos clickeables
-      // (saltan a esa página) y les sincronizamos cuál está activo según el
-      // scroll real del carrusel — mismo criterio que ya se usa para las
-      // flechas prev/next de arriba.
-      const paginationEl = section?.querySelector<HTMLElement>('[class*="pagination-bullets" i]')
-      const bullets = paginationEl
-        ? Array.from(paginationEl.querySelectorAll<HTMLElement>(".swiper-pagination-bullet"))
-        : []
-      if (bullets.length > 0) {
-        const formatHost =
-          (wrap.closest("[data-desktop-format], [data-mobile-format]") as HTMLElement | null) || wrap
-        const columnsFor = () => {
-          const desktop = window.matchMedia("(min-width: 768px)").matches
-          const attr = desktop ? formatHost.dataset.desktopColumns : formatHost.dataset.mobileColumns
-          return Math.max(1, parseInt(attr || "1", 10) || 1)
-        }
-        const pageWidth = () => {
-          const child = wrap.children[0] as HTMLElement | undefined
-          const slideWidth = child ? child.getBoundingClientRect().width : wrap.clientWidth
-          return columnsFor() * slideWidth
-        }
-        bullets.forEach((bullet, index) => {
-          bullet.style.cursor = "pointer"
-          const onClick = () => wrap.scrollTo({ left: index * pageWidth(), behavior: "smooth" })
-          bullet.addEventListener("click", onClick)
-          cleanups.push(() => bullet.removeEventListener("click", onClick))
-        })
-        const syncActiveBullet = () => {
-          const width = pageWidth()
-          const page = width > 0 ? Math.round(wrap.scrollLeft / width) : 0
-          bullets.forEach((bullet, i) =>
-            bullet.classList.toggle("swiper-pagination-bullet-active", i === page)
-          )
-        }
-        wrap.addEventListener("scroll", syncActiveBullet)
-        cleanups.push(() => wrap.removeEventListener("scroll", syncActiveBullet))
-      }
-    })
+    // applyLayout mide wrap.scrollWidth para decidir centrar vs. dejar
+    // scroll con flechas, pero corre antes de que las imágenes lazy (ej.
+    // los logos de "Nuestras marcas") terminen de cargar su tamaño real —
+    // bug real visto en pinkonlineoficial.tol.ar: la fila se centraba bien
+    // un instante y después, cuando los logos cargaban y la fila crecía,
+    // quedaba desbordada y pegada a la izquierda para siempre porque nada
+    // volvía a medir. "load" de <img> no burbujea, por eso escuchamos acá
+    // en fase de captura sobre root para enterarnos igual.
+    const onImageLoad = () => applyLayout()
+    root.addEventListener("load", onImageLoad, true)
+    cleanups.push(() => root.removeEventListener("load", onImageLoad, true))
 
     return () => cleanups.forEach((fn) => fn())
   }, [cloned.html])
@@ -600,26 +800,54 @@ export function StoreClonedIndexLive({ store, cloned, featuredProducts, ofertaDe
   // real en data-srcset/data-src, más una clase "lazyloaded" que su propio
   // JS agrega para subir la opacidad de 0 a 1 vía CSS). Como sacamos todo
   // <script> del clonado por seguridad, ese JS nunca corre y las fotos
-  // quedan en blanco. Hacemos acá el mismo swap a mano, una sola vez al
-  // montar.
+  // quedan en blanco. Hacemos acá el mismo swap a mano.
   useEffect(() => {
     const root = rootRef.current
     if (!root) return
-    const lazyImgs = root.querySelectorAll<HTMLImageElement>("img[data-srcset], img[data-src]")
-    lazyImgs.forEach((img) => {
-      const srcset = img.getAttribute("data-srcset")
-      const dataSrc = img.getAttribute("data-src")
-      if (srcset) {
-        img.srcset = srcset
-        const last = srcset.split(",").map((s) => s.trim().split(" ")[0]).filter(Boolean).pop()
-        if (last) img.src = last
-      } else if (dataSrc) {
-        img.src = dataSrc
-      }
-      img.removeAttribute("data-srcset")
-      img.removeAttribute("data-src")
-      img.classList.add("lazyloaded")
-    })
+
+    const revealLazyImages = () => {
+      const lazyImgs = root.querySelectorAll<HTMLImageElement>("img[data-srcset], img[data-src]")
+      lazyImgs.forEach((img) => {
+        const srcset = img.getAttribute("data-srcset")
+        const dataSrc = img.getAttribute("data-src")
+        if (srcset) {
+          img.srcset = srcset
+          const last = srcset.split(",").map((s) => s.trim().split(" ")[0]).filter(Boolean).pop()
+          if (last) img.src = last
+        } else if (dataSrc) {
+          img.src = dataSrc
+        }
+        img.removeAttribute("data-srcset")
+        img.removeAttribute("data-src")
+        // Swiper (carrusel de "Nuestras marcas") espera "swiper-lazy-loaded"
+        // para revelar la imagen — agregarle "lazyloaded" (la convención de
+        // lazysizes que usa el resto del clonado) activa la regla CSS
+        // ".fade-in.lazyloaded{display:none}" del tema y la esconde.
+        img.classList.add(img.classList.contains("swiper-lazy") ? "swiper-lazy-loaded" : "lazyloaded")
+      })
+      // Algunas imágenes (ej. "Nuestras marcas") ya vienen con srcset real
+      // desde el scraping, sin data-srcset/data-src — el loop de arriba nunca
+      // las toca. Pero igual tienen la clase "swiper-lazy" que Swiper usa
+      // para esconderlas con opacity:0 hasta que su JS (que no corremos) les
+      // agrega "swiper-lazy-loaded". Sin este segundo pase quedan en gris
+      // para siempre.
+      root.querySelectorAll<HTMLImageElement>("img.swiper-lazy:not(.swiper-lazy-loaded)").forEach((img) => {
+        img.classList.add("swiper-lazy-loaded")
+      })
+    }
+
+    revealLazyImages()
+
+    // Red de contención (mismo patrón que "Oferta Destacada" más abajo): si
+    // el HTML clonado se vuelve a pintar entero por cualquier motivo (visto
+    // en vivo en pinkonlineoficial.tol.ar, no solo en dev — los logos de
+    // "Nuestras marcas" volvían a quedar grises segundos después de que este
+    // efecto ya los había revelado), las imágenes vuelven a su estado
+    // original con data-srcset/data-src intactos y hay que re-aplicar el
+    // swap, no alcanza con correrlo una sola vez al montar.
+    const observer = new MutationObserver(revealLazyImages)
+    observer.observe(root, { childList: true, subtree: true })
+    return () => observer.disconnect()
   }, [cloned.html])
 
   return (
@@ -640,7 +868,7 @@ export function StoreClonedIndexLive({ store, cloned, featuredProducts, ofertaDe
           flex-wrap: nowrap !important;
           overflow-x: auto !important;
           -webkit-overflow-scrolling: touch;
-          gap: ${CAROUSEL_GAP_REM}rem;
+          gap: ${CAROUSEL_GAP_REM}rem !important;
           scrollbar-width: none;
           -ms-overflow-style: none;
         }
@@ -666,35 +894,22 @@ export function StoreClonedIndexLive({ store, cloned, featuredProducts, ofertaDe
         dangerouslySetInnerHTML={{ __html: cloned.html }}
       />
       {destacadosNode &&
-        featuredProducts.length > 0 &&
+        (destacadosOverride ? destacadosOverride.length > 0 : featuredProducts.length > 0) &&
         createPortal(
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "center",
-              gap: "1.5rem",
-              padding: "1rem 0",
-            }}
-          >
-            {featuredProducts.slice(0, 3).map((product) => (
-              <a
-                key={product.id}
-                href={`/tienda/${store.subdomain}/producto/${product.slug}`}
-                style={{ display: "block", width: 220, textAlign: "center", textDecoration: "none", color: "inherit" }}
-              >
-                <img
-                  src={product.image_url || "/placeholder.svg"}
-                  alt={product.name}
-                  style={{ width: "100%", aspectRatio: "1 / 1", objectFit: "cover", borderRadius: 8 }}
-                />
-                <div style={{ marginTop: "0.5rem", fontSize: "0.95rem" }}>{product.name}</div>
-                <div style={{ fontWeight: 600 }}>{formatPrice(product.price, store.country)}</div>
-              </a>
-            ))}
-          </div>,
+          <CarouselProductsGrid
+            products={destacadosOverride || featuredProducts.slice(0, 3)}
+            subdomain={store.subdomain}
+            country={store.country}
+          />,
           destacadosNode
         )}
+      {otherCarouselTargets.map(({ el, products: targetProducts }, i) =>
+        createPortal(
+          <CarouselProductsGrid products={targetProducts} subdomain={store.subdomain} country={store.country} />,
+          el,
+          `tol-other-carousel-${i}`
+        )
+      )}
     </>
   )
 }
