@@ -4,6 +4,9 @@ import { getStorePages } from "@/lib/services/store-pages"
 import { StoreHeader } from "@/components/store/store-header"
 import { StoreHeaderPink } from "@/components/store/store-header-pink"
 import { StoreFooter } from "@/components/store/store-footer"
+import { StoreFooterPink } from "@/components/store/store-footer-pink"
+import { StoreClonedHeaderLive, StoreClonedFooterLive } from "@/components/store/store-cloned-chrome-live"
+import { getClonedChrome } from "@/lib/cloned-chrome"
 import { ProductGrid } from "@/components/store/product-grid"
 import { redirect } from "next/navigation"
 
@@ -28,6 +31,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     getStorePages(store.id),
   ])
   const headerStyle = store.plan_features?.header_style
+  const clonedChrome = getClonedChrome(store)
 
   // Encontrar la categoría actual
   const currentCategory = categories.find((cat) => cat.slug === slug)
@@ -41,7 +45,14 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {headerStyle === "pink" ? (
+      {clonedChrome ? (
+        <StoreClonedHeaderLive
+          headerHtml={clonedChrome.headerHtml}
+          footerHtml={clonedChrome.footerHtml}
+          stylesheetHrefs={clonedChrome.stylesheetHrefs}
+          inlineStyles={clonedChrome.inlineStyles}
+        />
+      ) : headerStyle === "pink" ? (
         <StoreHeaderPink store={store} categories={categories} storePages={storePages} />
       ) : (
         <StoreHeader store={store} categories={categories} hasMayoristaMinorista={hasMayoristaMinorista} />
@@ -64,7 +75,13 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         </div>
       </main>
 
-      <StoreFooter store={store} />
+      {clonedChrome ? (
+        <StoreClonedFooterLive footerHtml={clonedChrome.footerHtml} />
+      ) : headerStyle === "pink" ? (
+        <StoreFooterPink store={store} categories={categories} storePages={storePages} />
+      ) : (
+        <StoreFooter store={store} />
+      )}
     </div>
   )
 }

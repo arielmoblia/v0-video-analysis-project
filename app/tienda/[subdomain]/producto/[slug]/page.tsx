@@ -11,6 +11,9 @@ import { getStorePages } from "@/lib/services/store-pages"
 import { StoreHeader } from "@/components/store/store-header"
 import { StoreHeaderPink } from "@/components/store/store-header-pink"
 import { StoreFooter } from "@/components/store/store-footer"
+import { StoreFooterPink } from "@/components/store/store-footer-pink"
+import { StoreClonedHeaderLive, StoreClonedFooterLive } from "@/components/store/store-cloned-chrome-live"
+import { getClonedChrome } from "@/lib/cloned-chrome"
 import { ProductSelector } from "@/components/store/product-selector"
 import { ProductEditable } from "@/components/store/product-editable"
 import { formatPriceNumber } from "@/lib/currency"
@@ -105,6 +108,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     getStorePages(store.id),
   ])
   const headerStyle = store.plan_features?.header_style
+  const clonedChrome = getClonedChrome(store)
 
   if (!product) {
     notFound()
@@ -180,7 +184,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
-      {headerStyle === "pink" ? (
+      {clonedChrome ? (
+        <StoreClonedHeaderLive
+          headerHtml={clonedChrome.headerHtml}
+          footerHtml={clonedChrome.footerHtml}
+          stylesheetHrefs={clonedChrome.stylesheetHrefs}
+          inlineStyles={clonedChrome.inlineStyles}
+        />
+      ) : headerStyle === "pink" ? (
         <StoreHeaderPink store={store} categories={categories} storePages={storePages} />
       ) : (
         <StoreHeader store={store} categories={[]} hasMayoristaMinorista={hasMayoristaMinorista} />
@@ -205,7 +216,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </div>
       </main>
 
-      <StoreFooter store={store} />
+      {clonedChrome ? (
+        <StoreClonedFooterLive footerHtml={clonedChrome.footerHtml} />
+      ) : headerStyle === "pink" ? (
+        <StoreFooterPink store={store} categories={categories} storePages={storePages} />
+      ) : (
+        <StoreFooter store={store} />
+      )}
     </div>
   )
 }
