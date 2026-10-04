@@ -41,16 +41,25 @@ export default async function ClonarConIAPage({ searchParams }: { searchParams: 
             Cositas tol.ar
           </div>
           <h1 className="text-5xl md:text-6xl font-bold mb-6 text-slate-900">Clonar con IA</h1>
-          <p className="text-xl text-slate-500 mb-8 leading-relaxed">
+          <p className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-2">Resumen</p>
+          <p className="text-xl text-orange-500 mb-8 leading-relaxed">
             Pegás el link de una tienda que te gusta y elegís cuánto querés clonar: desde solo la portada hasta todo el sistema sincronizado solo, todos los días.
           </p>
-          <div className="flex gap-3 justify-center flex-wrap">
-            <Link href={activarHref} className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors">
-              Ver las 7 modalidades
-            </Link>
-            <Link href="/plan-cositas" className="border border-slate-300 text-slate-700 px-8 py-3 rounded-lg font-medium hover:bg-slate-50 transition-colors">
-              Ver todas las cositas
-            </Link>
+          <div className="grid sm:grid-cols-5 gap-4 items-center max-w-3xl mx-auto">
+            <div className="sm:col-span-3 aspect-video bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 gap-2">
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+              </svg>
+              <span className="text-xs text-center px-4">Video explicativo — próximamente</span>
+            </div>
+            <div className="sm:col-span-2 flex flex-col gap-3 justify-center">
+              <Link href={activarHref} className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors text-center">
+                Ver las 7 modalidades
+              </Link>
+              <Link href="/plan-cositas" className="border border-slate-300 text-slate-700 px-8 py-3 rounded-lg font-medium hover:bg-slate-50 transition-colors text-center">
+                Ver todas las cositas
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -131,7 +140,11 @@ export default async function ClonarConIAPage({ searchParams }: { searchParams: 
             {[
               { q: "¿Puedo elegir más de una modalidad?", a: "No, es una sola opción por pedido. Si más adelante querés pasar a otra (por ejemplo, de portada a catálogo completo), armamos un pedido nuevo." },
               { q: "¿Necesito permiso de la tienda que quiero clonar?", a: "Es tu responsabilidad contar con esa autorización. tol.ar te da la herramienta técnica, no gestiona acuerdos con terceros." },
+              { q: "¿Qué pasa con las fotos y textos de la tienda original?", a: "Se clonan igual que el resto del contenido, pero los derechos sobre esas fotos y textos siguen siendo de quien los creó. Usarlos sin permiso es tu responsabilidad, igual que con el resto del contenido clonado." },
               { q: "¿La modalidad sincronizada se actualiza para siempre?", a: "Sí, precio y stock se actualizan solos todos los días, como un dropshipping completo. El resto de las modalidades quedan fijas el día que se clonan." },
+              { q: "¿Qué pasa si la tienda original cambia de diseño o deja de existir?", a: "En las modalidades fijas (todas menos la sincronizada) no te afecta, tu copia queda tal como se clonó. En la sincronizada, si la original cambia mucho o cierra, te avisamos para decidir cómo seguir." },
+              { q: "¿Cuánto tarda en estar listo?", a: "Depende de la modalidad: portada sola o catálogo sin diseño, los más rápidos; sistema completo o todo clonado, un poco más. Te confirmamos un plazo exacto junto con el precio antes de arrancar." },
+              { q: "¿Cuándo se paga?", a: "Primero te confirmamos el pedido (qué se clona, precio y plazo) y el pago se hace al aceptar esa confirmación, antes de empezar el trabajo." },
               { q: "¿Qué pasa si solo quiero una parte puntual (ej. el checkout)?", a: "Elegís la modalidad 'Solo una parte puntual' y nos contás qué sección." },
             ].map((faq, i) => (
               <div key={i} className="p-6">
