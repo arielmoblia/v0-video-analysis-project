@@ -26,7 +26,13 @@ export default async function StoreLayout({
   const purchasedFeatures = store ? await getStorePurchasedFeatures(store.id) : []
   const hasWhatsAppFeature = purchasedFeatures.includes("whatsapp_chat")
     const hasLupaFeature = purchasedFeatures.includes("lupa")
-  const hasCustomerAccounts = purchasedFeatures.includes("customer_accounts")
+  // El index clonado (ver store-cloned-index-live.tsx) ya trae su propio
+  // ícono/link de "Entrá / Registrate" del diseño original, apuntando a
+  // /cuenta (clone-store.ts lo reescribe así) — el botón flotante genérico
+  // quedaba duplicado encima del diseño clonado, tapando contenido sin
+  // aportar nada nuevo (bug real visto en pinkonlineoficial.tol.ar).
+  const hasClonedIndex = !!store?.plan_features?.cloned_index?.active
+  const hasCustomerAccounts = purchasedFeatures.includes("customer_accounts") && !hasClonedIndex
   const whatsappNumber = store?.social_whatsapp || store?.whatsapp_number
 
   return (
