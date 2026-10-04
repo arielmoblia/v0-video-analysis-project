@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { ClonarCatalogoManager } from "./clonar-catalogo-manager"
 import Script from "next/script"
 import Image from "next/image"
 import {
@@ -67,7 +68,6 @@ interface PlansManagerProps {
   onActiveTabChange?: (tab: string) => void
   onGoToProducts?: () => void
   onGoToCarousels?: () => void
-  onGoToClonarCatalogo?: () => void
   autoSelectFeature?: string | null
 }
 
@@ -289,7 +289,7 @@ const LEER_MAS_URLS: Record<string, string> = {
 
 const getLeerMasUrl = (code: string) => LEER_MAS_URLS[code] || `${APP_URL}/cositas#${code}`
 
-export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialSliderImages, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts, onGoToCarousels, onGoToClonarCatalogo, autoSelectFeature }: PlansManagerProps) {
+export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialSliderImages, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts, onGoToCarousels, autoSelectFeature }: PlansManagerProps) {
   const [internalActiveTab, setInternalActiveTab] = useState("cositas")
   const activeTab = controlledActiveTab ?? internalActiveTab
   const setActiveTab = onActiveTabChange ?? setInternalActiveTab
@@ -1488,14 +1488,6 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                     </Button>
                                   </div>
                                 )}
-                                {expandedFeatures.has(feature.code) && feature.code === "clonar_ia_catalogo" && (
-                                  <div className="px-4 pb-4 pt-1 space-y-2">
-                                    <p className="text-xs text-green-700">{feature.description}</p>
-                                    <Button size="sm" onClick={onGoToClonarCatalogo}>
-                                      Ir a Clonar con IA <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                                    </Button>
-                                  </div>
-                                )}
                                 {expandedFeatures.has(feature.code) && feature.code === "banner_deslizante" && (
                                   <div className="px-4 pb-4 pt-1 space-y-3">
                                     <p className="text-xs text-green-700">{feature.description}</p>
@@ -1550,44 +1542,51 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                             const isSelected = selectedFeatures.includes(feature.code)
                             const isClonarCatalogo = feature.code === "clonar_ia_catalogo"
                             return (
-                              <div key={feature.code} id={`feature-${feature.code}`} className="flex items-center gap-3 px-4 py-3 bg-orange-50 border-b border-orange-100 last:border-b-0">
-                                <div className="w-9 h-9 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
-                                  <IconComponent className="h-4 w-4 text-orange-700" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-orange-900 text-sm">{feature.name}</p>
-                                  <p className="text-xs text-orange-600 truncate">{feature.description}</p>
-                                </div>
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                  {isClonarCatalogo ? (
-                                    <button onClick={onGoToClonarCatalogo} className="text-xs bg-orange-500 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-orange-600 whitespace-nowrap">
-                                      Elegir modalidad →
-                                    </button>
-                                  ) : (
-                                    <>
-                                      {hasTrial && (
-                                        <button onClick={() => startTrial(feature)} className="text-xs bg-orange-500 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-orange-600 whitespace-nowrap">
-                                          Probar {feature.trial_days} días
-                                        </button>
-                                      )}
-                                      <button
-                                        onClick={() => toggleFeature(feature.code)}
-                                        className={`text-xs px-3 py-1.5 rounded-lg font-medium border whitespace-nowrap ${isSelected ? "bg-orange-500 text-white border-orange-500" : "bg-white text-orange-600 border-orange-400 hover:bg-orange-50"}`}
-                                      >
-                                        {isSelected ? "Seleccionado" : "Comprar"}
+                              <div key={feature.code} id={`feature-${feature.code}`} className="bg-orange-50 border-b border-orange-100 last:border-b-0">
+                                <div className="flex items-center gap-3 px-4 py-3">
+                                  <div className="w-9 h-9 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+                                    <IconComponent className="h-4 w-4 text-orange-700" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-orange-900 text-sm">{feature.name}</p>
+                                    <p className="text-xs text-orange-600 truncate">{feature.description}</p>
+                                  </div>
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    {isClonarCatalogo ? (
+                                      <button onClick={() => toggleExpanded(feature.code)} className="text-xs bg-orange-500 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-orange-600 whitespace-nowrap">
+                                        {expandedFeatures.has(feature.code) ? "Cerrar ✕" : "Elegir modalidad →"}
                                       </button>
-                                    </>
-                                  )}
+                                    ) : (
+                                      <>
+                                        {hasTrial && (
+                                          <button onClick={() => startTrial(feature)} className="text-xs bg-orange-500 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-orange-600 whitespace-nowrap">
+                                            Probar {feature.trial_days} días
+                                          </button>
+                                        )}
+                                        <button
+                                          onClick={() => toggleFeature(feature.code)}
+                                          className={`text-xs px-3 py-1.5 rounded-lg font-medium border whitespace-nowrap ${isSelected ? "bg-orange-500 text-white border-orange-500" : "bg-white text-orange-600 border-orange-400 hover:bg-orange-50"}`}
+                                        >
+                                          {isSelected ? "Seleccionado" : "Comprar"}
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                  <a
+                                    href={getLeerMasUrl(feature.code)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-xs text-orange-600 hover:text-orange-700 hover:underline whitespace-nowrap flex-shrink-0"
+                                  >
+                                    Leer más →
+                                  </a>
                                 </div>
-                                <a
-                                  href={getLeerMasUrl(feature.code)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="text-xs text-orange-600 hover:text-orange-700 hover:underline whitespace-nowrap flex-shrink-0"
-                                >
-                                  Leer más →
-                                </a>
+                                {isClonarCatalogo && expandedFeatures.has(feature.code) && (
+                                  <div className="px-4 pb-4 pt-1">
+                                    <ClonarCatalogoManager storeId={storeId} subdomain={subdomain} inline />
+                                  </div>
+                                )}
                               </div>
                             )
                           })}

@@ -29,7 +29,6 @@ import { StorePagesManager } from "./store-pages-manager"
 import { CustomersManager } from "./customers-manager"
 import { CarouselsManager } from "./carousels-manager"
 import { OfertaDestacadaManager } from "./oferta-destacada-manager"
-import { ClonarCatalogoManager } from "./clonar-catalogo-manager"
 
 // Prueba aislada: solo esta tienda tiene el asistente de chat en el admin
 const ADMIN_CHAT_SUBDOMAINS = ["prueba3"]
@@ -69,7 +68,7 @@ const FEATURE_TAB: Record<string, string> = {
   customer_accounts: "clientes",
   botonera_cabecera: "paginas",
   carousels: "carruseles",
-  clonar_ia_catalogo: "clonar-catalogo",
+  clonar_ia_catalogo: "plans",
 }
 
 interface AdminDashboardProps {
@@ -175,8 +174,11 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
   const hasClonedIndex = !!store.plan_features?.cloned_index?.active
 
   const trialCodes = trialFeatures.map(t => t.code)
+  // clonar_ia_catalogo queda afuera de la sidebar a propósito: ya se ve como
+  // una fila más dentro de "Plan Cositas" (Elegir modalidad, inline), no hace
+  // falta un segundo acceso que antes duplicaba el cartel "Clonar con IA".
   const cositaCodes = Object.keys(FEATURE_NAMES).filter(code =>
-    code !== "dropshipping" || store.is_dropship
+    (code !== "dropshipping" || store.is_dropship) && code !== "clonar_ia_catalogo"
   )
   const activeCositas = cositaCodes.filter(code =>
     purchasedFeatures.includes(code) && !trialCodes.includes(code)
@@ -427,12 +429,6 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
               )}
             </TabsContent>
 
-            <TabsContent value="clonar-catalogo">
-              {purchasedFeatures.includes("clonar_ia_catalogo") && (
-                <ClonarCatalogoManager storeId={store.id} subdomain={subdomain} />
-              )}
-            </TabsContent>
-
             {hasClonedIndex && (
               <TabsContent value="oferta-destacada">
                 <OfertaDestacadaManager
@@ -473,7 +469,6 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
                 onActiveTabChange={setPlansTab}
                 onGoToProducts={() => setActiveTab("products")}
                 onGoToCarousels={() => setActiveTab("carruseles")}
-                onGoToClonarCatalogo={() => setActiveTab("clonar-catalogo")}
                 autoSelectFeature={activarFeature}
               />
               {(purchasedFeatures.includes("custom_variants") || store.template === "variants") && (
