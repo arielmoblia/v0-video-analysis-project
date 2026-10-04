@@ -67,6 +67,7 @@ interface PlansManagerProps {
   onActiveTabChange?: (tab: string) => void
   onGoToProducts?: () => void
   onGoToCarousels?: () => void
+  onGoToClonarCatalogo?: () => void
   autoSelectFeature?: string | null
 }
 
@@ -288,7 +289,7 @@ const LEER_MAS_URLS: Record<string, string> = {
 
 const getLeerMasUrl = (code: string) => LEER_MAS_URLS[code] || `${APP_URL}/cositas#${code}`
 
-export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialSliderImages, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts, onGoToCarousels, autoSelectFeature }: PlansManagerProps) {
+export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialSliderImages, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts, onGoToCarousels, onGoToClonarCatalogo, autoSelectFeature }: PlansManagerProps) {
   const [internalActiveTab, setInternalActiveTab] = useState("cositas")
   const activeTab = controlledActiveTab ?? internalActiveTab
   const setActiveTab = onActiveTabChange ?? setInternalActiveTab
@@ -385,7 +386,13 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
           // "theme_custom_url" quedó eliminada del admin (ver "Clonar con IA" real,
           // feature "clonar_ia_catalogo"); se sigue filtrando acá por si la fila
           // vieja de la DB todavía está activa para alguna tienda.
-          setAvailableFeatures(allFeatures.filter((f) => f.code !== "theme_custom_url"))
+          // "clonar_ia_catalogo" es el panel interno de pedidos de clonado, exclusivo
+          // de la tienda clonar.tol.ar: no se ofrece como cosita comprable al resto.
+          setAvailableFeatures(
+            allFeatures
+              .filter((f) => f.code !== "theme_custom_url")
+              .filter((f) => f.code !== "clonar_ia_catalogo" || subdomain === "clonar"),
+          )
           if (data.exchangeRate) {
             setExchangeRate(data.exchangeRate)
           }
@@ -1477,6 +1484,14 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                     </Button>
                                   </div>
                                 )}
+                                {expandedFeatures.has(feature.code) && feature.code === "clonar_ia_catalogo" && (
+                                  <div className="px-4 pb-4 pt-1 space-y-2">
+                                    <p className="text-xs text-green-700">{feature.description}</p>
+                                    <Button size="sm" onClick={onGoToClonarCatalogo}>
+                                      Ir a Clonar con IA <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                                    </Button>
+                                  </div>
+                                )}
                                 {expandedFeatures.has(feature.code) && feature.code === "banner_deslizante" && (
                                   <div className="px-4 pb-4 pt-1 space-y-3">
                                     <p className="text-xs text-green-700">{feature.description}</p>
@@ -1503,6 +1518,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                   feature.code !== "multi_images" &&
                                   feature.code !== "carousels" &&
                                   feature.code !== "banner_deslizante" &&
+                                  feature.code !== "clonar_ia_catalogo" &&
                                   feature.code !== "dolar_peso" && (
                                     <div className="px-4 pb-4 pt-1">
                                       <p className="text-xs text-green-700">{feature.description}</p>

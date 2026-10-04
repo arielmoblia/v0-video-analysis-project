@@ -461,6 +461,7 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
               <PlansManager
                 storeId={store.id}
                 storeName={store.site_title}
+                subdomain={subdomain}
                 initialCustomDomain={store.custom_domain}
                 initialLinkedStoreUrl={store.linked_store_url}
                 initialLinkedStoreLabel={store.linked_store_label}
@@ -472,6 +473,7 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
                 onActiveTabChange={setPlansTab}
                 onGoToProducts={() => setActiveTab("products")}
                 onGoToCarousels={() => setActiveTab("carruseles")}
+                onGoToClonarCatalogo={() => setActiveTab("clonar-catalogo")}
                 autoSelectFeature={activarFeature}
               />
               {(purchasedFeatures.includes("custom_variants") || store.template === "variants") && (
