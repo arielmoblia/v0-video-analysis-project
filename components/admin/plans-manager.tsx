@@ -62,7 +62,6 @@ interface PlansManagerProps {
   initialLinkedStoreUrl?: string | null
   initialLinkedStoreLabel?: string | null
   initialActiveTheme?: string | null
-  initialCustomThemeRequest?: { url: string; status: string; requested_at: string } | null
   initialSliderImages?: string[] | null
   activeTab?: string
   onActiveTabChange?: (tab: string) => void
@@ -158,16 +157,6 @@ const pageDesigns = [
     comingSoon: false,
   },
 ]
-
-// Separado de pageDesigns a propósito: no es un modelo prearmado ($1/mes de Modelos/Templates),
-// es el clonado real por link ($10 único, feature "theme_custom_url"). Antes vivía mezclado como
-// una tile más de la grilla y quedaba invisible; ahora es su propia sección, siempre visible.
-const customCloneDesign = {
-  id: "nuevo_propio",
-  name: "Clonar con IA",
-  subtitle: "Copiá el estilo de otra tienda",
-  description: "Pegá el link de una tienda que te gusta y armamos un modelo nuevo con ese estilo, usando tus productos y fotos reales.",
-}
 
 interface DbFeature {
   id: string
@@ -299,7 +288,7 @@ const LEER_MAS_URLS: Record<string, string> = {
 
 const getLeerMasUrl = (code: string) => LEER_MAS_URLS[code] || `${APP_URL}/cositas#${code}`
 
-export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialCustomThemeRequest, initialSliderImages, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts, onGoToCarousels, autoSelectFeature }: PlansManagerProps) {
+export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialSliderImages, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts, onGoToCarousels, autoSelectFeature }: PlansManagerProps) {
   const [internalActiveTab, setInternalActiveTab] = useState("cositas")
   const activeTab = controlledActiveTab ?? internalActiveTab
   const setActiveTab = onActiveTabChange ?? setInternalActiveTab
@@ -344,9 +333,6 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
   const [savingTheme, setSavingTheme] = useState(false)
   const [previewDesign, setPreviewDesign] = useState<(typeof pageDesigns)[number] | null>(null)
   const [expandedFeatures, setExpandedFeatures] = useState<Set<string>>(new Set())
-  const [customThemeRequest, setCustomThemeRequest] = useState<{ url: string; status: string; requested_at: string } | null>(
-    initialCustomThemeRequest || null,
-  )
   const [sliderImages, setSliderImages] = useState<string[]>(initialSliderImages || [])
   const [savingSliderImages, setSavingSliderImages] = useState(false)
   const [sliderImagesSaved, setSliderImagesSaved] = useState(false)
@@ -368,20 +354,6 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       setSavingSliderImages(false)
     }
   }
-  const [customUrlDialogOpen, setCustomUrlDialogOpen] = useState(false)
-  const [customUrl, setCustomUrl] = useState("")
-  const [cloneConsentChecked, setCloneConsentChecked] = useState(false)
-  const [customUrlError, setCustomUrlError] = useState("")
-  const [submittingCustomUrl, setSubmittingCustomUrl] = useState(false)
-  const [customThemePriceUSD, setCustomThemePriceUSD] = useState(10)
-  const [customUrlCardLoadingBrick, setCustomUrlCardLoadingBrick] = useState(false)
-  const customUrlCardBrickRef = useRef<HTMLDivElement>(null)
-  const customUrlCardBrickBuilt = useRef(false)
-  const customUrlCardBrickGen = useRef(0)
-  const customUrlCardBrickController = useRef<any>(null)
-  const customUrlCardBrickOp = useRef<Promise<void>>(Promise.resolve())
-  const normalizedCustomUrlRef = useRef<string | null>(null)
-
   const toggleExpanded = (code: string) => {
     setExpandedFeatures((prev) => {
       const next = new Set(prev)
@@ -408,12 +380,12 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
         if (res.ok) {
           const data = await res.json()
           const allFeatures: DbFeature[] = data.availableFeatures || []
-          const customThemeFeature = allFeatures.find((f) => f.code === "theme_custom_url")
           setPurchasedFeatures(data.features || [])
           setPurchasedDetails(data.purchasedDetails || [])
-          // "theme_custom_url" no se muestra como cosita genérica: se cobra desde el popup de "Nuevo/Propio"
+          // "theme_custom_url" quedó eliminada del admin (ver "Clonar con IA" real,
+          // feature "clonar_ia_catalogo"); se sigue filtrando acá por si la fila
+          // vieja de la DB todavía está activa para alguna tienda.
           setAvailableFeatures(allFeatures.filter((f) => f.code !== "theme_custom_url"))
-          if (customThemeFeature) setCustomThemePriceUSD(customThemeFeature.price)
           if (data.exchangeRate) {
             setExchangeRate(data.exchangeRate)
           }
@@ -488,68 +460,6 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       if (res.ok) setActiveTheme(next)
     } finally {
       setSavingTheme(false)
-    }
-  }
-
-  const getNormalizedCustomUrl = (raw: string): string | null => {
-    let normalized = raw.trim()
-    if (!normalized) return null
-    if (!/^https?:\/\//i.test(normalized)) {
-      normalized = `https://${normalized}`
-    }
-    try {
-      return new URL(normalized).toString()
-    } catch {
-      return null
-    }
-  }
-
-  const handleCustomUrlCardSubmit = async (cardData: any) => {
-    const normalized = normalizedCustomUrlRef.current
-    if (!normalized) return
-    if (!cloneConsentChecked) {
-      setCustomUrlError("Tenés que tildar la autorización de arriba antes de pagar")
-      return
-    }
-    setSubmittingCustomUrl(true)
-    setCustomUrlError("")
-    try {
-      const res = await fetch("/api/admin/theme-request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          storeId,
-          url: normalized,
-          cardData,
-          amountARS: getPriceARS(customThemePriceUSD),
-          storeName,
-          subdomain,
-          cloneConsentAccepted: true,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setCustomUrlError(data.error || "No pudimos procesar el pago, probá con otra tarjeta")
-        return
-      }
-      await fetch("/api/admin/features/purchase", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          storeId,
-          features: ["theme_custom_url"],
-          paymentMethod: "mercadopago_card",
-          paymentId: data.custom_theme_request?.mp_payment_id,
-        }),
-      })
-      setCustomThemeRequest(data.custom_theme_request)
-      setCustomUrlDialogOpen(false)
-      setCustomUrl("")
-      setCloneConsentChecked(false)
-    } catch {
-      setCustomUrlError("Error al procesar el pago, probá de nuevo")
-    } finally {
-      setSubmittingCustomUrl(false)
     }
   }
 
@@ -641,161 +551,6 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
       setPaypalRendered(false)
     }
   }, [selectedFeatures.length])
-
-  const normalizedCustomUrl = getNormalizedCustomUrl(customUrl)
-  const hasValidCustomUrl = !!normalizedCustomUrl
-  normalizedCustomUrlRef.current = normalizedCustomUrl
-
-  const renderCloneWithAICard = () => (
-    <div className="mt-4 rounded-xl border-2 border-dashed border-violet-300 bg-violet-50 p-4 flex items-start gap-3">
-      <div className="w-11 h-11 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0 text-violet-500">
-        <Sparkles className="h-5 w-5" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-violet-900">{customCloneDesign.name}</p>
-        <p className="text-xs text-violet-700 mt-0.5">{customCloneDesign.description}</p>
-        <a
-          href={getLeerMasUrl(customCloneDesign.id)}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="inline-block text-xs text-green-700 hover:text-green-800 hover:underline mt-1"
-        >
-          Leer más →
-        </a>
-        <div className="mt-2">
-          {customThemeRequest?.status === "pendiente" ? (
-            <p className="text-xs text-violet-600 font-medium">Lo estamos armando…</p>
-          ) : customThemeRequest?.status === "listo" ? (
-            <p className="text-xs text-green-600 font-medium">¡Listo! Ya está en tu lista</p>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setCustomUrlDialogOpen(true)}
-              className="text-xs px-3 py-1.5 rounded-lg font-medium bg-violet-500 hover:bg-violet-600 text-white"
-            >
-              Clonar con IA · USD {customThemePriceUSD}
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-
-  const queueCustomUrlCardBrickOp = (op: () => Promise<void>) => {
-    customUrlCardBrickOp.current = customUrlCardBrickOp.current.then(op, op)
-    return customUrlCardBrickOp.current
-  }
-
-  const clearCustomUrlCardBrick = async () => {
-    // Igual que con el Brick de "Probar gratis": invalidamos la creación en
-    // curso apenas arranca un clear, así si esa promesa vieja resuelve tarde
-    // se descarta sola en vez de pisar el contenedor nuevo.
-    customUrlCardBrickGen.current += 1
-    if (customUrlCardBrickController.current) {
-      try { await customUrlCardBrickController.current.unmount() } catch {}
-      customUrlCardBrickController.current = null
-    }
-    if (customUrlCardBrickRef.current) customUrlCardBrickRef.current.innerHTML = ""
-    customUrlCardBrickBuilt.current = false
-  }
-
-  // Igual que el Brick de "Probar gratis": si el SDK de Mercado Pago se cuelga
-  // a mitad de camino (conexión lenta, bfcache al volver con "atrás"), sin este
-  // timeout el formulario queda cargando para siempre sin ningún mensaje de error.
-  const CUSTOM_URL_BRICK_TIMEOUT_MS = 15000
-
-  const initCustomUrlCardBrick = () => queueCustomUrlCardBrickOp(async () => {
-    if (customUrlCardBrickBuilt.current || !customUrlCardBrickRef.current) return
-    await clearCustomUrlCardBrick()
-    const myGen = customUrlCardBrickGen.current
-    setCustomUrlCardLoadingBrick(true)
-
-    const loadMP = () => new Promise<void>((resolve, reject) => {
-      if ((window as any).MercadoPago) { resolve(); return }
-      const s = document.createElement("script")
-      s.src = "https://sdk.mercadopago.com/js/v2"
-      s.onload = () => resolve()
-      s.onerror = () => reject(new Error("No se pudo cargar Mercado Pago"))
-      document.head.appendChild(s)
-    })
-
-    try {
-      await loadMP()
-    } catch (err) {
-      if (customUrlCardBrickGen.current !== myGen) return
-      console.error(err)
-      setCustomUrlCardLoadingBrick(false)
-      setCustomUrlError("No pudimos cargar el formulario de pago, cerrá y volvé a intentar")
-      return
-    }
-    if (customUrlCardBrickGen.current !== myGen || !customUrlCardBrickRef.current) return
-
-    const pubKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY as string
-    const mp = new (window as any).MercadoPago(pubKey, { locale: "es-AR" })
-    const bricks = mp.bricks()
-    customUrlCardBrickBuilt.current = true
-    setCustomUrlCardLoadingBrick(false)
-
-    const timeoutId = setTimeout(() => {
-      if (customUrlCardBrickGen.current !== myGen) return
-      customUrlCardBrickGen.current += 1
-      customUrlCardBrickBuilt.current = false
-      if (customUrlCardBrickRef.current) customUrlCardBrickRef.current.innerHTML = ""
-      setCustomUrlError("El formulario de pago tardó demasiado en cargar. Si estás en una ventana de incógnito o con bloqueadores de cookies, probá en una ventana normal. Cerrá esto y probá de nuevo.")
-    }, CUSTOM_URL_BRICK_TIMEOUT_MS)
-
-    let controller: any = null
-    try {
-      controller = await bricks.create("cardPayment", "mp-custom-url-card-brick", {
-        initialization: {
-          amount: getPriceARS(customThemePriceUSD),
-          payer: { email: "" },
-        },
-        customization: {
-          visual: { style: { theme: "default" } },
-          paymentMethods: { minInstallments: 1, maxInstallments: 1 },
-        },
-        callbacks: {
-          onReady: () => {},
-          onError: (err: any) => console.error("MP Brick error:", err),
-          onSubmit: (cardData: any) => handleCustomUrlCardSubmit(cardData),
-        },
-      })
-    } catch (err) {
-      clearTimeout(timeoutId)
-      if (customUrlCardBrickGen.current !== myGen) return
-      console.error("MP Brick create error:", err)
-      customUrlCardBrickBuilt.current = false
-      setCustomUrlCardLoadingBrick(false)
-      setCustomUrlError("No pudimos cargar el formulario de pago, cerrá y volvé a intentar")
-      return
-    }
-    clearTimeout(timeoutId)
-
-    if (customUrlCardBrickGen.current !== myGen) {
-      try { await controller?.unmount() } catch {}
-      return
-    }
-    customUrlCardBrickController.current = controller
-  })
-
-  useEffect(() => {
-    if (!customUrlDialogOpen || !hasValidCustomUrl || !cloneConsentChecked) {
-      queueCustomUrlCardBrickOp(clearCustomUrlCardBrick)
-      return
-    }
-    if (customUrlCardBrickBuilt.current) return
-
-    // Espera a que la URL deje de cambiar antes de montar el Brick. Si se monta en cada
-    // tecla (o en el "parpadeo" de limpiar+pegar), el SDK de Mercado Pago se queda a
-    // mitad de un create() async justo cuando el contenedor se vuelve a limpiar.
-    const timer = setTimeout(() => {
-      initCustomUrlCardBrick()
-    }, 400)
-
-    return () => clearTimeout(timer)
-  }, [customUrlDialogOpen, hasValidCustomUrl, cloneConsentChecked, customThemePriceUSD, storeId, storeName, subdomain])
 
   const startTrial = (feature: any) => {
     if (!feature.trial_days || feature.trial_days === 0) return
@@ -1662,7 +1417,6 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                         ),
                                       )}
                                     </div>
-                                    {renderCloneWithAICard()}
                                   </div>
                                 )}
                                 {expandedFeatures.has(feature.code) && feature.code === "dolar_peso" && (
@@ -2099,24 +1853,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
               <p className="text-xs text-muted-foreground mt-4">
                 Por ahora esto guarda tu preferencia de diseño. Todavía estamos conectando cada modelo a los productos y el carrito reales de tu tienda — te avisamos apenas "Moderno" quede funcionando 100% con tus datos.
               </p>
-              {renderCloneWithAICard()}
             </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="clonar" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-violet-500" />
-                Clonar con IA
-              </CardTitle>
-              <CardDescription>
-                Pago único aparte de Modelos/Templates. Pegá el link de una tienda que te gusta y armamos un modelo
-                nuevo con ese estilo, usando tus productos y fotos reales.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>{renderCloneWithAICard()}</CardContent>
           </Card>
         </TabsContent>
 
@@ -2147,105 +1884,6 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
               className="w-full h-[70vh] border-0"
             />
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Popup: crear modelo nuevo pegando una URL */}
-      <Dialog
-        open={customUrlDialogOpen}
-        onOpenChange={(open) => {
-          setCustomUrlDialogOpen(open)
-          if (!open) {
-            setCustomUrlError("")
-            setCustomUrl("")
-            setCloneConsentChecked(false)
-            queueCustomUrlCardBrickOp(clearCustomUrlCardBrick)
-          }
-        }}
-      >
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Creá tu modelo a partir de un link</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="xxxxxx.com"
-              value={customUrl}
-              onChange={(e) => {
-                setCustomUrl(e.target.value)
-                setCustomUrlError("")
-              }}
-              disabled={submittingCustomUrl}
-            />
-            {customUrlError && <p className="text-xs text-red-600">{customUrlError}</p>}
-
-            <ol className="space-y-3 text-sm">
-              <li className="flex gap-2">
-                <span className="font-semibold text-violet-700">1)</span>
-                <span>Pegá el link de la página que te guste</span>
-              </li>
-              {normalizedCustomUrl && (
-                <li className="flex gap-2">
-                  <input
-                    type="checkbox"
-                    id="clone-consent-checkbox"
-                    checked={cloneConsentChecked}
-                    onChange={(e) => {
-                      setCloneConsentChecked(e.target.checked)
-                      setCustomUrlError("")
-                    }}
-                    disabled={submittingCustomUrl}
-                    className="mt-1 h-4 w-4 flex-shrink-0 accent-violet-600"
-                  />
-                  <label htmlFor="clone-consent-checkbox" className="text-xs text-slate-600 leading-relaxed">
-                    Declaro ser el titular (o tener autorización del titular) del sitio que indiqué arriba, y
-                    autorizo a tol.ar a extraer de esa URL imágenes, textos, precios y estructura de diseño,
-                    únicamente para armar la portada de mi tienda en tol.ar. Soy responsable si ese contenido
-                    pertenece a terceros. Leí la cláusula 12 de los{" "}
-                    <a href="/terminos" target="_blank" rel="noreferrer" className="underline">
-                      Términos y Condiciones
-                    </a>
-                    .
-                  </label>
-                </li>
-              )}
-              <li className="space-y-2">
-                <div className="flex gap-2">
-                  <span className="font-semibold text-violet-700">2)</span>
-                  <span>
-                    Aboná los <span className="font-semibold">USD {customThemePriceUSD}</span> (~$
-                    {Math.round(customThemePriceUSD * exchangeRate).toLocaleString("es-AR")} ARS), pago único. Al
-                    aprobarse el pago, una IA clona la portada sola y la deja lista al toque (si no puede, la
-                    armamos nosotros en los próximos días).
-                  </span>
-                </div>
-                <div className={`rounded-lg border border-violet-200 bg-violet-50 p-3 space-y-2 ${normalizedCustomUrl && cloneConsentChecked ? "" : "hidden"}`}>
-                  {submittingCustomUrl && (
-                    <div className="flex items-center justify-center py-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-violet-600" />
-                    </div>
-                  )}
-                  <div className={submittingCustomUrl ? "hidden" : ""}>
-                    {/* Este div nunca se desmonta mientras el popup está abierto: si se saca del DOM
-                        a mitad de un toggle de estado, el SDK de Mercado Pago se queda a mitad de un create(). */}
-                    <div id="mp-custom-url-card-brick" ref={customUrlCardBrickRef} className="min-h-[40px]" />
-                    {customUrlCardLoadingBrick && <p className="text-[11px] text-muted-foreground">Cargando formulario de pago…</p>}
-                  </div>
-                </div>
-                {normalizedCustomUrl && !cloneConsentChecked && (
-                  <p className="text-[11px] text-slate-400">Tildá la autorización de arriba para habilitar el pago.</p>
-                )}
-              </li>
-              <li className="flex gap-2">
-                <span className="font-semibold text-violet-700">3)</span>
-                <span>
-                  Personalizá fotos y texto{" "}
-                  {/* Falta el link del video: pendiente hasta que se grabe y suba al canal de YouTube */}
-                  <span className="text-muted-foreground">(video próximamente)</span>
-                </span>
-              </li>
-            </ol>
-          </div>
         </DialogContent>
       </Dialog>
 
