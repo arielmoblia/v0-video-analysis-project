@@ -29,6 +29,7 @@ import { StorePagesManager } from "./store-pages-manager"
 import { CustomersManager } from "./customers-manager"
 import { CarouselsManager } from "./carousels-manager"
 import { OfertaDestacadaManager } from "./oferta-destacada-manager"
+import { ClonarCatalogoManager } from "./clonar-catalogo-manager"
 
 // Prueba aislada: solo esta tienda tiene el asistente de chat en el admin
 const ADMIN_CHAT_SUBDOMAINS = ["prueba3"]
@@ -49,6 +50,7 @@ const FEATURE_NAMES: Record<string, string> = {
   customer_accounts: "Cuentas de clientes",
   botonera_cabecera: "Botonera Cabecera",
   carousels: "Carruseles",
+  clonar_ia_catalogo: "Clonar con IA",
 }
 
 const FEATURE_TAB: Record<string, string> = {
@@ -67,6 +69,7 @@ const FEATURE_TAB: Record<string, string> = {
   customer_accounts: "clientes",
   botonera_cabecera: "paginas",
   carousels: "carruseles",
+  clonar_ia_catalogo: "clonar-catalogo",
 }
 
 interface AdminDashboardProps {
@@ -432,6 +435,12 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
             <TabsContent value="carruseles">
               {purchasedFeatures.includes("carousels") && (
                 <CarouselsManager storeId={store.id} initialCarousels={store.plan_features?.carousels || null} />
+              )}
+            </TabsContent>
+
+            <TabsContent value="clonar-catalogo">
+              {purchasedFeatures.includes("clonar_ia_catalogo") && (
+                <ClonarCatalogoManager storeId={store.id} subdomain={subdomain} />
               )}
             </TabsContent>
 
