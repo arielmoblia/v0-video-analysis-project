@@ -1262,13 +1262,17 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                     <div className="space-y-5">
 
                       {/* BLOQUE VERDE: activos (pagados + en prueba) */}
-                      {availableFeatures.filter(f => f.is_active && purchasedFeatures.includes(f.code)).length > 0 && (
+                      {/* clonar_ia_catalogo queda afuera de este bloque a propósito: en vez de
+                          aislarla en su propia caja "activa", se muestra como una cosita más
+                          dentro del listado general (ver bloque naranja), con un botón que
+                          abre directo el selector de modalidades en un solo clic. */}
+                      {availableFeatures.filter(f => f.is_active && purchasedFeatures.includes(f.code) && f.code !== "clonar_ia_catalogo").length > 0 && (
                         <div className="rounded-xl overflow-hidden border-2 border-green-300">
                           <div className="bg-green-100 px-4 py-2.5 flex items-center gap-2 border-b border-green-200">
                             <div className="w-2 h-2 rounded-full bg-green-500"></div>
                             <span className="text-sm font-medium text-green-800">Tus cositas activas</span>
                           </div>
-                          {availableFeatures.filter(f => f.is_active && purchasedFeatures.includes(f.code)).map(feature => {
+                          {availableFeatures.filter(f => f.is_active && purchasedFeatures.includes(f.code) && f.code !== "clonar_ia_catalogo").map(feature => {
                             const IconComponent = ICON_MAP[feature.icon] || Package
                             const detail = purchasedDetails.find((d: any) => d.feature_code === feature.code)
                             const isTrial = detail?.is_trial && detail?.trial_ends_at
@@ -1530,18 +1534,21 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                         </div>
                       )}
 
-                      {/* BLOQUE NARANJA: disponibles no compradas */}
-                      {availableFeatures.filter(f => f.is_active && !purchasedFeatures.includes(f.code)).length > 0 && (
+                      {/* BLOQUE NARANJA: disponibles no compradas (+ clonar_ia_catalogo, que
+                          aunque ya esté activa en esta tienda se muestra siempre acá como una
+                          cosita más de la lista, con su propio botón directo al selector) */}
+                      {availableFeatures.filter(f => f.is_active && (!purchasedFeatures.includes(f.code) || f.code === "clonar_ia_catalogo")).length > 0 && (
                         <div className="rounded-xl overflow-hidden border-2 border-orange-300">
                           <div className="bg-orange-100 px-4 py-2.5 flex items-center gap-2 border-b border-orange-200">
                             <div className="w-2 h-2 rounded-full bg-orange-500"></div>
                             <span className="text-sm font-medium text-orange-800">Disponibles — probá gratis o comprá</span>
                           </div>
-                          {availableFeatures.filter(f => f.is_active && !purchasedFeatures.includes(f.code)).map(feature => {
+                          {availableFeatures.filter(f => f.is_active && (!purchasedFeatures.includes(f.code) || f.code === "clonar_ia_catalogo")).map(feature => {
                             const IconComponent = ICON_MAP[feature.icon] || Package
                             const hasTrial = (feature.trial_days || 0) > 0
                             const priceARS = getPriceARS(feature.price)
                             const isSelected = selectedFeatures.includes(feature.code)
+                            const isClonarCatalogo = feature.code === "clonar_ia_catalogo"
                             return (
                               <div key={feature.code} id={`feature-${feature.code}`} className="flex items-center gap-3 px-4 py-3 bg-orange-50 border-b border-orange-100 last:border-b-0">
                                 <div className="w-9 h-9 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
@@ -1552,17 +1559,25 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                   <p className="text-xs text-orange-600 truncate">{feature.description}</p>
                                 </div>
                                 <div className="flex items-center gap-2 flex-shrink-0">
-                                  {hasTrial && (
-                                    <button onClick={() => startTrial(feature)} className="text-xs bg-orange-500 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-orange-600 whitespace-nowrap">
-                                      Probar {feature.trial_days} días
+                                  {isClonarCatalogo ? (
+                                    <button onClick={onGoToClonarCatalogo} className="text-xs bg-orange-500 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-orange-600 whitespace-nowrap">
+                                      Elegir modalidad →
                                     </button>
+                                  ) : (
+                                    <>
+                                      {hasTrial && (
+                                        <button onClick={() => startTrial(feature)} className="text-xs bg-orange-500 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-orange-600 whitespace-nowrap">
+                                          Probar {feature.trial_days} días
+                                        </button>
+                                      )}
+                                      <button
+                                        onClick={() => toggleFeature(feature.code)}
+                                        className={`text-xs px-3 py-1.5 rounded-lg font-medium border whitespace-nowrap ${isSelected ? "bg-orange-500 text-white border-orange-500" : "bg-white text-orange-600 border-orange-400 hover:bg-orange-50"}`}
+                                      >
+                                        {isSelected ? "Seleccionado" : "Comprar"}
+                                      </button>
+                                    </>
                                   )}
-                                  <button
-                                    onClick={() => toggleFeature(feature.code)}
-                                    className={`text-xs px-3 py-1.5 rounded-lg font-medium border whitespace-nowrap ${isSelected ? "bg-orange-500 text-white border-orange-500" : "bg-white text-orange-600 border-orange-400 hover:bg-orange-50"}`}
-                                  >
-                                    {isSelected ? "Seleccionado" : "Comprar"}
-                                  </button>
                                 </div>
                                 <a
                                   href={getLeerMasUrl(feature.code)}
