@@ -287,9 +287,13 @@ const LEER_MAS_URLS: Record<string, string> = {
   botonera_cabecera: `${APP_URL}/plan-cositas/botonera-cabecera`,
   multi_images: `${APP_URL}/plan-cositas/galeria-imagenes`,
   modelos_templates: `${APP_URL}/plan-cositas/modelos-templates`,
+  clonar_ia_catalogo: `${APP_URL}/plan-cositas/clonar-con-ia`,
 }
 
-const getLeerMasUrl = (code: string) => LEER_MAS_URLS[code] || `${APP_URL}/cositas#${code}`
+const getLeerMasUrl = (code: string, subdomain?: string) => {
+  const base = LEER_MAS_URLS[code] || `${APP_URL}/cositas#${code}`
+  return subdomain ? `${base}?tienda=${subdomain}` : base
+}
 
 export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialSliderImages, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts, onGoToCarousels, autoSelectFeature }: PlansManagerProps) {
   const [internalActiveTab, setInternalActiveTab] = useState("cositas")
@@ -1328,7 +1332,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                     <span className="text-sm font-medium text-green-700">${priceARS.toLocaleString("es-AR")}/mes</span>
                                   )}
                                   <a
-                                    href={getLeerMasUrl(feature.code)}
+                                    href={getLeerMasUrl(feature.code, subdomain)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={(e) => e.stopPropagation()}
@@ -1575,7 +1579,7 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                     )}
                                   </div>
                                   <a
-                                    href={getLeerMasUrl(feature.code)}
+                                    href={getLeerMasUrl(feature.code, subdomain)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={(e) => e.stopPropagation()}

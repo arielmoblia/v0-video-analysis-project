@@ -3,6 +3,7 @@ import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import Link from "next/link"
 import { getBrand } from "@/lib/get-brand"
+import { getActivarHref } from "@/lib/get-activar-href"
 
 export const metadata: Metadata = {
   title: "Mayorista / Minorista — Dos tiendas conectadas, un solo negocio",
@@ -15,7 +16,9 @@ export const metadata: Metadata = {
   }
 }
 
-export default async function MayoristaMinoristaPage() {
+export default async function MayoristaMinoristaPage({ searchParams }: { searchParams: Promise<{ tienda?: string }> }) {
+  const { tienda } = await searchParams
+  const activarHref = getActivarHref(tienda, "mayorista_minorista")
   const brand = await getBrand()
   return (
     <div className="min-h-screen bg-white">
@@ -25,28 +28,19 @@ export default async function MayoristaMinoristaPage() {
       <section className="py-16 md:py-24 text-center border-b border-slate-100">
         <div className="container mx-auto px-4 max-w-3xl">
           <div className="inline-flex items-center gap-2 bg-slate-100 text-slate-500 px-4 py-1.5 rounded-full text-sm mb-6">
-            Cositas tol.ar · Próximamente
+            Cositas tol.ar
           </div>
           <h1 className="text-5xl md:text-6xl font-bold mb-6 text-slate-900">Mayorista / Minorista</h1>
-          <p className="text-xs font-semibold text-orange-500 uppercase tracking-widest mb-2">Resumen</p>
-          <p className="text-xl text-orange-500 mb-8 leading-relaxed">
+          <p className="text-xl text-slate-500 mb-8 leading-relaxed">
             Dos tiendas separadas, una para vender por mayor y otra por menor, cada una con sus propios precios y productos. Un botón en el encabezado de cada una lleva directo a la otra.
           </p>
-          <div className="grid sm:grid-cols-5 gap-4 items-center max-w-3xl mx-auto">
-            <div className="sm:col-span-3 aspect-video bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 gap-2">
-              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-2.36a.75.75 0 011.28.53v6.36a.75.75 0 01-1.28.53L15.75 13.5M4.5 6h9a1.5 1.5 0 011.5 1.5v9a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 013 16.5v-9A1.5 1.5 0 014.5 6z" />
-              </svg>
-              <span className="text-xs text-center px-4">Video explicativo — próximamente</span>
-            </div>
-            <div className="sm:col-span-2 flex flex-col gap-3 justify-center">
-              <Link href="/plan-cositas" className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors text-center">
-                Me interesa esta cosita
-              </Link>
-              <Link href="/plan-cositas" className="border border-slate-300 text-slate-700 px-8 py-3 rounded-lg font-medium hover:bg-slate-50 transition-colors text-center">
-                Ver todas las cositas
-              </Link>
-            </div>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <Link href={activarHref} className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors">
+              Activar por $1 USD/mes
+            </Link>
+            <Link href="/plan-cositas" className="border border-slate-300 text-slate-700 px-8 py-3 rounded-lg font-medium hover:bg-slate-50 transition-colors">
+              Ver todas las cositas
+            </Link>
           </div>
         </div>
       </section>
@@ -146,10 +140,10 @@ export default async function MayoristaMinoristaPage() {
       <section className="py-16 bg-black">
         <div className="container mx-auto px-4 max-w-2xl text-center">
           <h2 className="text-3xl font-bold text-white mb-3">Separá tu venta por mayor de tu venta por menor</h2>
-          <p className="text-slate-400 mb-8">Esta cosita está en preparación. Contanos si te interesa para tu tienda.</p>
+          <p className="text-slate-400 mb-8">$1 USD por mes. Cancelás cuando querés.</p>
           <div className="flex gap-3 justify-center flex-wrap">
-            <Link href="/plan-cositas" className="bg-orange-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors">
-              Me interesa esta cosita
+            <Link href={activarHref} className="bg-orange-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors">
+              Activar ahora
             </Link>
             <Link href="/plan-cositas" className="bg-white text-black px-8 py-3 rounded-lg font-medium hover:bg-slate-100 transition-colors">
               Ver todas las cositas
