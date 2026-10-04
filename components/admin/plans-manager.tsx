@@ -285,6 +285,8 @@ const LEER_MAS_URLS: Record<string, string> = {
   banner_deslizante: `${APP_URL}/plan-cositas/banner-deslizante`,
   customer_accounts: `${APP_URL}/plan-cositas/cuentas-clientes`,
   botonera_cabecera: `${APP_URL}/plan-cositas/botonera-cabecera`,
+  multi_images: `${APP_URL}/plan-cositas/galeria-imagenes`,
+  modelos_templates: `${APP_URL}/plan-cositas/modelos-templates`,
 }
 
 const getLeerMasUrl = (code: string) => LEER_MAS_URLS[code] || `${APP_URL}/cositas#${code}`
