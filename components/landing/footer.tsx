@@ -64,7 +64,7 @@ export function Footer({ brand }: FooterProps) {
               <a href="https://facebook.com" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors" aria-label="Seguinos en Facebook">
                 <Facebook className="h-5 w-5" />
               </a>
-              <a href="https://youtube.com" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors" aria-label="Suscribite a nuestro canal de YouTube">
+              <a href="https://www.youtube.com/@tiendaonline-com-ar" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors" aria-label="Suscribite a nuestro canal de YouTube">
                 <Youtube className="h-5 w-5" />
               </a>
               <a href="https://twitter.com" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors" aria-label="Seguinos en Twitter">

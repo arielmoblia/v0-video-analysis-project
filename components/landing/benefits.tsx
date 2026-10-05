@@ -1,7 +1,11 @@
 "use client"
-import { Check, Zap, Shield, Smartphone, Globe, HeadphonesIcon, ArrowRight } from "lucide-react"
+import { useState } from "react"
+import dynamic from "next/dynamic"
+import { Check, Zap, Shield, Smartphone, Globe, HeadphonesIcon, ArrowRight, PlayCircle } from "lucide-react"
 import Link from "next/link"
 import { EditableText, usePageContent } from "@/components/editable-text"
+
+const VideoPopup = dynamic(() => import("@/components/landing/video-popup").then(m => ({ default: m.VideoPopup })), { ssr: false, loading: () => null })
 
 const BENEFITS = [
   { icon: Zap,            key:"ben1", title:"Rápido y fácil de usar",                    desc:"Creá tu tienda online profesional en menos de 2 minutos. No necesitás conocimientos técnicos, programación ni diseño. Nuestra plataforma está pensada para emprendedores argentinos.", link: null },
@@ -14,6 +18,7 @@ const BENEFITS = [
 
 export function Benefits() {
   const { isAdmin, get } = usePageContent("home")
+  const [isVideoOpen, setIsVideoOpen] = useState(false)
   const ET = (field: string, fallback: string) => (
     <EditableText page="home" field={field} defaultValue={get(field, fallback)} isAdmin={isAdmin} accentColor="#f59e0b" />
   )
@@ -22,7 +27,14 @@ export function Benefits() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">{ET("ben_titulo", "Vendé por Internet con MercadoPago y Envíos Andreani")}</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{ET("ben_subtitulo", "La alternativa argentina para vender por internet. Diseñada para emprendedores que quieren vender por internet sin complicaciones.")}</p>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-4">{ET("ben_subtitulo", "La alternativa argentina para vender por internet. Diseñada para emprendedores que quieren vender por internet sin complicaciones.")}</p>
+          <button
+            onClick={() => setIsVideoOpen(true)}
+            className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 font-medium"
+            type="button"
+          >
+            <PlayCircle className="w-5 h-5" /> Ver video: manejá tu negocio desde donde quieras
+          </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {BENEFITS.map(b => (
@@ -51,6 +63,7 @@ export function Benefits() {
           </div>
         </div>
       </div>
+      <VideoPopup isOpen={isVideoOpen} onClose={() => setIsVideoOpen(false)} videoId="BNRJgY2-eoQ" title="Manejá tu negocio desde donde quieras" />
     </section>
   )
 }

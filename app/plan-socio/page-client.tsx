@@ -1,11 +1,15 @@
 "use client"
 
+import { useState } from "react"
+import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import { EditableText, usePageContent } from "@/components/editable-text"
-import { Handshake, Store, Sparkles, ArrowRight, Megaphone, Percent } from "lucide-react"
+import { Handshake, Store, Sparkles, ArrowRight, Megaphone, Percent, PlayCircle } from "lucide-react"
+
+const VideoPopup = dynamic(() => import("@/components/landing/video-popup").then(m => ({ default: m.VideoPopup })), { ssr: false, loading: () => null })
 
 interface Props {
   brand?: "tol" | "tiendabasica"
@@ -13,6 +17,7 @@ interface Props {
 
 export default function PlanSocioHubPage({ brand = "tol" }: Props) {
   const { isAdmin, get } = usePageContent("plan-socio-hub")
+  const [isVideoOpen, setIsVideoOpen] = useState(false)
 
   const ET = (field: string, fallback: string, tag = "span", className = "") => (
     <EditableText page="plan-socio-hub" field={field} defaultValue={get(field, fallback)} isAdmin={isAdmin} tag={tag} className={className} accentColor="#7c3aed" />
@@ -56,10 +61,18 @@ export default function PlanSocioHubPage({ brand = "tol" }: Props) {
                   <Sparkles className="w-3.5 h-3.5" /> {ET("chip3", "Un vendedor que te vende")}
                 </span>
               </div>
+              <button
+                onClick={() => setIsVideoOpen(true)}
+                className="flex items-center gap-2 mx-auto mt-6 text-violet-700 hover:text-violet-800 font-medium"
+                type="button"
+              >
+                <PlayCircle className="w-5 h-5" /> Ver video: publicidad en redes y buscadores
+              </button>
             </CardContent>
           </Card>
         </div>
       </section>
+      <VideoPopup isOpen={isVideoOpen} onClose={() => setIsVideoOpen(false)} videoId="0_6PjWg8fMo" title="Publicidad en redes y buscadores para tu tienda online" />
 
       <section className="py-12 px-4 pb-24">
         <div className="container mx-auto max-w-5xl">

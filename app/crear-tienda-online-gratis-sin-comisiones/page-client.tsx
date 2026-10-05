@@ -1,6 +1,11 @@
 "use client"
+import { useState } from "react"
+import dynamic from "next/dynamic"
+import { PlayCircle } from "lucide-react"
 import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
+
+const VideoPopup = dynamic(() => import("@/components/landing/video-popup").then(m => ({ default: m.VideoPopup })), { ssr: false, loading: () => null })
 
 const CONTENT = {
   "badge": "100% Gratis, Sin Comisiones",
@@ -26,6 +31,7 @@ interface Props {
 }
 
 export default function CrearTiendaGratisClient({ brand = "tol" }: Props) {
+  const [isVideoOpen, setIsVideoOpen] = useState(false)
   return (
     <main className="min-h-screen flex flex-col bg-background">
       <Header fullMenu={true} brand={brand} />
@@ -43,8 +49,16 @@ export default function CrearTiendaGratisClient({ brand = "tol" }: Props) {
           <a href="https://tol.ar" className="inline-flex items-center justify-center px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium">
             {CONTENT.cta_boton || "Crear mi tienda gratis"}
           </a>
+          <button
+            onClick={() => setIsVideoOpen(true)}
+            className="flex items-center gap-2 mx-auto mt-5 text-amber-700 hover:text-amber-800 font-medium"
+            type="button"
+          >
+            <PlayCircle className="w-5 h-5" /> Ver video: creá tu tienda gratis
+          </button>
         </div>
       </section>
+      <VideoPopup isOpen={isVideoOpen} onClose={() => setIsVideoOpen(false)} videoId="X93t3b-tJc0" title="Creá tu tienda online gratis con tol.ar" />
 
       <section className="py-16 px-4 bg-slate-50">
         <div className="container mx-auto max-w-4xl">

@@ -36,11 +36,14 @@ export default async function GaleriaImagenesPage({ searchParams }: { searchPara
             Subí hasta 5 fotos por producto y mostralas en una galería deslizable. Tus clientes ven el producto desde todos los ángulos antes de comprar.
           </p>
           <div className="grid sm:grid-cols-5 gap-4 items-center max-w-3xl mx-auto">
-            <div className="sm:col-span-3 aspect-video bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 gap-2">
-              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-2.36a.75.75 0 011.28.53v6.36a.75.75 0 01-1.28.53L15.75 13.5M4.5 6h9a1.5 1.5 0 011.5 1.5v9a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 013 16.5v-9A1.5 1.5 0 014.5 6z" />
-              </svg>
-              <span className="text-xs text-center px-4">Video explicativo — próximamente</span>
+            <div className="sm:col-span-3 aspect-video rounded-xl overflow-hidden border border-slate-200">
+              <iframe
+                src="https://www.youtube.com/embed/DMgNkjOVLs4"
+                title="Cómo sacar buenas fotos de tus productos con el celular"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              />
             </div>
             <div className="sm:col-span-2 flex flex-col gap-3 justify-center">
               <Link href={activarHref} className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors text-center">
