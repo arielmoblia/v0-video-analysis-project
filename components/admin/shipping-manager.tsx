@@ -76,7 +76,7 @@ const TUTORIAL_VIDEOS = {
   pickup: "",
   own_delivery: "",
   enviamelo: "JHZWVOef68U",
-  andreani: "hQHjK9-oQW0",
+  andreani: "",
   oca: "",
   correo: "",
 }

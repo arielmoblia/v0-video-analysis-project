@@ -863,10 +863,6 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                         </div>
                       </div>
 
-                      <div>
-                        {/* VIDEO PLACEHOLDER - Reemplazar con el ID real del video */}
-                        <VideoTutorial videoId="dQw4w9WgXcQ" title="Cómo configurar Ualá Bis" />
-                      </div>
                     </div>
                     <div className="flex justify-between items-center mt-4 pt-4 border-t">
                       <p className="text-xs text-muted-foreground">{payments.uala_enabled ? "Activo — visible en el checkout" : "Inactivo — no se muestra en el checkout"}</p>
@@ -1021,10 +1017,6 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
                           onChange={(e) => setPayments({ ...payments, rapipago_instructions: e.target.value })}
                           rows={3}
                         />
-                      </div>
-                      <div>
-                        {/* VIDEO PLACEHOLDER */}
-                        <VideoTutorial videoId="dQw4w9WgXcQ" title="Cómo configurar Rapipago" />
                       </div>
                     </div>
                     <div className="flex justify-between items-center mt-4 pt-4 border-t">
