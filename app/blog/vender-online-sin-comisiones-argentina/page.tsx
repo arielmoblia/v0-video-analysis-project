@@ -274,6 +274,16 @@ export default async function VenderOnlineSinComisionesArgentina() {
               MercadoPago, que la pagarías igual en cualquier plataforma.
             </p>
 
+            <div className="not-prose my-6 max-w-sm mx-auto rounded-xl overflow-hidden border border-gray-200">
+              <iframe
+                src="https://www.youtube.com/embed/P1Fq3tD-KM4"
+                title="tol.ar - Te quedás con el 100%"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full aspect-[9/16]"
+              />
+            </div>
+
             <h2>Preguntas frecuentes</h2>
 
             <h3>¿Se puede vender online completamente sin comisiones?</h3>

@@ -359,6 +359,19 @@ export default async function ComoCrearTiendaOnlineGratisArgentina() {
 
             <h2 id="paso-a-paso">Paso a paso: cómo crear tu tienda online gratis</h2>
 
+            <p>
+              Si preferís verlo en video, así se hace en tol.ar:
+            </p>
+            <div className="not-prose my-6 rounded-xl overflow-hidden border border-gray-200">
+              <iframe
+                src="https://www.youtube.com/embed/X93t3b-tJc0"
+                title="Creá tu tienda online gratis con tol.ar"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full aspect-video"
+              />
+            </div>
+
             <h3>Paso 1 — Registrarte en tol.ar</h3>
             <p>
               Entrás a <a href="https://tol.ar/plan-gratis" className="text-green-700 hover:underline">tol.ar/plan-gratis</a>,

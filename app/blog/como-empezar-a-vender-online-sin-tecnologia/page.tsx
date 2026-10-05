@@ -229,6 +229,16 @@ export default async function ComoEmpezarAVenderOnlineSinTecnologia() {
 
             <h2>Paso a paso: tu tienda online en 2 minutos</h2>
 
+            <div className="not-prose my-6 rounded-xl overflow-hidden border border-gray-200">
+              <iframe
+                src="https://www.youtube.com/embed/BNRJgY2-eoQ"
+                title="Manejá tu negocio desde donde quieras | tol.ar"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full aspect-video"
+              />
+            </div>
+
             <h3>Paso 1: Crear tu cuenta en tol.ar</h3>
             <p>
               Entrás a <Link href="/">tol.ar</Link> desde tu celular o computadora. Ponés tu email y
