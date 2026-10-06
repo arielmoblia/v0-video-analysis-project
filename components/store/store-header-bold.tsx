@@ -70,18 +70,28 @@ export function StoreHeaderBold({
             </div>
 
             {disableNav ? (
-              <span className="flex items-center gap-2">
-                <LogoBadge initial={initial} accentColor={accentColor} accentColor2={accentColor2} />
-                <span className="font-extrabold text-2xl tracking-tight" style={{ color: accentColor }}>
-                  {store.site_title}
+              store.logo_url ? (
+                <img src={store.logo_url} alt={store.site_title || "Logo"} className="h-12 w-auto object-contain" />
+              ) : (
+                <span className="flex items-center gap-2">
+                  <LogoBadge initial={initial} accentColor={accentColor} accentColor2={accentColor2} />
+                  <span className="font-extrabold text-2xl tracking-tight" style={{ color: accentColor }}>
+                    {store.site_title}
+                  </span>
                 </span>
-              </span>
+              )
             ) : (
               <Link href={basePath || "/"} className="flex items-center gap-2">
-                <LogoBadge initial={initial} accentColor={accentColor} accentColor2={accentColor2} />
-                <span className="font-extrabold text-2xl tracking-tight" style={{ color: accentColor }}>
-                  {store.site_title}
-                </span>
+                {store.logo_url ? (
+                  <img src={store.logo_url} alt={store.site_title || "Logo"} className="h-12 w-auto object-contain" />
+                ) : (
+                  <>
+                    <LogoBadge initial={initial} accentColor={accentColor} accentColor2={accentColor2} />
+                    <span className="font-extrabold text-2xl tracking-tight" style={{ color: accentColor }}>
+                      {store.site_title}
+                    </span>
+                  </>
+                )}
               </Link>
             )}
 

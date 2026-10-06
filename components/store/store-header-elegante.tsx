@@ -63,12 +63,20 @@ export function StoreHeaderElegante({ store, categories, accentColor = "#f7791e"
             </div>
 
             {disableNav ? (
-              <span className="font-bold text-2xl tracking-wide" style={{ color: NAVY }}>
-                {store.site_title}
-              </span>
+              store.logo_url ? (
+                <img src={store.logo_url} alt={store.site_title || "Logo"} className="h-12 w-auto object-contain" />
+              ) : (
+                <span className="font-bold text-2xl tracking-wide" style={{ color: NAVY }}>
+                  {store.site_title}
+                </span>
+              )
             ) : (
               <Link href={basePath || "/"} className="font-bold text-2xl tracking-wide" style={{ color: NAVY }}>
-                {store.site_title}
+                {store.logo_url ? (
+                  <img src={store.logo_url} alt={store.site_title || "Logo"} className="h-12 w-auto object-contain" />
+                ) : (
+                  store.site_title
+                )}
               </Link>
             )}
 

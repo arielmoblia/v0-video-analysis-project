@@ -59,12 +59,20 @@ export function StoreHeaderMinimal({ store, categories, accentColor = "#ff7f00",
           </div>
 
           {disableNav ? (
-            <span className={`${minimalHeading.className} text-2xl font-light tracking-[0.15em] text-neutral-900`}>
-              {store.site_title.toLowerCase()}
-            </span>
+            store.logo_url ? (
+              <img src={store.logo_url} alt={store.site_title || "Logo"} className="h-12 w-auto object-contain" />
+            ) : (
+              <span className={`${minimalHeading.className} text-2xl font-light tracking-[0.15em] text-neutral-900`}>
+                {store.site_title.toLowerCase()}
+              </span>
+            )
           ) : (
             <Link href={basePath || "/"} className={`${minimalHeading.className} text-2xl font-light tracking-[0.15em] text-neutral-900`}>
-              {store.site_title.toLowerCase()}
+              {store.logo_url ? (
+                <img src={store.logo_url} alt={store.site_title || "Logo"} className="h-12 w-auto object-contain" />
+              ) : (
+                store.site_title.toLowerCase()
+              )}
             </Link>
           )}
 

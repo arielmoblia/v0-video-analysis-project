@@ -46,10 +46,18 @@ export function StoreHeaderModern({ store, categories, accentColor = "#111827", 
           </Button>
 
           {disableNav ? (
-            <span className="font-bold text-xl text-neutral-900">{store.site_title}</span>
+            store.logo_url ? (
+              <img src={store.logo_url} alt={store.site_title || "Logo"} className="h-12 w-auto object-contain" />
+            ) : (
+              <span className="font-bold text-xl text-neutral-900">{store.site_title}</span>
+            )
           ) : (
             <Link href={basePath || "/"} className="font-bold text-xl text-neutral-900">
-              {store.site_title}
+              {store.logo_url ? (
+                <img src={store.logo_url} alt={store.site_title || "Logo"} className="h-12 w-auto object-contain" />
+              ) : (
+                store.site_title
+              )}
             </Link>
           )}
 

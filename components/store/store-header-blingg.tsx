@@ -75,12 +75,20 @@ export function StoreHeaderBlingg({
             </div>
 
             {disableNav ? (
-              <span className={`${blinggHeading.className} font-bold text-2xl tracking-wide`} style={{ color: SECONDARY }}>
-                {store.site_title}
-              </span>
+              store.logo_url ? (
+                <img src={store.logo_url} alt={store.site_title || "Logo"} className="h-12 w-auto object-contain" />
+              ) : (
+                <span className={`${blinggHeading.className} font-bold text-2xl tracking-wide`} style={{ color: SECONDARY }}>
+                  {store.site_title}
+                </span>
+              )
             ) : (
               <Link href={basePath || "/"} className={`${blinggHeading.className} font-bold text-2xl tracking-wide`} style={{ color: SECONDARY }}>
-                {store.site_title}
+                {store.logo_url ? (
+                  <img src={store.logo_url} alt={store.site_title || "Logo"} className="h-12 w-auto object-contain" />
+                ) : (
+                  store.site_title
+                )}
               </Link>
             )}
 

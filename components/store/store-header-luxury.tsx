@@ -66,12 +66,20 @@ export function StoreHeaderLuxury({ store, categories, disableNav = false }: Sto
           {disableNav && <div className="hidden md:block w-24" />}
 
           {disableNav ? (
-            <span className={`${luxuryHeading.className} text-2xl uppercase tracking-[0.2em] font-semibold`}>
-              {store.site_title}
-            </span>
+            store.logo_url ? (
+              <img src={store.logo_url} alt={store.site_title || "Logo"} className="h-12 w-auto object-contain" />
+            ) : (
+              <span className={`${luxuryHeading.className} text-2xl uppercase tracking-[0.2em] font-semibold`}>
+                {store.site_title}
+              </span>
+            )
           ) : (
             <Link href={basePath || "/"} className={`${luxuryHeading.className} text-2xl uppercase tracking-[0.2em] font-semibold`}>
-              {store.site_title}
+              {store.logo_url ? (
+                <img src={store.logo_url} alt={store.site_title || "Logo"} className="h-12 w-auto object-contain" />
+              ) : (
+                store.site_title
+              )}
             </Link>
           )}
 

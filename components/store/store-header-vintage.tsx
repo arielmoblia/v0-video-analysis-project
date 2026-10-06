@@ -49,10 +49,18 @@ export function StoreHeaderVintage({ store, categories, accentColor = "#cc3833",
           </Button>
 
           {disableNav ? (
-            <span className={`${vintageHeading.className} text-2xl text-[#4a4632]`}>{store.site_title}</span>
+            store.logo_url ? (
+              <img src={store.logo_url} alt={store.site_title || "Logo"} className="h-12 w-auto object-contain" />
+            ) : (
+              <span className={`${vintageHeading.className} text-2xl text-[#4a4632]`}>{store.site_title}</span>
+            )
           ) : (
             <Link href={basePath || "/"} className={`${vintageHeading.className} text-2xl text-[#4a4632]`}>
-              {store.site_title}
+              {store.logo_url ? (
+                <img src={store.logo_url} alt={store.site_title || "Logo"} className="h-12 w-auto object-contain" />
+              ) : (
+                store.site_title
+              )}
             </Link>
           )}
 

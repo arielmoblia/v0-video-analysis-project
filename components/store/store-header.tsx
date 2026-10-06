@@ -52,8 +52,14 @@ export function StoreHeader({ store, categories, hasMayoristaMinorista }: StoreH
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
 
-            <Link href={basePath || "/"} className="font-light text-2xl tracking-[0.2em] uppercase text-black">
-              {store.site_title}
+            <Link href={basePath || "/"} className="shrink-0">
+              {store.logo_url ? (
+                <img src={store.logo_url} alt={store.site_title || "Logo"} className="h-12 w-auto object-contain" />
+              ) : (
+                <span className="font-light text-2xl tracking-[0.2em] uppercase text-black">
+                  {store.site_title}
+                </span>
+              )}
             </Link>
 
             <nav className="hidden md:flex items-center gap-8" aria-label="Navegacion principal de la tienda">
