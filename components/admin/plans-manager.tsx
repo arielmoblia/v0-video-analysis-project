@@ -72,6 +72,9 @@ interface PlansManagerProps {
   onActiveTabChange?: (tab: string) => void
   onGoToProducts?: () => void
   onGoToCarousels?: () => void
+  onGoToPaginas?: () => void
+  onGoToClientes?: () => void
+  onGoToWhatsapp?: () => void
   autoSelectFeature?: string | null
 }
 
@@ -302,7 +305,7 @@ const getLeerMasUrl = (code: string, subdomain?: string) => {
   return subdomain ? `${base}?tienda=${subdomain}` : base
 }
 
-export function PlansManager({ storeId, storeName, subdomain, country, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialSliderImages, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts, onGoToCarousels, autoSelectFeature }: PlansManagerProps) {
+export function PlansManager({ storeId, storeName, subdomain, country, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialSliderImages, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts, onGoToCarousels, onGoToPaginas, onGoToClientes, onGoToWhatsapp, autoSelectFeature }: PlansManagerProps) {
   const [internalActiveTab, setInternalActiveTab] = useState("cositas")
   const activeTab = controlledActiveTab ?? internalActiveTab
   const setActiveTab = onActiveTabChange ?? setInternalActiveTab
@@ -1539,6 +1542,30 @@ export function PlansManager({ storeId, storeName, subdomain, country, initialCu
                                     <ProductosDestacadosManager storeId={storeId} country={country} compact />
                                   </div>
                                 )}
+                                {expandedFeatures.has(feature.code) && feature.code === "botonera_cabecera" && (
+                                  <div className="px-4 pb-4 pt-1 space-y-2">
+                                    <p className="text-xs text-green-700">{feature.description}</p>
+                                    <Button size="sm" onClick={onGoToPaginas}>
+                                      Ir a Páginas <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                                    </Button>
+                                  </div>
+                                )}
+                                {expandedFeatures.has(feature.code) && feature.code === "customer_accounts" && (
+                                  <div className="px-4 pb-4 pt-1 space-y-2">
+                                    <p className="text-xs text-green-700">{feature.description}</p>
+                                    <Button size="sm" onClick={onGoToClientes}>
+                                      Ir a Clientes <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                                    </Button>
+                                  </div>
+                                )}
+                                {expandedFeatures.has(feature.code) && feature.code === "whatsapp_chat" && (
+                                  <div className="px-4 pb-4 pt-1 space-y-2">
+                                    <p className="text-xs text-green-700">{feature.description}</p>
+                                    <Button size="sm" onClick={onGoToWhatsapp}>
+                                      Ir a WhatsApp <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                                    </Button>
+                                  </div>
+                                )}
                                 {expandedFeatures.has(feature.code) &&
                                   feature.code !== "modelos_templates" &&
                                   feature.code !== "mayorista_minorista" &&
@@ -1548,7 +1575,10 @@ export function PlansManager({ storeId, storeName, subdomain, country, initialCu
                                   feature.code !== "clonar_ia_catalogo" &&
                                   feature.code !== "dolar_peso" &&
                                   feature.code !== "oferta_destacada" &&
-                                  feature.code !== "productos_destacados" && (
+                                  feature.code !== "productos_destacados" &&
+                                  feature.code !== "botonera_cabecera" &&
+                                  feature.code !== "customer_accounts" &&
+                                  feature.code !== "whatsapp_chat" && (
                                     <div className="px-4 pb-4 pt-1">
                                       <p className="text-xs text-green-700">{feature.description}</p>
                                     </div>

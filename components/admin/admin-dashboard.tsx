@@ -477,6 +477,9 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
                 onActiveTabChange={setPlansTab}
                 onGoToProducts={() => setActiveTab("products")}
                 onGoToCarousels={() => setActiveTab("carruseles")}
+                onGoToPaginas={() => setActiveTab("paginas")}
+                onGoToClientes={() => setActiveTab("clientes")}
+                onGoToWhatsapp={() => setActiveTab("whatsapp")}
                 autoSelectFeature={activarFeature}
               />
               {(purchasedFeatures.includes("custom_variants") || store.template === "variants") && (
