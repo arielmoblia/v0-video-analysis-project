@@ -341,6 +341,18 @@ export default async function VenderRopaOnline() {
               </p>
             </div>
 
+            <div className="not-prose my-8 rounded-xl border border-green-200 bg-green-50 p-6">
+              <p className="text-sm font-semibold text-green-800 mb-2">Guía específica</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">¿Vas a vender remeras?</h3>
+              <p className="text-gray-700">
+                Escribimos una guía aparte sobre tipos de tela, estampado personalizado (DTF/sublimado) y
+                el costo de envío por ser una prenda liviana:{" "}
+                <Link href="/vender-ropa-online/remeras" className="text-green-700 hover:underline font-medium">
+                  cómo vender remeras online en Argentina
+                </Link>.
+              </p>
+            </div>
+
             <h2 id="checklist">Checklist final antes de publicar tu tienda de ropa</h2>
             <div className="not-prose my-6 rounded-xl border border-gray-200 bg-white p-6 space-y-3">
               {[

@@ -61,7 +61,7 @@ export function AdminLogin({ store, subdomain }: AdminLoginProps) {
           <CardDescription>Panel de Administración</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} action="#" className="space-y-4">
+          <form onSubmit={handleSubmit} method="post" className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Usuario</Label>
               <Input

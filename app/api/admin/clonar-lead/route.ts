@@ -14,10 +14,14 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { storeId, subdomain, modalidadId, modalidadTitulo, link } = await request.json()
+  const { storeId, subdomain, modalidadId, modalidadTitulo, link, confirmoPermiso } = await request.json()
 
   if (!storeId || !modalidadId || typeof modalidadId !== "string") {
     return NextResponse.json({ error: "Falta la opción elegida" }, { status: 400 })
+  }
+
+  if (confirmoPermiso !== true) {
+    return NextResponse.json({ error: "Falta confirmar la autorización para clonar" }, { status: 400 })
   }
 
   let leads: unknown[] = []
@@ -34,6 +38,7 @@ export async function POST(request: Request) {
     modalidadId,
     modalidadTitulo: modalidadTitulo || null,
     link: typeof link === "string" ? link.slice(0, 500) : "",
+    confirmoPermiso: true,
     fecha: new Date().toISOString(),
   })
 

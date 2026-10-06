@@ -46,7 +46,11 @@ function useClonedChromeSafety(rootRef: React.RefObject<HTMLDivElement | null>, 
       } catch {
         return
       }
-      if (url.hostname !== window.location.hostname) {
+      // Mismo criterio que StoreClonedIndexLive: los links a wa.me/redes que
+      // clone-store.ts reescribió a propósito vienen con target="_blank" —
+      // bloquearlos acá rompía el WhatsApp real del menú/footer clonado
+      // (bug real visto en pinkonlineoficial.tol.ar).
+      if (url.hostname !== window.location.hostname && link.target !== "_blank") {
         e.preventDefault()
         e.stopPropagation()
       }

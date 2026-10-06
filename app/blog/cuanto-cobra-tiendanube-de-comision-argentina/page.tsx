@@ -174,7 +174,8 @@ export default async function CuantoCobraTiendanubeDeComision() {
             <h2>El dato oficial: 0,7% a 2% por venta</h2>
             <p>
               Según la documentación oficial de Tiendanube, además de la mensualidad del plan
-              contratado (planes pagos desde $26.999/mes, con un plan gratis limitado disponible),
+              contratado (planes pagos desde $20.999/mes pagando anual, o $27.999/mes pagando mes a
+              mes, con un plan gratis limitado disponible),
               cobra un <strong>costo por transacción de 0,7% a 2%</strong> sobre cada venta,
               según el plan y el medio de pago que use el comprador.
             </p>

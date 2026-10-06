@@ -47,7 +47,7 @@ const MODALIDADES = [
     id: "marca-propia",
     titulo: "Con marca propia",
     precio: "A cotizar",
-    desc: "Misma base que se elija arriba, pero cambiando logo, colores y nombre para que no se vea como una copia 1 a 1.",
+    desc: "Misma base que se elija arriba, pero con logo, colores y nombre propios, para que la tienda tenga identidad propia.",
   },
   {
     id: "dropshipping",
@@ -60,13 +60,14 @@ const MODALIDADES = [
 export function ClonarCatalogoManager({ storeId, subdomain, inline }: ClonarCatalogoManagerProps) {
   const [seleccion, setSeleccion] = useState<string | null>(null)
   const [link, setLink] = useState("")
+  const [confirmoPermiso, setConfirmoPermiso] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [resultado, setResultado] = useState<"ok" | "error" | null>(null)
 
   const modalidadSeleccionada = MODALIDADES.find((m) => m.id === seleccion)
 
   const enviar = async () => {
-    if (!modalidadSeleccionada) return
+    if (!modalidadSeleccionada || !confirmoPermiso) return
     setEnviando(true)
     setResultado(null)
     try {
@@ -79,12 +80,14 @@ export function ClonarCatalogoManager({ storeId, subdomain, inline }: ClonarCata
           modalidadId: modalidadSeleccionada.id,
           modalidadTitulo: modalidadSeleccionada.titulo,
           link,
+          confirmoPermiso,
         }),
       })
       if (!res.ok) throw new Error("fail")
       setResultado("ok")
       setSeleccion(null)
       setLink("")
+      setConfirmoPermiso(false)
     } catch {
       setResultado("error")
     } finally {
@@ -144,10 +147,26 @@ export function ClonarCatalogoManager({ storeId, subdomain, inline }: ClonarCata
           Pedido guardado.
         </div>
       ) : (
-        <Button onClick={enviar} disabled={!seleccion || enviando} className="w-full mt-2">
-          {enviando ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-          {enviando ? "Guardando..." : "Guardar pedido"}
-        </Button>
+        <>
+          {seleccion && (
+            <label className="flex items-start gap-2 text-xs text-muted-foreground pt-1 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={confirmoPermiso}
+                onChange={(e) => setConfirmoPermiso(e.target.checked)}
+                className="mt-0.5 accent-violet-600"
+              />
+              <span>
+                Confirmo que la página a clonar es propia o cuento con autorización del dueño para copiar su diseño,
+                catálogo, fotos y textos. tol.ar no verifica esta autorización, es responsabilidad de quien pide el clonado.
+              </span>
+            </label>
+          )}
+          <Button onClick={enviar} disabled={!seleccion || !confirmoPermiso || enviando} className="w-full mt-2">
+            {enviando ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+            {enviando ? "Guardando..." : "Guardar pedido"}
+          </Button>
+        </>
       )}
       {resultado === "error" && (
         <p className="text-xs text-red-600 text-center">No se pudo guardar. Probá de nuevo.</p>

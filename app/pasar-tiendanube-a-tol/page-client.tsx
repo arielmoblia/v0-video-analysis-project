@@ -162,7 +162,8 @@ export default function PasarTiendanubeATolPage({ brand = "tol" }: Props) {
                       Productos e Imágenes → Guardar → Revelar token
                     </p>
                     <p className="text-sm text-muted-foreground mb-3">
-                      Disponible en los planes Escala y Tiendanube Evolución. Copiá el token apenas lo veas: Tiendanube
+                      Esta función depende de tu plan de Tiendanube — si no te aparece la opción "Aplicaciones a
+                      medida" en tu panel, usá el modo Manual de más abajo. Copiá el token apenas lo veas: Tiendanube
                       solo lo muestra una vez.
                     </p>
                     <a

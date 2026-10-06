@@ -22,6 +22,10 @@ export interface CarouselBlock {
   // type "products": productos elegidos a mano, en este orden. Sin esto (o
   // vacío) cae al comportamiento viejo: destacados si hay, si no todos.
   productIds?: string[]
+  // Cuántos productos se ven a la vez en escritorio (el resto se ve
+  // deslizando con las flechas). Sin esto, 5 — el valor que ya tenía
+  // hardcodeado el carrusel antes de que esto fuera configurable.
+  visibleCount?: number
   // type "text": tarjetas con link propio. Sin esto (o vacío) cae al
   // marquee viejo de "phrases" para no romper tiendas ya configuradas.
   cards?: CarouselTextCard[]
@@ -91,6 +95,7 @@ export function StoreCarousels({ carousels, products, featuredProducts, subdomai
             subdomain={subdomain}
             exchangeRate={exchangeRate}
             country={country}
+            visibleCount={block.visibleCount}
           />
         )
       })}
@@ -210,19 +215,33 @@ function CardsCarousel({ title, cards }: { title?: string; cards: CarouselTextCa
   )
 }
 
+// Clases literales (no armadas por template string) para que Tailwind las
+// detecte al escanear el código — un "lg:basis-1/" + n dinámico no se
+// generaría nunca en el build.
+const DESKTOP_BASIS_CLASS: Record<number, string> = {
+  2: "lg:basis-1/2",
+  3: "lg:basis-1/3",
+  4: "lg:basis-1/4",
+  5: "lg:basis-1/5",
+  6: "lg:basis-1/6",
+}
+
 function ProductsCarousel({
   title,
   products,
   subdomain,
   exchangeRate,
   country,
+  visibleCount,
 }: {
   title?: string
   products: Product[]
   subdomain: string
   exchangeRate: number
   country?: string | null
+  visibleCount?: number
 }) {
+  const desktopBasis = DESKTOP_BASIS_CLASS[visibleCount || 5] || DESKTOP_BASIS_CLASS[5]
   const [basePath, setBasePath] = useState(`/tienda/${subdomain}`)
   const [api, setApi] = useState<CarouselApi>()
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -256,7 +275,7 @@ function ProductsCarousel({
             {products.map((product) => {
               const hasDiscount = !!product.compare_price && product.compare_price > product.price && exchangeRate === 0
               return (
-                <CarouselItem key={product.id} className="basis-1/2 md:basis-1/3 lg:basis-1/5">
+                <CarouselItem key={product.id} className={`basis-1/2 md:basis-1/3 ${desktopBasis}`}>
                   <Link href={`${basePath}/producto/${product.slug}`} className="group block">
                     <div className="aspect-[3/4] relative overflow-hidden bg-neutral-100 mb-3">
                       <Image

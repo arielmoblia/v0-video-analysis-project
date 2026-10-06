@@ -37,11 +37,11 @@ const jsonLd = {
   },
 }
 
-// Datos reales, verificados en Supabase el 27/07/2026. No hay citas de clientes
+// Datos reales, verificados en Supabase el 04/10/2026. No hay citas de clientes
 // inventadas: mostramos tiendas reales y activas, no reseñas escritas por nosotros.
 const stats = [
-  { numero: "437", descripcion: "tiendas activas creadas en tol.ar" },
-  { numero: "55%", descripcion: "de las tiendas nuevas del último mes llegaron recomendadas por una IA" },
+  { numero: "1.002", descripcion: "tiendas activas creadas en tol.ar" },
+  { numero: "64%", descripcion: "de las tiendas nuevas del último mes llegaron recomendadas por una IA" },
   { numero: "0%", descripcion: "comisión por venta (la plataforma es gratis)" },
 ]
 

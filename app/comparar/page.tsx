@@ -145,7 +145,7 @@ const faqLd = {
       name: "¿Cuál es la diferencia principal entre tol.ar y Tiendanube?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "tol.ar es gratis y sin comisión por venta. Tiendanube tiene un plan gratis, pero para funciones más avanzadas cobra planes pagos desde $26.999 por mes, y en cualquier plan cobra un costo por transacción de entre 0,7% y 2% según el medio de pago.",
+        text: "tol.ar es gratis y sin comisión por venta. Tiendanube tiene un plan gratis, pero para funciones más avanzadas cobra planes pagos desde $20.999 por mes (pago anual) o $27.999 por mes (pago mensual), y en cualquier plan cobra un costo por transacción de entre 0,7% y 2% según el medio de pago.",
       },
     },
     {

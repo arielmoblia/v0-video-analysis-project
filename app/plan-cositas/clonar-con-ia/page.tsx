@@ -22,7 +22,7 @@ const MODALIDADES = [
   { titulo: "Sistema completo vacío", precio: "$35.000", desc: "Clonamos el diseño completo (categorías, producto, carrito, cuenta) sin productos. Cargás el catálogo a mano después." },
   { titulo: "Todo clonado, foto fija", precio: "$50.000", desc: "Clonamos diseño y catálogo completo tal como están hoy. Queda fijo, no se actualiza solo." },
   { titulo: "Solo una parte puntual", precio: "A cotizar", desc: "Clonamos una sección específica, por ejemplo el checkout o una categoría, no la página entera." },
-  { titulo: "Con marca propia", precio: "A cotizar", desc: "Misma base que elijas arriba, pero cambiando logo, colores y nombre para que no se vea como copia 1 a 1." },
+  { titulo: "Con marca propia", precio: "A cotizar", desc: "Misma base que elijas arriba, pero con tu propio logo, colores y nombre, para que la tienda tenga identidad propia." },
   { titulo: "Sistema + catálogo sincronizado", precio: "$70.000 + mantenimiento mensual", desc: "Clonamos todo y lo mantenemos sincronizado solo, todos los días (precio y stock), como un dropshipping completo." },
 ]
 
@@ -139,8 +139,8 @@ export default async function ClonarConIAPage({ searchParams }: { searchParams: 
           <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">
             {[
               { q: "¿Puedo elegir más de una modalidad?", a: "No, es una sola opción por pedido. Si más adelante querés pasar a otra (por ejemplo, de portada a catálogo completo), armamos un pedido nuevo." },
-              { q: "¿Necesito permiso de la tienda que quiero clonar?", a: "Es tu responsabilidad contar con esa autorización. tol.ar te da la herramienta técnica, no gestiona acuerdos con terceros." },
-              { q: "¿Qué pasa con las fotos y textos de la tienda original?", a: "Se clonan igual que el resto del contenido, pero los derechos sobre esas fotos y textos siguen siendo de quien los creó. Usarlos sin permiso es tu responsabilidad, igual que con el resto del contenido clonado." },
+              { q: "¿Necesito permiso de la tienda que quiero clonar?", a: "Sí. Es tu responsabilidad contar con esa autorización (sea tu propia tienda o tengas permiso del dueño). Antes de arrancar el trabajo te pedimos confirmarlo explícitamente; tol.ar te da la herramienta técnica, no gestiona acuerdos con terceros." },
+              { q: "¿Qué pasa con las fotos y textos de la tienda original?", a: "Se clonan igual que el resto del contenido, pero los derechos sobre esas fotos y textos siguen siendo de quien los creó. Usarlos sin permiso es tu responsabilidad, igual que con el resto del contenido clonado — por eso te pedimos confirmar la autorización antes de empezar." },
               { q: "¿La modalidad sincronizada se actualiza para siempre?", a: "Sí, precio y stock se actualizan solos todos los días, como un dropshipping completo. El resto de las modalidades quedan fijas el día que se clonan." },
               { q: "¿Qué pasa si la tienda original cambia de diseño o deja de existir?", a: "En las modalidades fijas (todas menos la sincronizada) no te afecta, tu copia queda tal como se clonó. En la sincronizada, si la original cambia mucho o cierra, te avisamos para decidir cómo seguir." },
               { q: "¿Cuánto tarda en estar listo?", a: "Depende de la modalidad: portada sola o catálogo sin diseño, los más rápidos; sistema completo o todo clonado, un poco más. Te confirmamos un plazo exacto junto con el precio antes de arrancar." },

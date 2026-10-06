@@ -157,11 +157,14 @@ export default async function RootLayout({
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable}`}>
       <head>
         {/* CSS critico inline para evitar layout shift y FOUC */}
+        {/* Va dentro de @layer base para que las clases de Tailwind (ej. h-12 en un logo) le ganen a este reset */}
         <style dangerouslySetInnerHTML={{ __html: `
-          html{scroll-behavior:smooth}
-          body{margin:0;min-height:100vh;background:#fff}
-          img{max-width:100%;height:auto;display:block}
-          *{box-sizing:border-box}
+          @layer base {
+            html{scroll-behavior:smooth}
+            body{margin:0;min-height:100vh;background:#fff}
+            img{max-width:100%;height:auto;display:block}
+            *{box-sizing:border-box}
+          }
         `}} />
         {/* Preconectar a dominios criticos primero */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

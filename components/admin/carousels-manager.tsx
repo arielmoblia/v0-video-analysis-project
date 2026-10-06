@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Loader2, Check, GripVertical, Trash2, Plus, X, MessageCircle, Instagram, Pencil, Link2 } from "lucide-react"
 import type { CarouselBlock, CarouselTextCard } from "@/components/store/store-carousels"
 
@@ -80,6 +80,27 @@ export function CarouselsManager({ storeId, initialCarousels }: CarouselsManager
       setSaving(false)
     }
   }
+
+  // Autoguardado: sin esto, agregar productos y cambiar de pestaña del admin
+  // antes de tocar "Guardar" perdía el cambio (el panel se remonta con los
+  // datos viejos de cuando cargó la página). Guarda solo, sin el cartel de
+  // "Guardando/Guardado" para no ser invasivo — el botón sigue sirviendo
+  // para confirmar visualmente que quedó.
+  const isFirstRender = useRef(true)
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    const timer = setTimeout(() => {
+      fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId, carousels: carouselsConfig }),
+      }).catch(() => {})
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [carouselsConfig, storeId])
 
   return (
     <div className="space-y-8">
@@ -222,14 +243,30 @@ function ProductsBlockEditor({
 
   return (
     <div className="space-y-4">
-      <div>
-        <label className="text-xs text-slate-500">Título de la franja</label>
-        <input
-          value={block.title || ""}
-          onChange={(e) => onChange({ title: e.target.value })}
-          placeholder="Ej: Destacados"
-          className="mt-1 w-full max-w-xs rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
-        />
+      <div className="flex flex-wrap gap-6">
+        <div>
+          <label className="text-xs text-slate-500">Título de la franja</label>
+          <input
+            value={block.title || ""}
+            onChange={(e) => onChange({ title: e.target.value })}
+            placeholder="Ej: Destacados"
+            className="mt-1 w-full max-w-xs rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-slate-500">Cuántos se ven a la vez (escritorio)</label>
+          <select
+            value={block.visibleCount || 5}
+            onChange={(e) => onChange({ visibleCount: Number(e.target.value) })}
+            className="mt-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400 bg-white"
+          >
+            {[2, 3, 4, 5, 6].map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div>
