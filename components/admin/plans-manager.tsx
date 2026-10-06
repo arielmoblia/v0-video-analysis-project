@@ -1276,16 +1276,16 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                           aislarla en su propia caja "activa", se muestra como una cosita más
                           dentro del listado general (ver bloque naranja), con un botón que
                           abre directo el selector de modalidades en un solo clic. */}
-                      {/* oferta_destacada entra siempre acá aunque la tienda no tenga fila en
-                          store_purchased_features: es gratis y está activa para todas las
-                          tiendas por diseño (no se compra ni se prueba). */}
-                      {availableFeatures.filter(f => f.is_active && (purchasedFeatures.includes(f.code) || f.code === "oferta_destacada") && f.code !== "clonar_ia_catalogo").length > 0 && (
+                      {/* oferta_destacada y productos_destacados entran siempre acá aunque la
+                          tienda no tenga fila en store_purchased_features: son gratis y están
+                          activas para todas las tiendas por diseño (no se compran ni se prueban). */}
+                      {availableFeatures.filter(f => f.is_active && (purchasedFeatures.includes(f.code) || f.code === "oferta_destacada" || f.code === "productos_destacados") && f.code !== "clonar_ia_catalogo").length > 0 && (
                         <div className="rounded-xl overflow-hidden border-2 border-green-300">
                           <div className="bg-green-100 px-4 py-2.5 flex items-center gap-2 border-b border-green-200">
                             <div className="w-2 h-2 rounded-full bg-green-500"></div>
                             <span className="text-sm font-medium text-green-800">Tus cositas activas</span>
                           </div>
-                          {availableFeatures.filter(f => f.is_active && (purchasedFeatures.includes(f.code) || f.code === "oferta_destacada") && f.code !== "clonar_ia_catalogo").map(feature => {
+                          {availableFeatures.filter(f => f.is_active && (purchasedFeatures.includes(f.code) || f.code === "oferta_destacada" || f.code === "productos_destacados") && f.code !== "clonar_ia_catalogo").map(feature => {
                             const IconComponent = ICON_MAP[feature.icon] || Package
                             const detail = purchasedDetails.find((d: any) => d.feature_code === feature.code)
                             const isTrial = detail?.is_trial && detail?.trial_ends_at
@@ -1542,13 +1542,13 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                       {/* BLOQUE NARANJA: disponibles no compradas (+ clonar_ia_catalogo, que
                           aunque ya esté activa en esta tienda se muestra siempre acá como una
                           cosita más de la lista, con su propio botón directo al selector) */}
-                      {availableFeatures.filter(f => f.is_active && f.code !== "oferta_destacada" && (!purchasedFeatures.includes(f.code) || f.code === "clonar_ia_catalogo")).length > 0 && (
+                      {availableFeatures.filter(f => f.is_active && f.code !== "oferta_destacada" && f.code !== "productos_destacados" && (!purchasedFeatures.includes(f.code) || f.code === "clonar_ia_catalogo")).length > 0 && (
                         <div className="rounded-xl overflow-hidden border-2 border-orange-300">
                           <div className="bg-orange-100 px-4 py-2.5 flex items-center gap-2 border-b border-orange-200">
                             <div className="w-2 h-2 rounded-full bg-orange-500"></div>
                             <span className="text-sm font-medium text-orange-800">Disponibles — probá gratis o comprá</span>
                           </div>
-                          {availableFeatures.filter(f => f.is_active && f.code !== "oferta_destacada" && (!purchasedFeatures.includes(f.code) || f.code === "clonar_ia_catalogo")).map(feature => {
+                          {availableFeatures.filter(f => f.is_active && f.code !== "oferta_destacada" && f.code !== "productos_destacados" && (!purchasedFeatures.includes(f.code) || f.code === "clonar_ia_catalogo")).map(feature => {
                             const IconComponent = ICON_MAP[feature.icon] || Package
                             const hasTrial = (feature.trial_days || 0) > 0
                             const priceARS = getPriceARS(feature.price)
