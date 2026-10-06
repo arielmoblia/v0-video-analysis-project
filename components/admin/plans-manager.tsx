@@ -291,6 +291,7 @@ const LEER_MAS_URLS: Record<string, string> = {
   modelos_templates: `${APP_URL}/plan-cositas/modelos-templates`,
   clonar_ia_catalogo: `${APP_URL}/plan-cositas/clonar-con-ia`,
   oferta_destacada: `${APP_URL}/plan-cositas/oferta-destacada`,
+  productos_destacados: `${APP_URL}/plan-cositas/productos-destacados`,
 }
 
 const getLeerMasUrl = (code: string, subdomain?: string) => {

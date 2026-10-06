@@ -29,6 +29,7 @@ import { StorePagesManager } from "./store-pages-manager"
 import { CustomersManager } from "./customers-manager"
 import { CarouselsManager } from "./carousels-manager"
 import { OfertaDestacadaManager } from "./oferta-destacada-manager"
+import { ProductosDestacadosManager } from "./productos-destacados-manager"
 
 // Prueba aislada: solo esta tienda tiene el asistente de chat en el admin
 const ADMIN_CHAT_SUBDOMAINS = ["prueba3"]
@@ -80,11 +81,17 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const activarFeature = searchParams.get("activar")
-  // "Oferta Destacada" es gratis y ya está activa para todas las tiendas:
-  // el link de activación va directo a su pestaña, no a la caja de pago de
-  // "Cositas" (ahí no existe como feature paga).
+  // "Oferta Destacada" y "Productos Destacados" son gratis y ya están activas
+  // para todas las tiendas: el link de activación va directo a su pestaña, no
+  // a la caja de pago de "Cositas" (ahí no existen como feature paga).
   const [activeTab, setActiveTab] = useState(
-    activarFeature === "oferta_destacada" ? "oferta-destacada" : activarFeature ? "plans" : "settings"
+    activarFeature === "oferta_destacada"
+      ? "oferta-destacada"
+      : activarFeature === "productos_destacados"
+      ? "productos-destacados"
+      : activarFeature
+      ? "plans"
+      : "settings"
   )
   const [plansTab, setPlansTab] = useState("cositas")
   const [purchasedFeatures, setPurchasedFeatures] = useState<string[]>([])
@@ -303,6 +310,7 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
           <div className="px-2 pb-1 border-t border-neutral-200 pt-2">
             {sectionLabel("Cositas activas", "text-green-700")}
             {navActive("oferta_destacada", "oferta-destacada", "Oferta Destacada · Gratis")}
+            {navActive("productos_destacados", "productos-destacados", "Productos Destacados · Gratis")}
             {activeCositas.map(code => navActive(code, FEATURE_TAB[code], FEATURE_NAMES[code]))}
           </div>
 
@@ -432,6 +440,10 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
                 country={store.country}
                 onGoToProducts={() => setActiveTab("products")}
               />
+            </TabsContent>
+
+            <TabsContent value="productos-destacados">
+              <ProductosDestacadosManager storeId={store.id} country={store.country} />
             </TabsContent>
 
             {purchasedFeatures.includes("whatsapp_chat") && (
