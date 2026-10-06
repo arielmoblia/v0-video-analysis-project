@@ -146,12 +146,10 @@ export function MarketingManager({ storeId, subdomain }: MarketingManagerProps) 
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-semibold">Marketing</h2>
-            <VideoTutorialButton title="Cómo usar Marketing" />
-          </div>
+          <h2 className="text-2xl font-semibold">Marketing</h2>
           <p className="text-slate-500">Herramientas para aumentar tus ventas</p>
         </div>
+        <VideoTutorialButton title="Cómo usar Marketing" />
       </div>
 
       <Tabs defaultValue="seo" className="space-y-4">

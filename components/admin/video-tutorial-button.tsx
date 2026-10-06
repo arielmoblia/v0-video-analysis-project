@@ -16,12 +16,14 @@ export function VideoTutorialButton({ title, youtubeId }: VideoTutorialButtonPro
 
   if (!youtubeId) {
     return (
-      <span
-        title="Video tutorial: próximamente"
-        className="inline-flex items-center justify-center h-7 w-7 rounded-full border border-dashed border-muted-foreground/40 text-muted-foreground/40 cursor-not-allowed shrink-0"
-      >
-        <PlayCircle className="h-4 w-4" />
-      </span>
+      <div className="flex flex-col items-center gap-1 w-28 shrink-0">
+        <span className="text-[11px] text-muted-foreground/50 text-center leading-tight">
+          Video: próximamente
+        </span>
+        <div className="w-full aspect-video rounded-md border border-dashed border-muted-foreground/30 bg-muted/20 flex items-center justify-center">
+          <PlayCircle className="h-5 w-5 text-muted-foreground/30" />
+        </div>
+      </div>
     )
   }
 
@@ -31,9 +33,21 @@ export function VideoTutorialButton({ title, youtubeId }: VideoTutorialButtonPro
         type="button"
         onClick={() => setOpen(true)}
         title={`Video tutorial: ${title}`}
-        className="inline-flex items-center justify-center h-7 w-7 rounded-full border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors shrink-0"
+        className="flex flex-col items-center gap-1 w-28 shrink-0 group"
       >
-        <PlayCircle className="h-4 w-4" />
+        <span className="text-[11px] text-muted-foreground group-hover:text-foreground text-center leading-tight line-clamp-1 transition-colors">
+          {title}
+        </span>
+        <div className="relative w-full aspect-video rounded-md overflow-hidden border group-hover:border-foreground transition-colors">
+          <img
+            src={`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`}
+            alt={title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/25 group-hover:bg-black/35 transition-colors">
+            <PlayCircle className="h-6 w-6 text-white drop-shadow" />
+          </div>
+        </div>
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl">

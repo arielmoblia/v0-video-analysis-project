@@ -249,12 +249,10 @@ export function PaymentsManager({ storeId }: PaymentsManagerProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-semibold">Cobros</h2>
-            <VideoTutorialButton title="Cómo configurar Cobros" />
-          </div>
+          <h2 className="text-2xl font-semibold">Cobros</h2>
           <p className="text-muted-foreground">Métodos de cobro para tus clientes</p>
         </div>
+        <VideoTutorialButton title="Cómo configurar Cobros" />
       </div>
 
       <Tabs defaultValue="tienda" className="w-full">

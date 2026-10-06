@@ -691,7 +691,7 @@ export function OrdersManager({ storeId, storeName = "Tienda", isDropship = fals
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-light tracking-wide">Pedidos</h2>
         <VideoTutorialButton title="Cómo gestionar Pedidos" />
       </div>

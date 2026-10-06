@@ -250,20 +250,20 @@ export function ShippingManager({ storeId }: ShippingManagerProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-bold tracking-tight">Métodos de Envío</h2>
-            <VideoTutorialButton title="Cómo configurar Métodos de Envío" />
-          </div>
+          <h2 className="text-2xl font-bold tracking-tight">Métodos de Envío</h2>
           <p className="text-muted-foreground">Configurá cómo tus clientes reciben sus pedidos</p>
         </div>
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          ) : saved ? (
-            <Check className="h-4 w-4 mr-2" />
-          ) : null}
-          {saved ? "Guardado" : "Guardar Cambios"}
-        </Button>
+        <div className="flex items-center gap-4">
+          <VideoTutorialButton title="Cómo configurar Métodos de Envío" />
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : saved ? (
+              <Check className="h-4 w-4 mr-2" />
+            ) : null}
+            {saved ? "Guardado" : "Guardar Cambios"}
+          </Button>
+        </div>
       </div>
 
       {/* Retiro en Local */}

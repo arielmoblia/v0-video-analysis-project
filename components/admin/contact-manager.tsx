@@ -201,19 +201,19 @@ export function ContactManager({ storeId, subdomain, storeName }: ContactManager
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-bold">Contacto</h2>
-            <VideoTutorialButton title="Cómo usar Contacto" />
-          </div>
+          <h2 className="text-2xl font-bold">Contacto</h2>
           <p className="text-muted-foreground">Gestiona los mensajes y la informacion de contacto de tu tienda</p>
         </div>
-        <div className="flex gap-2">
-          {unreadCount > 0 && (
-            <Badge variant="destructive">{unreadCount} sin leer</Badge>
-          )}
-          {pendingCount > 0 && (
-            <Badge variant="outline">{pendingCount} sin responder</Badge>
-          )}
+        <div className="flex items-center gap-4">
+          <VideoTutorialButton title="Cómo usar Contacto" />
+          <div className="flex gap-2">
+            {unreadCount > 0 && (
+              <Badge variant="destructive">{unreadCount} sin leer</Badge>
+            )}
+            {pendingCount > 0 && (
+              <Badge variant="outline">{pendingCount} sin responder</Badge>
+            )}
+          </div>
         </div>
       </div>
 

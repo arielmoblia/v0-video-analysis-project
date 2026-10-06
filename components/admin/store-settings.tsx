@@ -273,16 +273,16 @@ export function StoreSettings({ store }: StoreSettingsProps) {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <h2 className="text-2xl font-light tracking-wide">Ajustes</h2>
+        <h2 className="text-2xl font-light tracking-wide">Ajustes</h2>
+        <div className="flex items-center gap-4">
           <VideoTutorialButton title="Cómo configurar los Ajustes" youtubeId="FuL0gFwu49M" />
+          <Button
+            onClick={handleSaveAll}
+            disabled={saving || subdomainStatus === "checking" || subdomainStatus === "invalid" || subdomainStatus === "taken"}
+          >
+            {saving ? "Guardando..." : "Guardar todos los cambios"}
+          </Button>
         </div>
-        <Button
-          onClick={handleSaveAll}
-          disabled={saving || subdomainStatus === "checking" || subdomainStatus === "invalid" || subdomainStatus === "taken"}
-        >
-          {saving ? "Guardando..." : "Guardar todos los cambios"}
-        </Button>
       </div>
 
       {message && (

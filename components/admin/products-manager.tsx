@@ -426,10 +426,9 @@ export function ProductsManager({ storeId, template = "default", customVariants,
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <h2 className="text-2xl font-light tracking-wide">Productos</h2>
-          <VideoTutorialButton title="Cómo usar Productos" />
-        </div>
+        <h2 className="text-2xl font-light tracking-wide">Productos</h2>
+        <div className="flex items-center gap-4">
+        <VideoTutorialButton title="Cómo usar Productos" />
         <div className="flex gap-2">
           {hasCsvImportFeature && (
             <Button
@@ -650,6 +649,7 @@ export function ProductsManager({ storeId, template = "default", customVariants,
               </form>
             </DialogContent>
           </Dialog>
+        </div>
         </div>
       </div>
 

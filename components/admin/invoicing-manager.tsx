@@ -115,14 +115,14 @@ export function InvoicingManager({ storeId, subdomain }: InvoicingManagerProps) 
 
   return (
     <div className="space-y-8 max-w-3xl">
-      <div>
-        <div className="flex items-center gap-2">
+      <div className="flex items-start justify-between gap-4">
+        <div>
           <h1 className="text-4xl font-bold tracking-tight">Facturación electrónica</h1>
-          <VideoTutorialButton title="Cómo usar Facturación electrónica" />
+          <p className="text-xl text-muted-foreground mt-2">
+            Facturás con tu propio certificado, a tu nombre y con tu CUIT — igual que cuando facturás a mano, solo que el sistema lo hace automático por vos. tol.ar no queda como representante tuyo ante ARCA.
+          </p>
         </div>
-        <p className="text-xl text-muted-foreground mt-2">
-          Facturás con tu propio certificado, a tu nombre y con tu CUIT — igual que cuando facturás a mano, solo que el sistema lo hace automático por vos. tol.ar no queda como representante tuyo ante ARCA.
-        </p>
+        <VideoTutorialButton title="Cómo usar Facturación electrónica" />
       </div>
 
       <div className="rounded-lg bg-slate-50 px-4 py-3 flex items-center justify-between">

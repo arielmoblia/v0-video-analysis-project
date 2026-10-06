@@ -111,10 +111,9 @@ export function CategoriesManager({ storeId }: CategoriesManagerProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <h2 className="text-2xl font-light tracking-wide">Categorías</h2>
-          <VideoTutorialButton title="Cómo usar Categorías" />
-        </div>
+        <h2 className="text-2xl font-light tracking-wide">Categorías</h2>
+        <div className="flex items-center gap-4">
+        <VideoTutorialButton title="Cómo usar Categorías" />
         <Dialog
           open={dialogOpen}
           onOpenChange={(open) => {
@@ -144,6 +143,7 @@ export function CategoriesManager({ storeId }: CategoriesManagerProps) {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {categories.length === 0 ? (
