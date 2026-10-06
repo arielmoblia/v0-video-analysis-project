@@ -15,13 +15,16 @@ interface ProductLite {
 interface ProductosDestacadosManagerProps {
   storeId: string
   country?: string | null
+  compact?: boolean
 }
 
 // Cosita gratis: usa la misma estrella de Productos ("destacar en el inicio"),
 // pero acá se puede tildar varios de una, sin ir fila por fila en el listado
 // general. Todo producto tildado entra a la grilla "Productos Destacados" del
 // inicio de la tienda.
-export function ProductosDestacadosManager({ storeId, country }: ProductosDestacadosManagerProps) {
+// compact=true: embebido dentro del acordeón de "Tus cositas activas", sin
+// repetir el título grande (ya lo muestra la fila del acordeón).
+export function ProductosDestacadosManager({ storeId, country, compact }: ProductosDestacadosManagerProps) {
   const [products, setProducts] = useState<ProductLite[]>([])
   const [loading, setLoading] = useState(true)
   const [savingId, setSavingId] = useState<string | null>(null)
@@ -65,16 +68,18 @@ export function ProductosDestacadosManager({ storeId, country }: ProductosDestac
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight">Productos Destacados</h1>
-          <p className="text-xl text-muted-foreground mt-2">
-            Gratis. Los productos que tildes acá aparecen en una grilla aparte en el inicio de tu tienda, debajo de
-            las demás secciones.
-          </p>
+      {!compact && (
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight">Productos Destacados</h1>
+            <p className="text-xl text-muted-foreground mt-2">
+              Gratis. Los productos que tildes acá aparecen en una grilla aparte en el inicio de tu tienda, debajo de
+              las demás secciones.
+            </p>
+          </div>
+          <VideoTutorialButton title="Cómo usar Productos Destacados" />
         </div>
-        <VideoTutorialButton title="Cómo usar Productos Destacados" />
-      </div>
+      )}
 
       {loading ? (
         <p className="text-sm text-slate-400 italic">Cargando...</p>

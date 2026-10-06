@@ -53,6 +53,8 @@ import {
 import CustomVariantsManager from "./custom-variants-manager" // Import CustomVariantsManager
 import { DolarManager } from "./dolar-manager"
 import { MultiImageUpload } from "./multi-image-upload"
+import { OfertaDestacadaManager } from "./oferta-destacada-manager"
+import { ProductosDestacadosManager } from "./productos-destacados-manager"
 
 const PAYPAL_CLIENT_ID = "ASYvylVa8L7Qf57IKodIEIYd6BalypfW9TGuFkanCnaCR55rP-B-XRemN1FcVLcx0Aii2DIKDtr68RSA"
 
@@ -60,6 +62,7 @@ interface PlansManagerProps {
   storeId: string
   storeName?: string
   subdomain?: string
+  country?: string | null
   initialCustomDomain?: string | null
   initialLinkedStoreUrl?: string | null
   initialLinkedStoreLabel?: string | null
@@ -299,7 +302,7 @@ const getLeerMasUrl = (code: string, subdomain?: string) => {
   return subdomain ? `${base}?tienda=${subdomain}` : base
 }
 
-export function PlansManager({ storeId, storeName, subdomain, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialSliderImages, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts, onGoToCarousels, autoSelectFeature }: PlansManagerProps) {
+export function PlansManager({ storeId, storeName, subdomain, country, initialCustomDomain, initialLinkedStoreUrl, initialLinkedStoreLabel, initialActiveTheme, initialSliderImages, activeTab: controlledActiveTab, onActiveTabChange, onGoToProducts, onGoToCarousels, autoSelectFeature }: PlansManagerProps) {
   const [internalActiveTab, setInternalActiveTab] = useState("cositas")
   const activeTab = controlledActiveTab ?? internalActiveTab
   const setActiveTab = onActiveTabChange ?? setInternalActiveTab
@@ -1521,6 +1524,21 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                     )}
                                   </div>
                                 )}
+                                {expandedFeatures.has(feature.code) && feature.code === "oferta_destacada" && (
+                                  <div className="px-4 pb-4 pt-1">
+                                    <OfertaDestacadaManager
+                                      storeId={storeId}
+                                      country={country}
+                                      onGoToProducts={onGoToProducts}
+                                      compact
+                                    />
+                                  </div>
+                                )}
+                                {expandedFeatures.has(feature.code) && feature.code === "productos_destacados" && (
+                                  <div className="px-4 pb-4 pt-1">
+                                    <ProductosDestacadosManager storeId={storeId} country={country} compact />
+                                  </div>
+                                )}
                                 {expandedFeatures.has(feature.code) &&
                                   feature.code !== "modelos_templates" &&
                                   feature.code !== "mayorista_minorista" &&
@@ -1528,7 +1546,9 @@ export function PlansManager({ storeId, storeName, subdomain, initialCustomDomai
                                   feature.code !== "carousels" &&
                                   feature.code !== "banner_deslizante" &&
                                   feature.code !== "clonar_ia_catalogo" &&
-                                  feature.code !== "dolar_peso" && (
+                                  feature.code !== "dolar_peso" &&
+                                  feature.code !== "oferta_destacada" &&
+                                  feature.code !== "productos_destacados" && (
                                     <div className="px-4 pb-4 pt-1">
                                       <p className="text-xs text-green-700">{feature.description}</p>
                                     </div>

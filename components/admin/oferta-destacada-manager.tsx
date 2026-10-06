@@ -16,12 +16,15 @@ interface OfertaDestacadaManagerProps {
   storeId: string
   country?: string | null
   onGoToProducts?: () => void
+  compact?: boolean
 }
 
 // Cosita gratis: no tiene selección propia. Muestra siempre el mismo
 // producto marcado con la estrella ("destacar en el inicio") en Productos,
 // para que no haya dos lugares distintos elegiendo qué aparece en el inicio.
-export function OfertaDestacadaManager({ storeId, country, onGoToProducts }: OfertaDestacadaManagerProps) {
+// compact=true: embebido dentro del acordeón de "Tus cositas activas", sin
+// repetir el título grande (ya lo muestra la fila del acordeón).
+export function OfertaDestacadaManager({ storeId, country, onGoToProducts, compact }: OfertaDestacadaManagerProps) {
   const [products, setProducts] = useState<ProductLite[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -47,16 +50,18 @@ export function OfertaDestacadaManager({ storeId, country, onGoToProducts }: Ofe
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight">Oferta Destacada</h1>
-          <p className="text-xl text-muted-foreground mt-2">
-            Gratis. Muestra completo (galería de fotos, precio y botón de compra) en un lugar fijo del inicio de tu
-            tienda el mismo producto que marques con la estrella en Productos.
-          </p>
+      {!compact && (
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight">Oferta Destacada</h1>
+            <p className="text-xl text-muted-foreground mt-2">
+              Gratis. Muestra completo (galería de fotos, precio y botón de compra) en un lugar fijo del inicio de tu
+              tienda el mismo producto que marques con la estrella en Productos.
+            </p>
+          </div>
+          <VideoTutorialButton title="Cómo usar Oferta Destacada" />
         </div>
-        <VideoTutorialButton title="Cómo usar Oferta Destacada" />
-      </div>
+      )}
 
       {loading ? (
         <p className="text-sm text-slate-400 italic">Cargando...</p>

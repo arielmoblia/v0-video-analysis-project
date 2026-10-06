@@ -465,6 +465,7 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
                 storeId={store.id}
                 storeName={store.site_title}
                 subdomain={subdomain}
+                country={store.country}
                 initialCustomDomain={store.custom_domain}
                 initialLinkedStoreUrl={store.linked_store_url}
                 initialLinkedStoreLabel={store.linked_store_label}
