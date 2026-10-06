@@ -9,6 +9,7 @@ import { ProductGrid } from "@/components/store/product-grid"
 import { StoreFooter } from "@/components/store/store-footer"
 import { EditableInline } from "@/components/store/editable-inline"
 import { StoreCarousels } from "@/components/store/store-carousels"
+import { OfertaDestacadaSection } from "@/components/store/oferta-destacada-section"
 
 interface StoreBasicoLiveProps {
   store: Store
@@ -100,6 +101,12 @@ export function StoreBasicoLive({
           country={store.country}
           whatsapp={store.social_whatsapp}
           instagram={store.social_instagram}
+        />
+
+        <OfertaDestacadaSection
+          product={featuredProducts[0] || null}
+          subdomain={subdomain}
+          country={store.country}
         />
 
         {featuredProducts.length > 0 && (

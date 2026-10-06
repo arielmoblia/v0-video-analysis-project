@@ -10,6 +10,7 @@ import { PromoBarLuxury } from "@/components/store/promo-bar-luxury"
 import { CategoryShowcaseLuxuryEditable } from "@/components/store/category-showcase-luxury-editable"
 import { ProductGridLuxury } from "@/components/store/product-grid-luxury"
 import { StoreCarousels } from "@/components/store/store-carousels"
+import { OfertaDestacadaSection } from "@/components/store/oferta-destacada-section"
 import { BenefitsBannerLuxury } from "@/components/store/benefits-banner-luxury"
 import { TestimonialsLuxury } from "@/components/store/testimonials-luxury"
 import { StoreFooterLuxury } from "@/components/store/store-footer-luxury"
@@ -121,6 +122,12 @@ export function StoreLuxuryLive({
           country={store.country}
           whatsapp={store.social_whatsapp}
           instagram={store.social_instagram}
+        />
+
+        <OfertaDestacadaSection
+          product={featuredProducts[0] || null}
+          subdomain={subdomain}
+          country={store.country}
         />
 
         {featuredProducts.length > 0 && (

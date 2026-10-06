@@ -9,6 +9,7 @@ import { StoreHeroBlinggEditable } from "@/components/store/store-hero-blingg-ed
 import { CategoryShowcaseBlinggEditable } from "@/components/store/category-showcase-blingg-editable"
 import { ProductGridBlingg } from "@/components/store/product-grid-blingg"
 import { StoreCarousels } from "@/components/store/store-carousels"
+import { OfertaDestacadaSection } from "@/components/store/oferta-destacada-section"
 import { StoreFooter } from "@/components/store/store-footer"
 import { EditableInline } from "@/components/store/editable-inline"
 import { blinggBody, blinggHeading } from "@/lib/fonts/blingg"
@@ -153,6 +154,12 @@ export function StoreBlinggLive({
           country={store.country}
           whatsapp={store.social_whatsapp}
           instagram={store.social_instagram}
+        />
+
+        <OfertaDestacadaSection
+          product={featuredProducts[0] || null}
+          subdomain={subdomain}
+          country={store.country}
         />
 
         {featuredProducts.length > 0 && (

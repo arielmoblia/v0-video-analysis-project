@@ -10,6 +10,7 @@ import { ImageSliderBanner } from "@/components/store/image-slider-banner"
 import { ProductGrid } from "@/components/store/product-grid"
 import { StoreFooter } from "@/components/store/store-footer"
 import { StoreCarousels } from "@/components/store/store-carousels"
+import { OfertaDestacadaSection } from "@/components/store/oferta-destacada-section"
 import { MultiImageUpload } from "@/components/admin/multi-image-upload"
 import type { StorePage } from "@/lib/services/store-pages"
 
@@ -107,6 +108,12 @@ export function StoreDefaultLive({
           country={store.country}
           whatsapp={store.social_whatsapp}
           instagram={store.social_instagram}
+        />
+
+        <OfertaDestacadaSection
+          product={featuredProducts[0] || null}
+          subdomain={subdomain}
+          country={store.country}
         />
 
         {featuredProducts.length > 0 && (

@@ -80,7 +80,12 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const activarFeature = searchParams.get("activar")
-  const [activeTab, setActiveTab] = useState(activarFeature ? "plans" : "settings")
+  // "Oferta Destacada" es gratis y ya está activa para todas las tiendas:
+  // el link de activación va directo a su pestaña, no a la caja de pago de
+  // "Cositas" (ahí no existe como feature paga).
+  const [activeTab, setActiveTab] = useState(
+    activarFeature === "oferta_destacada" ? "oferta-destacada" : activarFeature ? "plans" : "settings"
+  )
   const [plansTab, setPlansTab] = useState("cositas")
   const [purchasedFeatures, setPurchasedFeatures] = useState<string[]>([])
   const [trialFeatures, setTrialFeatures] = useState<{ code: string; daysLeft: number }[]>([])
@@ -166,12 +171,6 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
     })
     router.refresh()
   }
-
-  // Solo tiene sentido para tiendas con "Clonado de Index" activo (hoy
-  // prueba99): es el único caso donde la sección "Destacados" normal ya no
-  // sirve para elegir qué se muestra arriba, porque viene fija del HTML
-  // clonado del sitio de referencia.
-  const hasClonedIndex = !!store.plan_features?.cloned_index?.active
 
   const trialCodes = trialFeatures.map(t => t.code)
   // clonar_ia_catalogo queda afuera de la sidebar a propósito: ya se ve como
@@ -278,7 +277,6 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
             {navGratis("contacto", "Contacto")}
             {navGratis("marketing", "Marketing")}
             {navGratis("facturacion", "Facturación electrónica")}
-            {hasClonedIndex && navGratis("oferta-destacada", "Oferta Destacada")}
           </div>
 
           <div className="px-2 pb-2 border-t border-neutral-200 pt-3">
@@ -302,12 +300,11 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
             </a>
           </div>
 
-          {activeCositas.length > 0 && (
-            <div className="px-2 pb-1 border-t border-neutral-200 pt-2">
-              {sectionLabel("Cositas activas", "text-green-700")}
-              {activeCositas.map(code => navActive(code, FEATURE_TAB[code], FEATURE_NAMES[code]))}
-            </div>
-          )}
+          <div className="px-2 pb-1 border-t border-neutral-200 pt-2">
+            {sectionLabel("Cositas activas", "text-green-700")}
+            {navActive("oferta_destacada", "oferta-destacada", "Oferta Destacada · Gratis")}
+            {activeCositas.map(code => navActive(code, FEATURE_TAB[code], FEATURE_NAMES[code]))}
+          </div>
 
           {trialFeatures.length > 0 && (
             <div className="px-2 pb-1 border-t border-neutral-200 pt-2">
@@ -429,15 +426,13 @@ export function AdminDashboard({ store, subdomain }: AdminDashboardProps) {
               )}
             </TabsContent>
 
-            {hasClonedIndex && (
-              <TabsContent value="oferta-destacada">
-                <OfertaDestacadaManager
-                  storeId={store.id}
-                  country={store.country}
-                  initialProductIds={store.plan_features?.oferta_destacada || []}
-                />
-              </TabsContent>
-            )}
+            <TabsContent value="oferta-destacada">
+              <OfertaDestacadaManager
+                storeId={store.id}
+                country={store.country}
+                onGoToProducts={() => setActiveTab("products")}
+              />
+            </TabsContent>
 
             {purchasedFeatures.includes("whatsapp_chat") && (
               <TabsContent value="whatsapp">

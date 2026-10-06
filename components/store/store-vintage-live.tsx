@@ -9,6 +9,7 @@ import { FeaturesVintage } from "@/components/store/features-vintage"
 import { CategoryShowcaseVintageEditable } from "@/components/store/category-showcase-vintage-editable"
 import { ProductGridVintage } from "@/components/store/product-grid-vintage"
 import { StoreCarousels } from "@/components/store/store-carousels"
+import { OfertaDestacadaSection } from "@/components/store/oferta-destacada-section"
 import { TestimonialsVintage } from "@/components/store/testimonials-vintage"
 import { StoreFooterVintage } from "@/components/store/store-footer-vintage"
 import { vintageBody, vintageHeading } from "@/lib/fonts/vintage"
@@ -114,6 +115,12 @@ export function StoreVintageLive({
           country={store.country}
           whatsapp={store.social_whatsapp}
           instagram={store.social_instagram}
+        />
+
+        <OfertaDestacadaSection
+          product={featuredProducts[0] || null}
+          subdomain={subdomain}
+          country={store.country}
         />
 
         {featuredProducts.length > 0 && (

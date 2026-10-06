@@ -8,6 +8,7 @@ import { StoreHeroMinimalEditable } from "@/components/store/store-hero-minimal-
 import { CategoryShowcaseMinimalEditable } from "@/components/store/category-showcase-minimal-editable"
 import { ProductGridMinimal } from "@/components/store/product-grid-minimal"
 import { StoreCarousels } from "@/components/store/store-carousels"
+import { OfertaDestacadaSection } from "@/components/store/oferta-destacada-section"
 import { StoreFooterMinimal } from "@/components/store/store-footer-minimal"
 import { minimalBody } from "@/lib/fonts/minimal"
 
@@ -104,6 +105,12 @@ export function StoreMinimalLive({
           country={store.country}
           whatsapp={store.social_whatsapp}
           instagram={store.social_instagram}
+        />
+
+        <OfertaDestacadaSection
+          product={featuredProducts[0] || null}
+          subdomain={subdomain}
+          country={store.country}
         />
 
         {featuredProducts.length > 0 && (

@@ -9,6 +9,7 @@ import { BrandStripArtesano } from "@/components/store/brand-strip-artesano"
 import { CategoryShowcaseArtesanoEditable } from "@/components/store/category-showcase-artesano-editable"
 import { ProductGridArtesano } from "@/components/store/product-grid-artesano"
 import { StoreCarousels } from "@/components/store/store-carousels"
+import { OfertaDestacadaSection } from "@/components/store/oferta-destacada-section"
 import { BenefitsBannerArtesano } from "@/components/store/benefits-banner-artesano"
 import { StoreFooterArtesano } from "@/components/store/store-footer-artesano"
 import { artesanoBody, artesanoHeading } from "@/lib/fonts/artesano"
@@ -132,6 +133,12 @@ export function StoreArtesanoLive({
           country={store.country}
           whatsapp={store.social_whatsapp}
           instagram={store.social_instagram}
+        />
+
+        <OfertaDestacadaSection
+          product={featuredProducts[0] || null}
+          subdomain={subdomain}
+          country={store.country}
         />
 
         {featuredProducts.length > 0 && (

@@ -238,8 +238,9 @@ export function StoreClonedIndexLive({
     setOtherCarouselTargets(targets)
   }, [cloned.html, products, productBlocks])
 
-  // "Oferta Destacada": 1 producto elegido a mano (panel propio en el admin,
-  // distinto de la estrella) mostrado completo (galería, precio con
+  // "Oferta Destacada" (Cosita gratis): el producto marcado con la estrella
+  // en Productos (mismo criterio que todos los demás temples, ver
+  // oferta-destacada-section.tsx) mostrado completo (galería, precio con
   // descuento, botón) en el mismo lugar y con el mismo formato que tenía la
   // idea original de Pink (pinkonlineoficial.com.ar): después de la franja
   // "¿No encontraste lo que buscás?" (clase real del tema TiendaNube clonado,
@@ -767,7 +768,13 @@ export function StoreClonedIndexLive({
       } catch {
         return
       }
-      if (url.hostname !== window.location.hostname) {
+      // Los links a wa.me/redes que el clonado reescribió a propósito (ver
+      // clone-store.ts) ya vienen con target="_blank" — bloquearlos acá
+      // también rompía el WhatsApp real del menú/footer/botón flotante
+      // (bug real visto en pinkonlineoficial.tol.ar: el href era correcto
+      // pero el click nunca navegaba). Cualquier otro link externo que haya
+      // quedado sin reescribir no tiene target="_blank" y sigue bloqueado.
+      if (url.hostname !== window.location.hostname && link.target !== "_blank") {
         e.preventDefault()
         e.stopPropagation()
       }

@@ -8,6 +8,7 @@ import { StoreHeroEleganteEditable } from "@/components/store/store-hero-elegant
 import { CategoryShowcaseEleganteEditable } from "@/components/store/category-showcase-elegante-editable"
 import { ProductGridElegante } from "@/components/store/product-grid-elegante"
 import { StoreCarousels } from "@/components/store/store-carousels"
+import { OfertaDestacadaSection } from "@/components/store/oferta-destacada-section"
 import { StoreFooter } from "@/components/store/store-footer"
 
 interface StoreEleganteLiveProps {
@@ -118,6 +119,12 @@ export function StoreEleganteLive({
           country={store.country}
           whatsapp={store.social_whatsapp}
           instagram={store.social_instagram}
+        />
+
+        <OfertaDestacadaSection
+          product={featuredProducts[0] || null}
+          subdomain={subdomain}
+          country={store.country}
         />
 
         {featuredProducts.length > 0 && (

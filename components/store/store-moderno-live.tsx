@@ -8,6 +8,7 @@ import { StoreHeroModernEditable } from "@/components/store/store-hero-modern-ed
 import { CategoryShowcaseModernEditable } from "@/components/store/category-showcase-modern-editable"
 import { ProductGridModern } from "@/components/store/product-grid-modern"
 import { StoreCarousels } from "@/components/store/store-carousels"
+import { OfertaDestacadaSection } from "@/components/store/oferta-destacada-section"
 import { StoreFooter } from "@/components/store/store-footer"
 import { EditableText, useStorePageContent } from "@/components/editable-text"
 import type { StorePage } from "@/lib/services/store-pages"
@@ -119,6 +120,12 @@ export function StoreModernoLive({
           country={store.country}
           whatsapp={store.social_whatsapp}
           instagram={store.social_instagram}
+        />
+
+        <OfertaDestacadaSection
+          product={featuredProducts[0] || null}
+          subdomain={subdomain}
+          country={store.country}
         />
 
         {featuredProducts.length > 0 && (
