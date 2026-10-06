@@ -95,7 +95,7 @@ async function isNoindex(pathname: string): Promise<boolean> {
 
 
 // Dominios raíz que NO son subdominios de tienda
-const ROOT_DOMAINS = ['tol.ar', 'www.tol.ar', 'localhost', '157.173.212.229', '3003.tol.ar', 'prueba.tol.ar']
+const ROOT_DOMAINS = ['tol.ar', 'www.tol.ar', 'localhost', '157.173.212.229', '3003.tol.ar']
 
 // CORS para llamadas de seo.tol.ar a los endpoints de administración de acá
 // (dev). Antes seo-contenido le pegaba directo a la IP por http:// y el
