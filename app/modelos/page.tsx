@@ -73,6 +73,13 @@ const ESTILOS = [
     image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&q=80",
     accent: "#6EC1E4",
   },
+  {
+    slug: "diani",
+    nombre: "Minimalista",
+    descripcion: "Blanco total, una sola tipografía y cero color de acento. El #10, editorial y silencioso.",
+    image: "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=600&q=80",
+    accent: "#111111",
+  },
 ]
 
 export default function ModelosPage() {

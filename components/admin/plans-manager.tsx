@@ -164,6 +164,15 @@ const pageDesigns = [
     previewUrl: "/disenio-preview/vintage",
     comingSoon: false,
   },
+  {
+    id: "diani",
+    name: "Minimalista",
+    subtitle: "Estilo editorial",
+    description: "Blanco total, una sola tipografía fina y cero color de acento: solo las fotos de tus productos hablan.",
+    image: "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=800&q=80",
+    previewUrl: "/disenio-preview/diani",
+    comingSoon: false,
+  },
 ]
 
 interface DbFeature {

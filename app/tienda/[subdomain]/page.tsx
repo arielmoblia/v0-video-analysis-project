@@ -12,6 +12,7 @@ import { StoreBlinggLive } from "@/components/store/store-blingg-live"
 import { StoreArtesanoLive } from "@/components/store/store-artesano-live"
 import { StoreLuxuryLive } from "@/components/store/store-luxury-live"
 import { StoreMinimalLive } from "@/components/store/store-minimal-live"
+import { StoreDianiLive } from "@/components/store/store-diani-live"
 import { StoreVintageLive } from "@/components/store/store-vintage-live"
 import { StoreBasicoLive } from "@/components/store/store-basico-live"
 import { StoreDefaultLive } from "@/components/store/store-default-live"
@@ -284,6 +285,23 @@ export default async function StorePage({ params }: StorePageProps) {
         exchangeRate={exchangeRate}
         isOwner={isOwner}
         initialCategoryImages={initialCategoryImages}
+      />
+    )
+  }
+
+  if (activeTheme === "diani") {
+    const cookieStore = await cookies()
+    const isOwner = cookieStore.get(`admin_${subdomain.toLowerCase()}`)?.value === "true"
+
+    return (
+      <StoreDianiLive
+        store={store}
+        categories={categories}
+        products={products}
+        featuredProducts={featuredProducts}
+        subdomain={subdomain}
+        exchangeRate={exchangeRate}
+        isOwner={isOwner}
       />
     )
   }
