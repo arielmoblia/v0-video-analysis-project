@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/dialog"
 import { ImageUpload } from "./image-upload"
 import { MinorConsentStatus } from "./minor-consent-status"
-import { Instagram, Facebook, Youtube, AlertTriangle, Eye, EyeOff, PlayCircle } from "lucide-react"
+import { VideoTutorialButton } from "./video-tutorial-button"
+import { Instagram, Facebook, Youtube, AlertTriangle, Eye, EyeOff } from "lucide-react"
 import type { Store } from "@/lib/store-context"
 
 interface StoreSettingsProps {
@@ -272,7 +273,10 @@ export function StoreSettings({ store }: StoreSettingsProps) {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-light tracking-wide">Ajustes</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-light tracking-wide">Ajustes</h2>
+          <VideoTutorialButton title="Cómo configurar los Ajustes" youtubeId="FuL0gFwu49M" />
+        </div>
         <Button
           onClick={handleSaveAll}
           disabled={saving || subdomainStatus === "checking" || subdomainStatus === "invalid" || subdomainStatus === "taken"}
@@ -284,27 +288,6 @@ export function StoreSettings({ store }: StoreSettingsProps) {
       {message && (
         <p className={`text-sm ${message.includes("Error") ? "text-red-500" : "text-green-500"}`}>{message}</p>
       )}
-
-      {/* Video Tutorial */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <PlayCircle className="h-4 w-4" /> Video Tutorial - Cómo configurar los Ajustes
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="aspect-video rounded-lg overflow-hidden border max-w-xl">
-            <iframe
-              width="100%"
-              height="100%"
-              src="https://www.youtube.com/embed/FuL0gFwu49M"
-              title="Cómo configurar los Ajustes de tu tienda online"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Información básica */}
       <Card>
