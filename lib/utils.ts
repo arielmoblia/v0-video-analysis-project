@@ -10,6 +10,13 @@ export function seoClean(text: string): string {
   return text.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').replace(/\s+/g, ' ').trim()
 }
 
+// Agrega protocolo si falta, para que un link externo cargado sin "http(s)://"
+// no se interprete como ruta relativa del dominio actual (ej: AFIP data fiscal).
+export function withProtocol(url: string): string {
+  const trimmed = url.trim()
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+}
+
 // Extrae el primer párrafo útil de una descripción de producto para usar como meta description.
 // Evita líneas que arrancan con especificaciones técnicas (Medidas:, Peso:, etc.).
 export function seoDesc(raw: string, maxLen = 155): string {

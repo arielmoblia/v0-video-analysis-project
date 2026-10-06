@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import type { Store, Category } from "@/lib/store-context"
+import { withProtocol } from "@/lib/utils"
 import { Instagram, Facebook, Youtube, MapPin, Mail, Phone } from "lucide-react"
 import Link from "next/link"
 import { ContactModal } from "./contact-modal"
@@ -133,7 +134,7 @@ export function StoreFooterVintage({ store, categories, subdomain }: StoreFooter
             {store.data_fiscal_url && (
               store.data_fiscal_link_url ? (
                 <a
-                  href={store.data_fiscal_link_url}
+                  href={withProtocol(store.data_fiscal_link_url)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-4 inline-block"
