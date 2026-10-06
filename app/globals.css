@@ -123,3 +123,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Fuera de @layer a propósito: el preflight de Tailwind (dentro de @layer base)
+   fuerza display:block en todo <img>, pero el footer clonado de TiendaNube
+   (header/footer servidos crudos en .tol-cloned-index, ver
+   components/store/store-cloned-chrome-live.tsx) depende de que esos <img> se
+   comporten como el navegador los pone por defecto (inline) para que los logos
+   de medios de pago/envío queden en una sola fila dentro de su <span
+   class="d-inline-block">, tal como en el sitio de origen — bug real visto en
+   pinkonlineoficial.tol.ar: se apilaban uno por línea. Al quedar sin capa, esta
+   regla gana por encima del preflight sin importar el orden de carga del CSS.
+   Una capa tiene siempre menor prioridad que una regla sin capa. */
+.tol-cloned-index .footer-payments-shipping-container img {
+  display: inline-block;
+}
