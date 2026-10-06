@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ExternalLink, CheckCircle2, Upload } from "lucide-react"
+import { VideoTutorialButton } from "./video-tutorial-button"
 
 interface InvoicingManagerProps {
   storeId: string
@@ -115,7 +116,10 @@ export function InvoicingManager({ storeId, subdomain }: InvoicingManagerProps) 
   return (
     <div className="space-y-8 max-w-3xl">
       <div>
-        <h1 className="text-4xl font-bold tracking-tight">Facturación electrónica</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-4xl font-bold tracking-tight">Facturación electrónica</h1>
+          <VideoTutorialButton title="Cómo usar Facturación electrónica" />
+        </div>
         <p className="text-xl text-muted-foreground mt-2">
           Facturás con tu propio certificado, a tu nombre y con tu CUIT — igual que cuando facturás a mano, solo que el sistema lo hace automático por vos. tol.ar no queda como representante tuyo ante ARCA.
         </p>

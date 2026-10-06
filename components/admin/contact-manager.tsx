@@ -26,6 +26,7 @@ import {
   Eye
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { VideoTutorialButton } from "./video-tutorial-button"
 
 interface ContactManagerProps {
   storeId: string
@@ -200,7 +201,10 @@ export function ContactManager({ storeId, subdomain, storeName }: ContactManager
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Contacto</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-bold">Contacto</h2>
+            <VideoTutorialButton title="Cómo usar Contacto" />
+          </div>
           <p className="text-muted-foreground">Gestiona los mensajes y la informacion de contacto de tu tienda</p>
         </div>
         <div className="flex gap-2">

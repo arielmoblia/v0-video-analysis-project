@@ -21,6 +21,7 @@ import {
   Bike,
   CheckCircle2,
 } from "lucide-react"
+import { VideoTutorialButton } from "./video-tutorial-button"
 
 interface ShippingManagerProps {
   storeId: string
@@ -249,7 +250,10 @@ export function ShippingManager({ storeId }: ShippingManagerProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Métodos de Envío</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-bold tracking-tight">Métodos de Envío</h2>
+            <VideoTutorialButton title="Cómo configurar Métodos de Envío" />
+          </div>
           <p className="text-muted-foreground">Configurá cómo tus clientes reciben sus pedidos</p>
         </div>
         <Button onClick={handleSave} disabled={saving}>

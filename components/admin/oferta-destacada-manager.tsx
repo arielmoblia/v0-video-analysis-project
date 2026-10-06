@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react"
 import { X, Loader2, Check } from "lucide-react"
 import { formatPrice } from "@/lib/currency"
+import { VideoTutorialButton } from "./video-tutorial-button"
 
 interface ProductLite {
   id: string
@@ -75,7 +76,10 @@ export function OfertaDestacadaManager({ storeId, country, initialProductIds }: 
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-4xl font-bold tracking-tight">Oferta Destacada</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-4xl font-bold tracking-tight">Oferta Destacada</h1>
+          <VideoTutorialButton title="Cómo usar Oferta Destacada" />
+        </div>
         <p className="text-xl text-muted-foreground mt-2">
           Elegí el producto que querés mostrar completo (galería de fotos, precio y botón de compra) en un lugar
           fijo del inicio de tu tienda.

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus, Pencil, Trash2, FolderOpen } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { VideoTutorialButton } from "./video-tutorial-button"
 
 interface Category {
   id: string
@@ -110,7 +111,10 @@ export function CategoriesManager({ storeId }: CategoriesManagerProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-light tracking-wide">Categorías</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-light tracking-wide">Categorías</h2>
+          <VideoTutorialButton title="Cómo usar Categorías" />
+        </div>
         <Dialog
           open={dialogOpen}
           onOpenChange={(open) => {

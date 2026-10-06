@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ShoppingCart, Package, Truck, CheckCircle, Clock, Eye, X, DollarSign, Printer, Trash2, ExternalLink, Copy, Check, FileText } from "lucide-react"
+import { VideoTutorialButton } from "./video-tutorial-button"
 
 interface OrderItem {
   id: string
@@ -690,7 +691,10 @@ export function OrdersManager({ storeId, storeName = "Tienda", isDropship = fals
 
   return (
     <div>
-      <h2 className="text-2xl font-light tracking-wide mb-6">Pedidos</h2>
+      <div className="flex items-center gap-2 mb-6">
+        <h2 className="text-2xl font-light tracking-wide">Pedidos</h2>
+        <VideoTutorialButton title="Cómo gestionar Pedidos" />
+      </div>
 
       {orders.length === 0 ? (
         <Card>

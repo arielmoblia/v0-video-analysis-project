@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { MultiImageUpload } from "./multi-image-upload"
 import { CsvImporter } from "./csv-importer"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { VideoTutorialButton } from "./video-tutorial-button"
 
 interface Product {
   id: string
@@ -425,7 +426,10 @@ export function ProductsManager({ storeId, template = "default", customVariants,
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-light tracking-wide">Productos</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-light tracking-wide">Productos</h2>
+          <VideoTutorialButton title="Cómo usar Productos" />
+        </div>
         <div className="flex gap-2">
           {hasCsvImportFeature && (
             <Button

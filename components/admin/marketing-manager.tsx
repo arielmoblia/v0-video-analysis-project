@@ -27,6 +27,7 @@ import {
   BarChart3
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { VideoTutorialButton } from "./video-tutorial-button"
 
 interface MarketingManagerProps {
   storeId: string
@@ -145,7 +146,10 @@ export function MarketingManager({ storeId, subdomain }: MarketingManagerProps) 
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold">Marketing</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-semibold">Marketing</h2>
+            <VideoTutorialButton title="Cómo usar Marketing" />
+          </div>
           <p className="text-slate-500">Herramientas para aumentar tus ventas</p>
         </div>
       </div>
