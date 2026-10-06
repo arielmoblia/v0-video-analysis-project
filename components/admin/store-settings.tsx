@@ -37,6 +37,7 @@ export function StoreSettings({ store }: StoreSettingsProps) {
   const [storeEmail, setStoreEmail] = useState(store.email || "")
   const [logoUrl, setLogoUrl] = useState(store.logo_url || "")
   const [dataFiscalUrl, setDataFiscalUrl] = useState(store.data_fiscal_url || "")
+  const [dataFiscalLinkUrl, setDataFiscalLinkUrl] = useState(store.data_fiscal_link_url || "")
 
   // Subdominio (nombre.tol.ar)
   const [subdomain, setSubdomain] = useState(store.subdomain || "")
@@ -159,6 +160,7 @@ export function StoreSettings({ store }: StoreSettingsProps) {
           email: storeEmail,
           logo_url: logoUrl,
           data_fiscal_url: dataFiscalUrl,
+          data_fiscal_link_url: dataFiscalLinkUrl,
           banner_image: bannerImage,
           banner_title: bannerTitle,
           banner_subtitle: bannerSubtitle,
@@ -378,7 +380,7 @@ export function StoreSettings({ store }: StoreSettingsProps) {
                   <li>
                     <strong>QR Data Fiscal de AFIP</strong> (Formulario 960/D): es obligatorio mostrarlo en tu
                     tienda, pero es único por cada comerciante (está atado a tu CUIT) — nosotros no te lo podemos
-                    generar. Lo sacás gratis entrando a{" "}
+                    generar. Son <strong>dos pasos</strong>, no uno: 1) con tu Clave Fiscal en{" "}
                     <a
                       href="https://www.afip.gob.ar/960/formulario-960/"
                       target="_blank"
@@ -387,14 +389,27 @@ export function StoreSettings({ store }: StoreSettingsProps) {
                     >
                       afip.gob.ar
                     </a>{" "}
-                    con tu Clave Fiscal, pedís el "Formulario 960/D", y te da una imagen con el código QR. Subila acá
-                    al lado y listo.
+                    pedís el "Formulario 960/D" y subís la imagen del QR acá abajo; 2) en la misma gestión, en
+                    "Generación del F960/D para Sitios Web", registrás el dominio de tu tienda y copiás el link que
+                    te da AFIP (del tipo qr.afip.gob.ar/?qr=...) — ese es el que hace que, al hacer click en el QR,
+                    se abra la verificación fiscal real. Sin ese link, el QR se ve pero no lleva a ningún lado al
+                    cliquearlo.
                   </li>
                 </ul>
               </div>
-              <div>
-                <Label className="mb-2 block">QR Data Fiscal (AFIP)</Label>
-                <ImageUpload value={dataFiscalUrl} onChange={setDataFiscalUrl} type="qr" />
+              <div className="space-y-4">
+                <div>
+                  <Label className="mb-2 block">QR Data Fiscal (AFIP) — imagen</Label>
+                  <ImageUpload value={dataFiscalUrl} onChange={setDataFiscalUrl} type="qr" />
+                </div>
+                <div>
+                  <Label className="mb-2 block">Link de verificación (AFIP) — opcional</Label>
+                  <Input
+                    value={dataFiscalLinkUrl}
+                    onChange={(e) => setDataFiscalLinkUrl(e.target.value)}
+                    placeholder="http://qr.afip.gob.ar/?qr=..."
+                  />
+                </div>
               </div>
             </div>
           </div>

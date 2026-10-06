@@ -16,6 +16,7 @@ export interface Store {
   admin_password?: string
   logo_url?: string | null
   data_fiscal_url?: string | null
+  data_fiscal_link_url?: string | null
   banner_image?: string | null
   banner_title?: string | null
   banner_subtitle?: string | null

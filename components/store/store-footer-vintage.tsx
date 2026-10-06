@@ -131,15 +131,19 @@ export function StoreFooterVintage({ store, categories, subdomain }: StoreFooter
               </li>
             </ul>
             {store.data_fiscal_url && (
-              <a
-                href={store.data_fiscal_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-block"
-                aria-label="Ver Data Fiscal de AFIP"
-              >
-                <img src={store.data_fiscal_url} alt="Data Fiscal AFIP" className="h-16 w-16 rounded bg-white p-1" />
-              </a>
+              store.data_fiscal_link_url ? (
+                <a
+                  href={store.data_fiscal_link_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-block"
+                  aria-label="Ver Data Fiscal de AFIP"
+                >
+                  <img src={store.data_fiscal_url} alt="Data Fiscal AFIP" className="h-16 w-16 rounded bg-white p-1" />
+                </a>
+              ) : (
+                <img src={store.data_fiscal_url} alt="Data Fiscal AFIP" className="h-16 w-16 rounded bg-white p-1 mt-4" />
+              )
             )}
           </div>
 

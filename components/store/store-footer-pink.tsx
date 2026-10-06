@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import type { Store, Category } from "@/lib/store-context"
+import type { StorePage } from "@/lib/services/store-pages"
 import { Instagram, Facebook, Youtube, MapPin, Mail, Phone } from "lucide-react"
 import Link from "next/link"
 import { ContactModal } from "./contact-modal"
@@ -23,29 +24,29 @@ function WhatsAppIcon({ className }: { className?: string }) {
   )
 }
 
-interface StoreFooterMinimalProps {
+interface StoreFooterPinkProps {
   store: Store
-  categories: Category[]
-  subdomain?: string
-  accentColor?: string
+  categories?: Category[]
+  storePages?: StorePage[]
 }
 
-// Footer "Minimal": fondo gris oscuro #333 (no negro puro ni marrón), 4
-// columnas con la primera dedicada a datos de contacto con iconitos chicos
-// (dirección/email/teléfono), tal cual el footer real de la demo. Distinto
-// del footer marrón de Artesano y celeste de Blingg.
-export function StoreFooterMinimal({ store, categories, subdomain, accentColor = "#ff7f00" }: StoreFooterMinimalProps) {
+// Pie "Pink": calco del footer real de pinkonlineoficial.com.ar (fondo
+// claro, info de contacto + navegación + legal), para usar en las
+// subpáginas (contacto, guía de talles, etc.) que no pintan el HTML
+// clonado crudo como hace la portada. Mismo acento rosa (#e6007e) que
+// StoreHeaderPink. Conserva intactos los links legales obligatorios
+// (Botón de Arrepentimiento, Términos, Privacidad, Devoluciones).
+export function StoreFooterPink({ store, categories = [], storePages = [] }: StoreFooterPinkProps) {
   const [contactOpen, setContactOpen] = useState(false)
   const [arrepentimientoOpen, setArrepentimientoOpen] = useState(false)
-  const [basePath, setBasePath] = useState(subdomain ? `/tienda/${subdomain}` : "")
+  const [basePath, setBasePath] = useState(`/tienda/${store.subdomain}`)
 
   useEffect(() => {
-    if (!subdomain) return
     const hostname = window.location.hostname
     if (hostname.includes("tol.ar") && !hostname.startsWith("www.") && hostname !== "tol.ar") {
       setBasePath("")
     }
-  }, [subdomain])
+  }, [])
 
   const hasSocialLinks =
     store.social_instagram ||
@@ -56,25 +57,26 @@ export function StoreFooterMinimal({ store, categories, subdomain, accentColor =
     store.social_youtube
 
   return (
-    <footer className="bg-[#333333] text-white" role="contentinfo" aria-label={`Pie de pagina de ${store.site_title}`}>
+    <footer className="bg-white text-neutral-900 border-t border-neutral-200" role="contentinfo" aria-label={`Pie de pagina de ${store.site_title}`}>
       <div className="container mx-auto px-6 py-14">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
           <div>
-            <h4 className="text-sm uppercase tracking-widest mb-4 text-white/90">{store.site_title.toLowerCase()}</h4>
-            <div className="space-y-2.5 text-sm text-white/60">
+            <h4 className="font-black uppercase tracking-tight text-lg mb-4">{store.site_title}</h4>
+            <div className="space-y-2.5 text-sm text-neutral-600">
+              <p>{store.footer_subtitle || "Tu destino para encontrar los mejores productos con estilo y calidad."}</p>
               {store.address && (
                 <p className="flex items-start gap-2">
-                  <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                  <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-[#e6007e]" />
                   {store.address}
                 </p>
               )}
               <p className="flex items-center gap-2">
-                <Mail className="h-3.5 w-3.5 shrink-0" />
+                <Mail className="h-3.5 w-3.5 shrink-0 text-[#e6007e]" />
                 {store.email}
               </p>
               {store.phone && (
                 <p className="flex items-center gap-2">
-                  <Phone className="h-3.5 w-3.5 shrink-0" />
+                  <Phone className="h-3.5 w-3.5 shrink-0 text-[#e6007e]" />
                   {store.phone}
                 </p>
               )}
@@ -82,50 +84,58 @@ export function StoreFooterMinimal({ store, categories, subdomain, accentColor =
           </div>
 
           <div>
-            <h5 className="text-xs uppercase tracking-widest mb-4 text-white/50">Categorías</h5>
-            {categories.length > 0 ? (
-              <ul className="space-y-2.5 text-sm text-white/60">
-                {categories.slice(0, 6).map((cat) => (
-                  <li key={cat.id}>
-                    <Link href={`${basePath}/categoria/${cat.slug}`} className="hover:text-white transition-colors">
-                      {cat.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-white/40 text-sm">Próximamente</p>
-            )}
+            <h5 className="text-xs uppercase tracking-widest mb-4 text-neutral-500">Navegación</h5>
+            <ul className="space-y-2.5 text-sm text-neutral-600">
+              <li>
+                <Link href={basePath || "/"} className="hover:text-neutral-900 transition-colors">
+                  Inicio
+                </Link>
+              </li>
+              {categories.slice(0, 5).map((cat) => (
+                <li key={cat.id}>
+                  <Link href={`${basePath}/categoria/${cat.slug}`} className="hover:text-neutral-900 transition-colors">
+                    {cat.name}
+                  </Link>
+                </li>
+              ))}
+              {storePages.map((page) => (
+                <li key={page.id}>
+                  <Link href={`${basePath}/pagina/${page.slug}`} className="hover:text-neutral-900 transition-colors">
+                    {page.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div>
-            <h5 className="text-xs uppercase tracking-widest mb-4 text-white/50">Legal</h5>
-            <ul className="space-y-2.5 text-sm text-white/60">
+            <h5 className="text-xs uppercase tracking-widest mb-4 text-neutral-500">Legal</h5>
+            <ul className="space-y-2.5 text-sm text-neutral-600">
               <li>
                 <button
                   onClick={() => setArrepentimientoOpen(true)}
-                  className="text-white underline underline-offset-4 hover:text-white/80 transition-colors"
+                  className="text-neutral-900 underline underline-offset-4 hover:text-[#e6007e] transition-colors"
                 >
                   Botón de Arrepentimiento
                 </button>
               </li>
               <li>
-                <Link href="/terminos" className="hover:text-white transition-colors">
+                <Link href="/terminos" className="hover:text-neutral-900 transition-colors">
                   Términos y Condiciones
                 </Link>
               </li>
               <li>
-                <Link href="/privacidad" className="hover:text-white transition-colors">
+                <Link href="/privacidad" className="hover:text-neutral-900 transition-colors">
                   Política de Privacidad
                 </Link>
               </li>
               <li>
-                <Link href="/devoluciones" className="hover:text-white transition-colors">
+                <Link href="/devoluciones" className="hover:text-neutral-900 transition-colors">
                   Política de Devoluciones
                 </Link>
               </li>
               <li>
-                <button onClick={() => setContactOpen(true)} className="hover:text-white transition-colors">
+                <button onClick={() => setContactOpen(true)} className="hover:text-neutral-900 transition-colors">
                   Contacto
                 </button>
               </li>
@@ -139,47 +149,47 @@ export function StoreFooterMinimal({ store, categories, subdomain, accentColor =
                   className="mt-4 inline-block"
                   aria-label="Ver Data Fiscal de AFIP"
                 >
-                  <img src={store.data_fiscal_url} alt="Data Fiscal AFIP" className="h-16 w-16 rounded bg-white p-1" />
+                  <img src={store.data_fiscal_url} alt="Data Fiscal AFIP" className="h-16 w-16 rounded bg-white p-1 border border-neutral-200" />
                 </a>
               ) : (
-                <img src={store.data_fiscal_url} alt="Data Fiscal AFIP" className="h-16 w-16 rounded bg-white p-1 mt-4" />
+                <img src={store.data_fiscal_url} alt="Data Fiscal AFIP" className="h-16 w-16 rounded bg-white p-1 border border-neutral-200 mt-4" />
               )
             )}
           </div>
 
           {hasSocialLinks && (
             <div>
-              <h5 className="text-xs uppercase tracking-widest mb-4 text-white/50">Seguinos</h5>
+              <h5 className="text-xs uppercase tracking-widest mb-4 text-neutral-500">Seguinos</h5>
               <div className="flex gap-4">
                 {store.social_instagram && (
-                  <a href={store.social_instagram} target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors" aria-label="Seguinos en Instagram">
+                  <a href={store.social_instagram} target="_blank" rel="noopener noreferrer" className="text-neutral-600 hover:text-[#e6007e] transition-colors" aria-label="Seguinos en Instagram">
                     <Instagram className="h-5 w-5" />
                   </a>
                 )}
                 {store.social_facebook && (
-                  <a href={store.social_facebook} target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors" aria-label="Seguinos en Facebook">
+                  <a href={store.social_facebook} target="_blank" rel="noopener noreferrer" className="text-neutral-600 hover:text-[#e6007e] transition-colors" aria-label="Seguinos en Facebook">
                     <Facebook className="h-5 w-5" />
                   </a>
                 )}
                 {store.social_twitter && (
-                  <a href={store.social_twitter} target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors" aria-label="Seguinos en X (Twitter)">
+                  <a href={store.social_twitter} target="_blank" rel="noopener noreferrer" className="text-neutral-600 hover:text-[#e6007e] transition-colors" aria-label="Seguinos en X (Twitter)">
                     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                     </svg>
                   </a>
                 )}
                 {store.social_tiktok && (
-                  <a href={store.social_tiktok} target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors" aria-label="Seguinos en TikTok">
+                  <a href={store.social_tiktok} target="_blank" rel="noopener noreferrer" className="text-neutral-600 hover:text-[#e6007e] transition-colors" aria-label="Seguinos en TikTok">
                     <TikTokIcon className="h-5 w-5" />
                   </a>
                 )}
                 {store.social_whatsapp && (
-                  <a href={`https://wa.me/${store.social_whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors" aria-label="Contactanos por WhatsApp">
+                  <a href={`https://wa.me/${store.social_whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-neutral-600 hover:text-[#e6007e] transition-colors" aria-label="Contactanos por WhatsApp">
                     <WhatsAppIcon className="h-5 w-5" />
                   </a>
                 )}
                 {store.social_youtube && (
-                  <a href={store.social_youtube} target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors" aria-label="Suscribite a nuestro canal de YouTube">
+                  <a href={store.social_youtube} target="_blank" rel="noopener noreferrer" className="text-neutral-600 hover:text-[#e6007e] transition-colors" aria-label="Suscribite a nuestro canal de YouTube">
                     <Youtube className="h-5 w-5" />
                   </a>
                 )}
@@ -188,12 +198,12 @@ export function StoreFooterMinimal({ store, categories, subdomain, accentColor =
           )}
         </div>
 
-        <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-center items-center gap-4">
-          <p className="text-xs text-white/40">
+        <div className="border-t border-neutral-200 pt-6 flex flex-col md:flex-row justify-center items-center gap-4">
+          <p className="text-xs text-neutral-500">
             © <span suppressHydrationWarning>{new Date().getFullYear()}</span> {store.site_title}. Todos los derechos reservados.
           </p>
-          <Link href="https://tol.ar" target="_blank" className="text-xs text-white hover:text-white/80 transition-colors font-medium">
-            Creado gratis con <span className="text-white font-bold">tol.ar</span>
+          <Link href="https://tol.ar" target="_blank" className="text-xs text-neutral-900 hover:text-[#e6007e] transition-colors font-medium">
+            Creado gratis con <span className="font-bold">tol.ar</span>
           </Link>
         </div>
       </div>
