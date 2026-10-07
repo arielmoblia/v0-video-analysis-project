@@ -43,6 +43,9 @@ export default async function ModelosTemplatesPage({ searchParams }: { searchPar
               <span className="text-xs text-center px-4">Video explicativo — próximamente</span>
             </div>
             <div className="sm:col-span-2 flex flex-col gap-3 justify-center">
+              <Link href="/modelos" className="border border-slate-300 text-slate-700 px-8 py-3 rounded-lg font-medium hover:bg-slate-50 transition-colors text-center">
+                Ver modelos
+              </Link>
               <Link href={activarHref} className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors text-center">
                 Activar por $1 USD/mes
               </Link>
