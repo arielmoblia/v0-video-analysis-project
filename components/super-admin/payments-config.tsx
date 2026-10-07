@@ -30,28 +30,28 @@ interface PaymentConfig {
   bank_account_last4: string
 }
 
-interface ClientRow {
-  month: string
-  store: string
-  email: string
-  phone: string
-  cositas: string
-  amount: string
-  currency: string
-  status: "paid" | "pending" | "failed" | "canceled"
-  next_charge: string
+interface Pago {
+  id: string
+  tipo: "cosita" | "renovacion"
+  fecha: string | null
+  store: { id: string; subdomain: string; email: string; site_title: string } | null
+  store_id: string
+  monto_ars: number | null
+  estado: string | null
+  payment_id: string | null
+  external_reference: string | null
+  concepto: string
 }
 
-const MOCK_CLIENTS: ClientRow[] = [
-  { month: "Mar 2026", store: "prueba3", email: "prueba@mail.com", phone: "+54 11 1234-5678", cositas: "3 cositas", amount: "$12.00", currency: "USD", status: "paid", next_charge: "01 Abr" },
-  { month: "Mar 2026", store: "demo2", email: "demo@mail.com", phone: "+54 11 8765-4321", cositas: "1 cosita", amount: "$4.00", currency: "USD", status: "pending", next_charge: "—" },
-]
-
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
-  paid: { label: "Pagado", cls: "bg-green-100 text-green-700 border-green-200" },
+  completed: { label: "Pagado", cls: "bg-green-100 text-green-700 border-green-200" },
+  processed: { label: "Pagado", cls: "bg-green-100 text-green-700 border-green-200" },
+  authorized: { label: "Autorizado", cls: "bg-green-100 text-green-700 border-green-200" },
   pending: { label: "Pendiente", cls: "bg-yellow-100 text-yellow-700 border-yellow-200" },
-  failed: { label: "Fallido", cls: "bg-red-100 text-red-700 border-red-200" },
-  canceled: { label: "Cancelado", cls: "bg-gray-100 text-gray-600 border-gray-200" },
+  payment_rejected: { label: "Rechazado", cls: "bg-red-100 text-red-700 border-red-200" },
+  rejected: { label: "Rechazado", cls: "bg-red-100 text-red-700 border-red-200" },
+  cancelled: { label: "Cancelado", cls: "bg-gray-100 text-gray-600 border-gray-200" },
+  paused: { label: "Pausado", cls: "bg-gray-100 text-gray-600 border-gray-200" },
 }
 
 export function PaymentsConfig() {
@@ -67,6 +67,10 @@ export function PaymentsConfig() {
   const [calcArs, setCalcArs] = useState("100000")
   const [exchangeRate, setExchangeRate] = useState(1580)
   const [rateUpdated, setRateUpdated] = useState("")
+  const [pagos, setPagos] = useState<Pago[]>([])
+  const [pagosLoading, setPagosLoading] = useState(true)
+  const [pagosError, setPagosError] = useState("")
+  const [pagosSearch, setPagosSearch] = useState("")
 
   useEffect(() => {
     fetch("/api/super-admin/exchange-rate")
@@ -80,6 +84,36 @@ export function PaymentsConfig() {
       .catch(() => {})
   }, [])
   // exchangeRate viene del estado
+
+  useEffect(() => {
+    fetch("/api/super-admin/payments-list")
+      .then(r => r.json())
+      .then(data => {
+        if (data.pagos) setPagos(data.pagos)
+        else setPagosError(data.error || "Error al cargar pagos")
+      })
+      .catch(() => setPagosError("Error al cargar pagos"))
+      .finally(() => setPagosLoading(false))
+  }, [])
+
+  const pagosFiltrados = pagos.filter(p => {
+    if (!pagosSearch.trim()) return true
+    const q = pagosSearch.toLowerCase().trim()
+    return [p.store?.subdomain, p.store?.email, p.store?.site_title, p.payment_id, p.external_reference, p.concepto, p.monto_ars?.toString()]
+      .some(v => v?.toLowerCase().includes(q))
+  })
+
+  const totalesMes = (() => {
+    const ahora = new Date()
+    const delMes = pagos.filter(p => {
+      if (!p.fecha) return false
+      const f = new Date(p.fecha)
+      return f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear()
+    })
+    const pagados = delMes.filter(p => ["completed", "processed", "authorized"].includes(p.estado || ""))
+    const totalArs = pagados.reduce((acc, p) => acc + (p.monto_ars || 0), 0)
+    return { cobros: pagados.length, totalArs }
+  })()
 
   const [config, setConfig] = useState<PaymentConfig>({
     stripe_enabled: false,
@@ -186,32 +220,54 @@ export function PaymentsConfig() {
   )
 
   const ClientsTable = () => (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-slate-200 bg-slate-50">
-            {["Mes","Tienda","Mail","Teléfono","Cositas","Monto","Estado","Próx. cobro"].map(h => (
-              <th key={h} className="text-left py-3 px-4 text-slate-500 font-medium text-xs">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {MOCK_CLIENTS.length === 0 ? (
-            <tr><td colSpan={8} className="py-8 text-center text-slate-400">Sin clientes aún</td></tr>
-          ) : MOCK_CLIENTS.map((c, i) => (
-            <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
-              <td className="py-3 px-4 text-slate-500">{c.month}</td>
-              <td className="py-3 px-4 text-slate-800 font-medium">{c.store}</td>
-              <td className="py-3 px-4 text-slate-600">{c.email}</td>
-              <td className="py-3 px-4 text-slate-600">{c.phone}</td>
-              <td className="py-3 px-4 text-slate-600">{c.cositas}</td>
-              <td className="py-3 px-4 text-slate-800 font-medium">{c.amount} {c.currency}</td>
-              <td className="py-3 px-4"><Badge className={STATUS_LABELS[c.status].cls}>{STATUS_LABELS[c.status].label}</Badge></td>
-              <td className="py-3 px-4 text-slate-600">{c.next_charge}</td>
+    <div className="space-y-3">
+      <Input
+        value={pagosSearch}
+        onChange={e => setPagosSearch(e.target.value)}
+        placeholder="Buscar por tienda, mail, payment ID o monto (para identificar un cobro que viste en MercadoPago)..."
+        className="bg-white border-slate-200 text-slate-800"
+      />
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50">
+              {["Fecha","Tienda","Concepto","Monto","Estado","Payment ID","Tipo"].map(h => (
+                <th key={h} className="text-left py-3 px-4 text-slate-500 font-medium text-xs">{h}</th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {pagosLoading ? (
+              <tr><td colSpan={7} className="py-8 text-center text-slate-400">Cargando...</td></tr>
+            ) : pagosError ? (
+              <tr><td colSpan={7} className="py-8 text-center text-red-500">{pagosError}</td></tr>
+            ) : pagosFiltrados.length === 0 ? (
+              <tr><td colSpan={7} className="py-8 text-center text-slate-400">{pagos.length === 0 ? "Sin pagos aún" : "No hay pagos que coincidan con la búsqueda"}</td></tr>
+            ) : pagosFiltrados.map(p => {
+              const estadoInfo = STATUS_LABELS[p.estado || ""] || { label: p.estado || "—", cls: "bg-slate-100 text-slate-600 border-slate-200" }
+              return (
+                <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="py-3 px-4 text-slate-500 whitespace-nowrap">{p.fecha ? new Date(p.fecha).toLocaleDateString("es-AR") : "—"}</td>
+                  <td className="py-3 px-4 text-slate-800 font-medium">
+                    {p.store ? (
+                      <a href={`https://${p.store.subdomain}.tol.ar`} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                        {p.store.site_title || p.store.subdomain}
+                      </a>
+                    ) : (
+                      <span className="text-red-500">tienda borrada ({p.store_id})</span>
+                    )}
+                  </td>
+                  <td className="py-3 px-4 text-slate-600">{p.concepto}</td>
+                  <td className="py-3 px-4 text-slate-800 font-medium">{p.monto_ars != null ? `$${p.monto_ars.toLocaleString("es-AR")} ARS` : "—"}</td>
+                  <td className="py-3 px-4"><Badge className={estadoInfo.cls}>{estadoInfo.label}</Badge></td>
+                  <td className="py-3 px-4 text-slate-500 font-mono text-xs">{p.payment_id || "—"}</td>
+                  <td className="py-3 px-4 text-slate-500 text-xs">{p.tipo === "cosita" ? "Cosita" : "Renovación"}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 
@@ -488,10 +544,10 @@ export function PaymentsConfig() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {[
               { label: "Stripe", val: "$0", sub: "0 cobros", color: "text-orange-600", border: "border-orange-100" },
-              { label: "MercadoPago", val: "$0", sub: "0 cobros", color: "text-orange-600", border: "border-orange-100" },
+              { label: "MercadoPago", val: `$${totalesMes.totalArs.toLocaleString("es-AR")}`, sub: `${totalesMes.cobros} cobro${totalesMes.cobros === 1 ? "" : "s"}`, color: "text-orange-600", border: "border-orange-100" },
               { label: "PayPal", val: "$0", sub: "0 cobros", color: "text-amber-600", border: "border-amber-100" },
               { label: "Mobbex", val: "$0", sub: "0 cobros", color: "text-green-600", border: "border-green-100" },
-              { label: "Total del mes", val: "$0 USD", sub: "0 suscriptores activos", color: "text-orange-600", border: "border-orange-500/20", highlight: true },
+              { label: "Total del mes", val: `$${totalesMes.totalArs.toLocaleString("es-AR")} ARS`, sub: `${totalesMes.cobros} cobro${totalesMes.cobros === 1 ? "" : "s"}`, color: "text-orange-600", border: "border-orange-500/20", highlight: true },
             ].map((m: any) => (
               <div key={m.label} className={`bg-white border rounded-xl p-4 ${m.border} ${m.highlight ? "shadow-sm" : ""}`}>
                 <p className={`text-xs font-semibold mb-1 ${m.color}`}>{m.label}</p>
@@ -500,13 +556,35 @@ export function PaymentsConfig() {
               </div>
             ))}
           </div>
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 flex-shrink-0 text-amber-500" />
-            Sistema en modo demo — aún no se están procesando cobros reales.
-          </div>
           <div className="bg-white border border-slate-200 rounded-xl p-6">
-            <p className="text-slate-700 font-medium mb-4">Últimos movimientos</p>
-            <p className="text-center text-slate-400 text-sm py-6">Sin movimientos aún</p>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-slate-700 font-medium">Últimos movimientos</p>
+              <p className="text-xs text-slate-400">Para encontrar a qué tienda pertenece un cobro visto en MercadoPago, buscalo en la pestaña Pasarelas → MercadoPago → Clientes</p>
+            </div>
+            {pagosLoading ? (
+              <p className="text-center text-slate-400 text-sm py-6">Cargando...</p>
+            ) : pagos.length === 0 ? (
+              <p className="text-center text-slate-400 text-sm py-6">Sin movimientos aún</p>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {pagos.slice(0, 8).map(p => {
+                  const estadoInfo = STATUS_LABELS[p.estado || ""] || { label: p.estado || "—", cls: "bg-slate-100 text-slate-600 border-slate-200" }
+                  return (
+                    <div key={p.id} className="flex items-center justify-between py-2.5 text-sm">
+                      <div>
+                        <span className="text-slate-800 font-medium">{p.store?.site_title || p.store?.subdomain || "tienda borrada"}</span>
+                        <span className="text-slate-400 ml-2">{p.concepto}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-slate-500">{p.fecha ? new Date(p.fecha).toLocaleDateString("es-AR") : "—"}</span>
+                        <span className="text-slate-800 font-medium">{p.monto_ars != null ? `$${p.monto_ars.toLocaleString("es-AR")}` : "—"}</span>
+                        <Badge className={estadoInfo.cls}>{estadoInfo.label}</Badge>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -10,13 +10,14 @@ export async function POST(request: NextRequest) {
   try {
     const { cardData, storeId, features, totalARS } = await request.json()
     const accessToken = process.env.MP_ACCESS_TOKEN
+    const externalReference = `card_${storeId}_${Date.now()}`
 
     const paymentRes = await fetch("https://api.mercadopago.com/v1/payments", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
-        "X-Idempotency-Key": `cositas_${storeId}_${Date.now()}`,
+        "X-Idempotency-Key": externalReference,
       },
       body: JSON.stringify({
         transaction_amount: totalARS,
@@ -26,6 +27,7 @@ export async function POST(request: NextRequest) {
         payment_method_id: cardData.payment_method_id,
         issuer_id: cardData.issuer_id,
         payer: { email: cardData.payer.email },
+        external_reference: externalReference,
       }),
     })
 
@@ -52,7 +54,7 @@ export async function POST(request: NextRequest) {
         status: "completed",
         payment_method: "mercadopago_card",
         payment_id: payment.id.toString(),
-        external_reference: `card_${storeId}_${Date.now()}`,
+        external_reference: externalReference,
       })
 
       if (features.includes("dropshipping")) {
