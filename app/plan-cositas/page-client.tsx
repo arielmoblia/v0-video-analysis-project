@@ -25,6 +25,23 @@ const ICON_MAP: Record<string, any> = {
   EyeOff, Wand2, Megaphone, ShoppingBag, Images,
 }
 
+const LEER_MAS_URLS: Record<string, string> = {
+  dolar_peso: "/plan-cositas/dolar-peso",
+  dropshipping: "https://tol.ar/blog/que-es-el-dropshipping",
+  mayorista_minorista: "/plan-cositas/mayorista-minorista",
+  modelos_templates: "/plan-cositas/modelos-templates",
+  multi_images: "/plan-cositas/galeria-imagenes",
+  lupa: "/plan-cositas/lupa",
+  theme_custom_url: "/plan-cositas/portada-especial",
+  carousels: "/plan-cositas/carruseles",
+  customer_accounts: "/plan-cositas/cuentas-clientes",
+  botonera_cabecera: "/plan-cositas/botonera-cabecera",
+  banner_deslizante: "/plan-cositas/banner-deslizante",
+  clonar_ia_catalogo: "/plan-cositas/clonar-con-ia",
+  oferta_destacada: "/plan-cositas/oferta-destacada",
+  productos_destacados: "/plan-cositas/productos-destacados",
+}
+
 interface StoreFeature {
   code: string
   name: string
@@ -219,80 +236,9 @@ export default function PlanCositasPage({ brand = "tol" }: Props) {
                                   {cosita.full_description || cosita.description}
                                 </DialogDescription>
                               </DialogHeader>
-                              {cosita.code === "dolar_peso" && (
-
+                              {LEER_MAS_URLS[cosita.code] && (
                                 <a
-                                  href="/plan-cositas/dolar-peso"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-block mt-2 mb-2 text-sm text-blue-600 hover:underline"
-                                >
-                                  Leer más →
-                                </a>
-                              )}
-                              {cosita.code === "dropshipping" && (
-                                <a
-                                  href="https://tol.ar/blog/que-es-el-dropshipping"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-block mt-2 mb-2 text-sm text-blue-600 hover:underline"
-                                >
-                                  Leer más →
-                                </a>
-                              )}
-                              {cosita.code === "mayorista_minorista" && (
-                                <a
-                                  href="/plan-cositas/mayorista-minorista"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-block mt-2 mb-2 text-sm text-blue-600 hover:underline"
-                                >
-                                  Leer más →
-                                </a>
-                              )}
-                              {cosita.code === "modelos_templates" && (
-                                <a
-                                  href="/plan-cositas/modelos-templates"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-block mt-2 mb-2 text-sm text-blue-600 hover:underline"
-                                >
-                                  Leer más →
-                                </a>
-                              )}
-                              {cosita.code === "multi_images" && (
-                                <a
-                                  href="/plan-cositas/galeria-imagenes"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-block mt-2 mb-2 text-sm text-blue-600 hover:underline"
-                                >
-                                  Leer más →
-                                </a>
-                              )}
-                              {cosita.code === "lupa" && (
-                                <a
-                                  href="/plan-cositas/lupa"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-block mt-2 mb-2 text-sm text-blue-600 hover:underline"
-                                >
-                                  Leer más →
-                                </a>
-                              )}
-                              {cosita.code === "theme_custom_url" && (
-                                <a
-                                  href="/plan-cositas/portada-especial"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-block mt-2 mb-2 text-sm text-blue-600 hover:underline"
-                                >
-                                  Leer más →
-                                </a>
-                              )}
-                              {cosita.code === "carousels" && (
-                                <a
-                                  href="/plan-cositas/carruseles"
+                                  href={LEER_MAS_URLS[cosita.code]}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-block mt-2 mb-2 text-sm text-blue-600 hover:underline"
