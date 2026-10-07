@@ -39,6 +39,9 @@ export function PlansDashboard({ stores }: PlansDashboardProps) {
   const [storesWithMP, setStoresWithMP] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [cositasPorTienda, setCositasPorTienda] = useState<Record<string, any[]>>({})
+  const [pagos, setPagos] = useState<any[]>([])
+  const [pagosLoading, setPagosLoading] = useState(true)
+  const [pagosSearch, setPagosSearch] = useState("")
 
   const freeStores = stores.filter(s => !s.plan || s.plan === "free" || s.plan === "gratis")
   const cositas = stores.filter(s => s.plan === "cositas")
@@ -78,6 +81,19 @@ export function PlansDashboard({ stores }: PlansDashboardProps) {
   }, [])
 
   useEffect(() => {
+    async function fetchPagos() {
+      setPagosLoading(true)
+      const res = await fetch('/api/super-admin/payments-list', { cache: 'no-store' })
+      if (res.ok) {
+        const data = await res.json()
+        setPagos(data.pagos || [])
+      }
+      setPagosLoading(false)
+    }
+    fetchPagos()
+  }, [])
+
+  useEffect(() => {
     fetch(`/api/super-admin/stores-activity?days=${viewsDays}`)
       .then(r => r.json())
       .then(data => setStoreViews(data))
@@ -98,6 +114,7 @@ export function PlansDashboard({ stores }: PlansDashboardProps) {
     { id: "cositas", label: `PLAN COSITAS (${cositas.length})` },
     { id: "socios", label: `PLAN SOCIOS (${socios.length})` },
     { id: "mayorista", label: "PLAN MAYORISTA" },
+    { id: "pagos", label: `PAGOS (${pagos.length})` },
   ]
 
   return (
@@ -616,6 +633,97 @@ export function PlansDashboard({ stores }: PlansDashboardProps) {
           </div>
           <h3 className="text-xl font-semibold text-slate-400 mb-2">Plan Mayorista</h3>
           <span className="inline-block bg-slate-200 text-slate-500 text-sm px-4 py-1 rounded-full">Próximamente</span>
+        </div>
+      )}
+
+      {/* PAGOS: reconciliación de cobros de MercadoPago contra la tienda */}
+      {activeTab === "pagos" && (
+        <div className="space-y-4">
+          <div className="bg-white border border-slate-200 rounded-lg">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between gap-4">
+              <div>
+                <h3 className="font-semibold text-slate-800">Pagos recibidos en la cuenta de MercadoPago de TOL.AR</h3>
+                <p className="text-xs text-slate-400 mt-1">Buscá por monto, email, tienda o ID de pago para identificar a qué tienda corresponde un cobro que aparece en MercadoPago.</p>
+              </div>
+              <input
+                type="text"
+                placeholder="Buscar monto, tienda, email o ID de pago..."
+                value={pagosSearch}
+                onChange={(e) => setPagosSearch(e.target.value)}
+                className="w-80 text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-orange-400"
+              />
+            </div>
+            {pagosLoading ? (
+              <div className="text-center py-12 text-slate-400">Cargando pagos...</div>
+            ) : pagos.length === 0 ? (
+              <div className="py-12 text-center text-slate-400">Todavía no hay pagos registrados</div>
+            ) : (
+              <div className="overflow-auto max-h-[650px]">
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 z-10">
+                    <tr className="bg-slate-50 text-left text-slate-500 text-xs uppercase">
+                      <th className="px-4 py-2">Fecha</th>
+                      <th className="px-4 py-2">Tienda</th>
+                      <th className="px-4 py-2">Email</th>
+                      <th className="px-4 py-2">Concepto</th>
+                      <th className="px-4 py-2 text-right">Monto ARS</th>
+                      <th className="px-4 py-2">Estado</th>
+                      <th className="px-4 py-2">ID pago MP</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {pagos
+                      .filter(p => {
+                        if (!pagosSearch.trim()) return true
+                        const q = pagosSearch.trim().toLowerCase()
+                        return (
+                          String(p.monto_ars ?? "").includes(q) ||
+                          (p.store?.subdomain || "").toLowerCase().includes(q) ||
+                          (p.store?.email || "").toLowerCase().includes(q) ||
+                          (p.payment_id || "").toLowerCase().includes(q) ||
+                          (p.external_reference || "").toLowerCase().includes(q)
+                        )
+                      })
+                      .map(p => (
+                        <tr key={`${p.tipo}-${p.id}`} className="hover:bg-orange-50 transition-colors">
+                          <td className="px-4 py-2 text-slate-500 text-xs whitespace-nowrap">
+                            {p.fecha ? new Date(p.fecha).toLocaleString("es-AR") : "—"}
+                          </td>
+                          <td className="px-4 py-2 font-medium text-slate-800">
+                            {p.store ? (
+                              <a href={`https://${p.store.subdomain}.tol.ar`} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 hover:underline">
+                                {p.store.subdomain}.tol.ar
+                              </a>
+                            ) : (
+                              <span className="text-red-500">tienda eliminada ({p.store_id?.slice(0, 8)})</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-2 text-slate-500 text-xs">{p.store?.email || "—"}</td>
+                          <td className="px-4 py-2 text-slate-600 text-xs">
+                            {p.concepto} {p.tipo === "renovacion" && <span className="text-indigo-400">(renovación)</span>}
+                          </td>
+                          <td className="px-4 py-2 text-right font-medium text-slate-700">
+                            {p.monto_ars != null ? `$${Number(p.monto_ars).toLocaleString("es-AR")}` : "—"}
+                          </td>
+                          <td className="px-4 py-2">
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                              p.estado === "completed" || p.estado === "approved" || p.estado === "processed"
+                                ? "bg-green-100 text-green-700"
+                                : p.estado === "pending" || p.estado === "authorized"
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-red-100 text-red-700"
+                            }`}>
+                              {p.estado}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2 text-slate-400 text-xs font-mono">{p.payment_id || "—"}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
