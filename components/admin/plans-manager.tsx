@@ -347,6 +347,20 @@ export function PlansManager({ storeId, storeName, subdomain, country, initialCu
   // cada creación sabe si sigue siendo "la vigente" cuando por fin resuelve;
   // si no lo es, se descarta en vez de pisar el Brick nuevo que ya se mostró.
   const trialCardBrickGen = useRef(0)
+
+  // Mismo patrón que el Brick de "Probar gratis" arriba, pero para el botón
+  // "Pagar con MercadoPago": cobra ya el primer mes y deja la tarjeta
+  // guardada para que Mercado Pago cobre solo todos los meses siguientes
+  // (antes este botón solo hacía un pago único y listo).
+  const [payModal, setPayModal] = useState<{names: string} | null>(null)
+  const [payCardFeatures, setPayCardFeatures] = useState<DbFeature[] | null>(null)
+  const [payCardLoadingBrick, setPayCardLoadingBrick] = useState(false)
+  const [payCardSubmitting, setPayCardSubmitting] = useState(false)
+  const [payCardError, setPayCardError] = useState("")
+  const payCardBrickRef = useRef<HTMLDivElement>(null)
+  const payCardBrickBuilt = useRef(false)
+  const payCardBrickController = useRef<any>(null)
+  const payCardBrickGen = useRef(0)
   const [cancellingFeature, setCancellingFeature] = useState<string | null>(null)
   const [customDomain, setCustomDomain] = useState(initialCustomDomain || "")
   const [savingDomain, setSavingDomain] = useState(false)
@@ -690,8 +704,7 @@ export function PlansManager({ storeId, storeName, subdomain, country, initialCu
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   storeId,
-                  featureCode: feature.code,
-                  featureName: feature.name,
+                  features: [{ code: feature.code, name: feature.name }],
                   trialDays: (feature as any).trial_days,
                   cardToken: cardData.token,
                   payerEmail: cardData.payer?.email,
@@ -734,6 +747,120 @@ export function PlansManager({ storeId, storeName, subdomain, country, initialCu
     }
   }, [trialCardFeature])
 
+  const payCardBrickOp = useRef<Promise<void>>(Promise.resolve())
+  const queuePayCardBrickOp = (op: () => Promise<void>) => {
+    payCardBrickOp.current = payCardBrickOp.current.then(op, op)
+    return payCardBrickOp.current
+  }
+
+  const clearPayCardBrick = async () => {
+    payCardBrickGen.current += 1
+    if (payCardBrickController.current) {
+      try { await payCardBrickController.current.unmount() } catch {}
+      payCardBrickController.current = null
+    }
+    if (payCardBrickRef.current) payCardBrickRef.current.innerHTML = ""
+    payCardBrickBuilt.current = false
+  }
+
+  const unmountPayCardBrick = () => queuePayCardBrickOp(clearPayCardBrick)
+
+  const initPayCardBrick = (features: DbFeature[]) => queuePayCardBrickOp(async () => {
+    if (payCardBrickBuilt.current || !payCardBrickRef.current) return
+    await clearPayCardBrick()
+    const myGen = payCardBrickGen.current
+    setPayCardLoadingBrick(true)
+    const pubKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY as string
+
+    const loadMP = () => new Promise<void>(resolve => {
+      if ((window as any).MercadoPago) { resolve(); return }
+      const s = document.createElement("script")
+      s.src = "https://sdk.mercadopago.com/js/v2"
+      s.onload = () => resolve()
+      document.head.appendChild(s)
+    })
+
+    await loadMP()
+    if (payCardBrickGen.current !== myGen) return
+
+    const mp = new (window as any).MercadoPago(pubKey, { locale: "es-AR" })
+    const bricks = mp.bricks()
+    payCardBrickBuilt.current = true
+    setPayCardLoadingBrick(false)
+
+    const totalARSForFeatures = features.reduce((sum, f) => sum + getPriceARS(f.price), 0)
+
+    const timeoutId = setTimeout(() => {
+      if (payCardBrickGen.current !== myGen) return
+      payCardBrickGen.current += 1
+      payCardBrickBuilt.current = false
+      if (payCardBrickRef.current) payCardBrickRef.current.innerHTML = ""
+      setPayCardError("El formulario de pago tardó demasiado en cargar. Cerrá esta ventana y probá de nuevo.")
+    }, TRIAL_BRICK_TIMEOUT_MS)
+
+    let controller: any = null
+    try {
+      controller = await bricks.create("cardPayment", "mp-pay-card-brick", {
+        initialization: {
+          amount: totalARSForFeatures,
+          payer: { email: "" },
+        },
+        customization: {
+          visual: { style: { theme: "default" } },
+          paymentMethods: { minInstallments: 1, maxInstallments: 1 },
+        },
+        callbacks: {
+          onReady: () => {},
+          onError: (err: any) => console.error("MP Brick error:", err),
+          onSubmit: async (cardData: any) => {
+            setPayCardSubmitting(true)
+            setPayCardError("")
+            try {
+              const res = await fetch("/api/tolar/mercadopago/create-subscription", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  storeId,
+                  features: features.map(f => ({ code: f.code, name: f.name })),
+                  trialDays: 0,
+                  cardToken: cardData.token,
+                  payerEmail: cardData.payer?.email,
+                  transactionAmountARS: totalARSForFeatures,
+                }),
+              })
+              const data = await res.json()
+              if (res.ok && data.ok) {
+                setPayCardFeatures(null)
+                setSelectedFeatures([])
+                setPayModal({ names: features.map(f => f.name).join(", ") })
+              } else {
+                setPayCardError(data.error || "No pudimos procesar el pago. Probá con otra tarjeta.")
+              }
+            } catch {
+              setPayCardError("Error al procesar la tarjeta")
+            }
+            setPayCardSubmitting(false)
+          },
+        },
+      })
+    } finally {
+      clearTimeout(timeoutId)
+    }
+
+    if (payCardBrickGen.current !== myGen) {
+      try { await controller?.unmount() } catch {}
+      return
+    }
+    payCardBrickController.current = controller
+  })
+
+  useEffect(() => {
+    if (payCardFeatures) {
+      payCardBrickBuilt.current = false
+      setTimeout(() => initPayCardBrick(payCardFeatures), 100)
+    }
+  }, [payCardFeatures])
+
   // Si el usuario se va del panel (ej. al Comprar, que redirige a Mercado
   // Pago) y vuelve con el botón "atrás" del navegador, Chrome puede restaurar
   // esta página entera desde bfcache tal cual quedó, con el diálogo de
@@ -752,6 +879,17 @@ export function PlansManager({ storeId, storeName, subdomain, country, initialCu
       setTrialCardFeature(null)
       setTrialCardError("")
       setTrialCardLoadingBrick(false)
+
+      payCardBrickGen.current += 1
+      payCardBrickBuilt.current = false
+      if (payCardBrickController.current) {
+        try { payCardBrickController.current.unmount() } catch {}
+        payCardBrickController.current = null
+      }
+      if (payCardBrickRef.current) payCardBrickRef.current.innerHTML = ""
+      setPayCardFeatures(null)
+      setPayCardError("")
+      setPayCardLoadingBrick(false)
     }
     window.addEventListener("pageshow", onPageShow)
     return () => window.removeEventListener("pageshow", onPageShow)
@@ -767,6 +905,10 @@ export function PlansManager({ storeId, storeName, subdomain, country, initialCu
         body: JSON.stringify({ storeId, featureCode }),
       })
       if (res.ok) {
+        const data = await res.json().catch(() => ({}))
+        if (data.alsoCancelled?.length > 0) {
+          alert(`Esta cosita se había pagado junto con ${data.alsoCancelled.join(", ")} en el mismo cobro, así que también se cancelaron.`)
+        }
         window.location.reload()
       } else {
         const data = await res.json().catch(() => ({}))
@@ -1758,47 +1900,17 @@ export function PlansManager({ storeId, storeName, subdomain, country, initialCu
                           </div>
                           <Button
                             className="w-full bg-[#00b1ea] hover:bg-[#0095c8] text-white"
-                            disabled={processingPayment}
-                            onClick={async () => {
-                              setProcessingPayment(true)
-                              try {
-                                // Preparar datos de las features seleccionadas
-                                const featuresToPurchase = availableFeatures
-                                  .filter(f => selectedFeatures.includes(f.code))
-                                  .map(f => ({ code: f.code, name: f.name, price: f.price }))
-
-                                const res = await fetch("/api/tolar/mercadopago/create-preference", {
-                                  method: "POST",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({
-                                    storeId,
-                                    features: featuresToPurchase,
-                                    totalARS,
-                                  }),
-                                })
-
-                                const data = await res.json()
-
-                                if (!res.ok) {
-                                  alert(data.error || "Error al crear el pago")
-                                  return
-                                }
-
-                                // Redirigir a MercadoPago (checkoutUrl ya elige sandbox o producción según la credencial)
-                                window.location.href = data.checkoutUrl || data.initPoint
-                              } catch (error) {
-                                console.error("Error:", error)
-                                alert("Error al procesar el pago")
-                              } finally {
-                                setProcessingPayment(false)
-                              }
+                            onClick={() => {
+                              setPayCardError("")
+                              payCardBrickBuilt.current = false
+                              setPayCardFeatures(availableFeatures.filter(f => selectedFeatures.includes(f.code)))
                             }}
                           >
-                            {processingPayment ? (
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : null}
-                            Pagar ${totalARS.toLocaleString("es-AR")} ARS
+                            Pagar ${totalARS.toLocaleString("es-AR")} ARS/mes
                           </Button>
+                          <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
+                            Guardamos tu tarjeta para cobrarte este monto todos los meses, hasta que cancelés.
+                          </p>
                         </div>
 
                         {/* PayPal - desactivado temporalmente, próximamente */}
@@ -2027,6 +2139,55 @@ export function PlansManager({ storeId, storeName, subdomain, country, initialCu
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!payCardFeatures} onOpenChange={(open) => { if (!open) { setPayCardFeatures(null); setPayCardError(""); unmountPayCardBrick() } }}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-[#00b1ea]" />
+              Pagar {payCardFeatures?.map(f => f.name).join(", ")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-2 space-y-4">
+            <div className="bg-blue-50 rounded-lg p-4 text-sm text-blue-900 space-y-1">
+              <p>
+                Se cobran ya{" "}
+                <strong>${payCardFeatures ? payCardFeatures.reduce((sum, f) => sum + getPriceARS(f.price), 0).toLocaleString("es-AR") : ""} ARS</strong>{" "}
+                con la tarjeta que cargues, y el mismo monto todos los meses, salvo que cancelés antes.
+              </p>
+            </div>
+            {payCardLoadingBrick && (
+              <div className="flex items-center justify-center py-8 gap-2">
+                <Loader2 className="w-6 h-6 animate-spin text-[#00b1ea]" />
+                <span className="text-sm text-muted-foreground">Cargando formulario de pago...</span>
+              </div>
+            )}
+            <div id="mp-pay-card-brick" ref={payCardBrickRef} />
+            {payCardSubmitting && (
+              <p className="text-xs text-muted-foreground text-center">Procesando pago...</p>
+            )}
+            {payCardError && (
+              <p className="text-xs text-red-600 text-center">{payCardError}</p>
+            )}
+            <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
+              <Lock className="w-3 h-3" /> Tu tarjeta la guarda Mercado Pago, no nosotros
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+    {payModal && (
+      <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setPayModal(null)}>
+        <div style={{ background: "white", borderRadius: "12px", padding: "32px", textAlign: "center", maxWidth: "360px", margin: "16px" }} onClick={(e) => e.stopPropagation()}>
+          <div style={{ fontSize: "40px", marginBottom: "12px" }}>✅</div>
+          <p style={{ fontSize: "18px", fontWeight: 600, margin: "0 0 8px" }}>¡Pago confirmado!</p>
+          <p style={{ fontSize: "13px", color: "#666", margin: "0 0 20px" }}>{payModal.names} ya está activo. Te vamos a cobrar el mismo monto todos los meses.</p>
+          <button onClick={() => window.location.reload()} style={{ background: "#00b1ea", color: "white", border: "none", borderRadius: "8px", padding: "12px 28px", fontSize: "15px", fontWeight: 600, cursor: "pointer" }}>
+            ¡Listo!
+          </button>
+        </div>
+      </div>
+    )}
 
     {trialModal && (
       <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setTrialModal(null)}>

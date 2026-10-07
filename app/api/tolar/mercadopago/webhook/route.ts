@@ -195,13 +195,14 @@ async function handlePreapprovalUpdate(preapprovalId?: string) {
     const preapproval = await res.json()
     console.log("[MP Webhook] Preapproval:", preapproval.id, preapproval.status)
 
-    const { data: row } = await supabase
+    // Un mismo preapproval puede cubrir varias cositas compradas juntas
+    // (ver create-subscription): se actualizan todas las filas por igual.
+    const { data: rows } = await supabase
       .from("store_purchased_features")
       .select("id, store_id, feature_code, is_trial")
       .eq("mp_preapproval_id", preapprovalId)
-      .maybeSingle()
 
-    if (!row) {
+    if (!rows || rows.length === 0) {
       console.error("[MP Webhook] No se encontró store_purchased_features para preapproval:", preapprovalId)
       return
     }
@@ -212,7 +213,7 @@ async function handlePreapprovalUpdate(preapprovalId?: string) {
       update.is_trial = false
     }
 
-    await supabase.from("store_purchased_features").update(update).eq("id", row.id)
+    await supabase.from("store_purchased_features").update(update).in("id", rows.map(r => r.id))
   } catch (error) {
     console.error("[MP Webhook] Error procesando preapproval:", error)
   }
@@ -260,21 +261,26 @@ async function handleAuthorizedPayment(authorizedPaymentId?: string) {
       return
     }
 
-    const { data: row } = await supabase
+    // Un mismo preapproval puede cubrir varias cositas compradas juntas
+    // (ver create-subscription): se actualizan todas las filas por igual y
+    // se manda un solo mail combinado, no uno por cosita.
+    const { data: rows } = await supabase
       .from("store_purchased_features")
       .select("id, store_id, feature_code, feature_name")
       .eq("mp_preapproval_id", payment.preapproval_id)
-      .maybeSingle()
 
-    if (!row) {
+    if (!rows || rows.length === 0) {
       console.error("[MP Webhook] No se encontró store_purchased_features para preapproval:", payment.preapproval_id)
       return
     }
 
+    const featureNames = rows.map(r => r.feature_name || r.feature_code).join(", ")
+    const rowIds = rows.map(r => r.id)
+
     const { data: store } = await supabase
       .from("stores")
       .select("email, subdomain, site_title")
-      .eq("id", row.store_id)
+      .eq("id", rows[0].store_id)
       .single()
 
     if (cobroStatus === "approved") {
@@ -288,7 +294,7 @@ async function handleAuthorizedPayment(authorizedPaymentId?: string) {
           payment_id: authorizedPaymentId.toString(),
           purchased_at: new Date().toISOString(),
         })
-        .eq("id", row.id)
+        .in("id", rowIds)
 
       if (store?.email) {
         try {
@@ -298,10 +304,10 @@ async function handleAuthorizedPayment(authorizedPaymentId?: string) {
             from: "TOL.AR <ventas@tiendaonline.com.ar>",
             to: store.email,
             bcc: "soporte@tiendaonline.com.ar",
-            subject: `Se cobró tu suscripción de ${row.feature_name || row.feature_code} - TOL.AR`,
+            subject: `Se cobró tu suscripción de ${featureNames} - TOL.AR`,
             html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
               <h1 style="color:#96305a">Cobro realizado</h1>
-              <p>Terminó tu prueba gratis de <strong>${row.feature_name || row.feature_code}</strong> y se hizo el cobro mensual con la tarjeta guardada.</p>
+              <p>Se hizo el cobro mensual de <strong>${featureNames}</strong> con la tarjeta guardada.</p>
               <p>Si no querés seguir con esta función, podés cancelarla desde <a href="https://${store.subdomain}.tol.ar/admin?tab=planes" style="color:#96305a">tu panel</a>.</p>
             </div>`,
           })
@@ -310,11 +316,11 @@ async function handleAuthorizedPayment(authorizedPaymentId?: string) {
         }
       }
     } else if (cobroStatus === "rejected") {
-      // La tarjeta falló: desactivamos la cosita y avisamos.
+      // La tarjeta falló: desactivamos todas las cositas de este preapproval y avisamos.
       await supabase
         .from("store_purchased_features")
         .update({ is_active: false, mp_subscription_status: "payment_rejected" })
-        .eq("id", row.id)
+        .in("id", rowIds)
 
       if (store?.email) {
         try {
@@ -324,10 +330,10 @@ async function handleAuthorizedPayment(authorizedPaymentId?: string) {
             from: "TOL.AR <ventas@tiendaonline.com.ar>",
             to: store.email,
             bcc: "soporte@tiendaonline.com.ar",
-            subject: `No pudimos cobrar ${row.feature_name || row.feature_code} - se desactivó - TOL.AR`,
+            subject: `No pudimos cobrar ${featureNames} - se desactivó - TOL.AR`,
             html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
               <h1 style="color:#dc2626">No se pudo cobrar</h1>
-              <p>Intentamos cobrar <strong>${row.feature_name || row.feature_code}</strong> con la tarjeta guardada y fue rechazada, así que la desactivamos.</p>
+              <p>Intentamos cobrar <strong>${featureNames}</strong> con la tarjeta guardada y fue rechazada, así que la desactivamos.</p>
               <p>Si querés seguir usándola, entrá a <a href="https://${store.subdomain}.tol.ar/admin?tab=planes" style="color:#96305a">tu panel</a> y volvé a activarla con otra tarjeta.</p>
             </div>`,
           })

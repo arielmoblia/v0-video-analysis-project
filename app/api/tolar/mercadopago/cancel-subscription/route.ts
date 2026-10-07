@@ -43,12 +43,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No se pudo cancelar en Mercado Pago" }, { status: 400 })
     }
 
+    // Si esta cosita se compró junto con otras en el mismo cobro (mismo
+    // preapproval), MP cancela el cobro entero: hay que desactivar también
+    // las demás filas que compartían ese preapproval, para no dejarlas
+    // "activas" en nuestra base cuando en Mercado Pago ya no se les va a
+    // cobrar más.
+    const { data: siblingRows } = await supabase
+      .from("store_purchased_features")
+      .select("id, feature_code, feature_name")
+      .eq("mp_preapproval_id", row.mp_preapproval_id)
+
+    const idsToDeactivate = (siblingRows && siblingRows.length > 0) ? siblingRows.map(r => r.id) : [row.id]
+
     await supabase
       .from("store_purchased_features")
       .update({ is_active: false, is_trial: false, mp_subscription_status: "cancelled" })
-      .eq("id", row.id)
+      .in("id", idsToDeactivate)
 
-    return NextResponse.json({ ok: true })
+    const alsoCancelled = (siblingRows || [])
+      .filter(r => r.feature_code !== featureCode)
+      .map(r => r.feature_name || r.feature_code)
+
+    return NextResponse.json({ ok: true, alsoCancelled })
   } catch (error) {
     console.error("[MP cancel-subscription] Error:", error)
     return NextResponse.json({ error: "Error interno" }, { status: 500 })
