@@ -3,7 +3,6 @@ import { Header } from "@/components/landing/header"
 import { Footer } from "@/components/landing/footer"
 import Link from "next/link"
 import { getBrand } from "@/lib/get-brand"
-import { getActivarHref } from "@/lib/get-activar-href"
 
 export const metadata: Metadata = {
   title: "Clonar con IA — Copiá una tienda que te gusta, a tu medida",
@@ -26,9 +25,7 @@ const MODALIDADES = [
   { titulo: "Sistema + catálogo sincronizado", precio: "$70.000 + mantenimiento mensual", desc: "Clonamos todo y lo mantenemos sincronizado solo, todos los días (precio y stock), como un dropshipping completo." },
 ]
 
-export default async function ClonarConIAPage({ searchParams }: { searchParams: Promise<{ tienda?: string }> }) {
-  const { tienda } = await searchParams
-  const activarHref = getActivarHref(tienda, "clonar_ia_catalogo")
+export default async function ClonarConIAPage() {
   const brand = await getBrand()
   return (
     <div className="min-h-screen bg-white">
@@ -53,7 +50,7 @@ export default async function ClonarConIAPage({ searchParams }: { searchParams: 
               <span className="text-xs text-center px-4">Video explicativo — próximamente</span>
             </div>
             <div className="sm:col-span-2 flex flex-col gap-3 justify-center">
-              <Link href={activarHref} className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors text-center">
+              <Link href="#modalidades" className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors text-center">
                 Ver las 7 modalidades
               </Link>
               <Link href="/plan-cositas" className="border border-slate-300 text-slate-700 px-8 py-3 rounded-lg font-medium hover:bg-slate-50 transition-colors text-center">
@@ -90,7 +87,7 @@ export default async function ClonarConIAPage({ searchParams }: { searchParams: 
       </section>
 
       {/* MODALIDADES */}
-      <section className="py-16">
+      <section id="modalidades" className="py-16">
         <div className="container mx-auto px-4 max-w-3xl">
           <h2 className="text-3xl font-bold text-slate-900 mb-3">Elegís la modalidad</h2>
           <p className="text-slate-500 mb-8">Una sola opción, según cuánto necesites clonar. Los precios son orientativos, se ajustan según el caso.</p>
@@ -165,7 +162,7 @@ export default async function ClonarConIAPage({ searchParams }: { searchParams: 
           <h2 className="text-3xl font-bold text-white mb-3">Empezá tu tienda clonando la que ya te gusta</h2>
           <p className="text-slate-400 mb-8">Desde $15.000, según la modalidad que elijas.</p>
           <div className="flex gap-3 justify-center flex-wrap">
-            <Link href={activarHref} className="bg-orange-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors">
+            <Link href="#modalidades" className="bg-orange-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors">
               Ver las 7 modalidades
             </Link>
             <Link href="/plan-cositas" className="bg-white text-black px-8 py-3 rounded-lg font-medium hover:bg-slate-100 transition-colors">
