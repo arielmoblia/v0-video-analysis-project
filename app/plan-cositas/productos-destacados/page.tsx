@@ -44,6 +44,9 @@ export default async function ProductosDestacadosPage({ searchParams }: { search
               <span className="text-xs text-center px-4">Video explicativo — próximamente</span>
             </div>
             <div className="sm:col-span-2 flex flex-col gap-3 justify-center">
+              <p className="text-xs font-semibold text-red-600 uppercase tracking-widest text-center">
+                Activá gratis en tu administrador
+              </p>
               <Link href={activarHref} className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors text-center">
                 Activar — Gratis
               </Link>
